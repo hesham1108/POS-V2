@@ -1,0 +1,69 @@
+@model StoresPOS.PL.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_LoginLayout";
+}
+
+<div class="login-page" id="loginPage" dir="ltr" lang="en">
+    <div class="login-shell">
+        <div class="login-brand">
+            <div class="login-brand-mark">
+                <div class="login-brand-mark__logo" aria-hidden="true">SP</div>
+                <div class="login-brand-mark__text">
+                    <strong data-i18n="brand">StoresPOS</strong>
+                    <span data-i18n="brandSub">Local store cashier</span>
+                </div>
+            </div>
+            <button type="button"
+                    class="login-lang"
+                    id="loginLangToggle"
+                    data-lang="en"
+                    aria-label="Switch language">
+                العربية
+            </button>
+        </div>
+
+        <div class="login-card">
+            <div class="login-card__eyebrow">
+                <span class="sp-badge-dot" aria-hidden="true"></span>
+                <span data-i18n="eyebrow">Secure sign-in</span>
+            </div>
+            <h1 class="login-card__title" data-i18n="title">Welcome back</h1>
+            <p class="login-card__subtitle" data-i18n="subtitle">Sign in to open the till and continue store operations.</p>
+
+            <form asp-action="Login" method="post" class="login-form" novalidate>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" data-i18n-validation></div>
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div class="mb-3">
+                    <label for="Username" class="form-label" data-i18n="username">Username</label>
+                    <input asp-for="Username"
+                           class="form-control"
+                           autocomplete="username"
+                           autofocus
+                           data-i18n-placeholder="usernamePlaceholder" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Password" class="form-label" data-i18n="password">Password</label>
+                    <input asp-for="Password"
+                           class="form-control"
+                           autocomplete="current-password"
+                           data-i18n-placeholder="passwordPlaceholder" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="login-actions">
+                    <button type="submit" class="login-submit" data-i18n="submit">Sign in</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="login-footer" data-i18n="footer">StoresPOS · Local installation</div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

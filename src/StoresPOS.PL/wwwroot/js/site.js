@@ -1,4 +1,10 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+$(function () {
+  // Shared jQuery helpers for StoresPOS.
+  window.StoresPos = window.StoresPos || {};
 
-// Write your JavaScript code.
+  window.StoresPos.$ = $;
+
+  window.StoresPos.on = function (selector, eventName, handler) {
+    $(document).on(eventName, selector, handler);
+  };
+});

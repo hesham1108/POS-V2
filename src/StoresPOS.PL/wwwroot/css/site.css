@@ -1,22 +1,63 @@
+/* Global app styles using StoresPOS theme tokens */
 html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+  font-size: 15px;
 }
 
 body {
-  margin-bottom: 60px;
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--sp-font);
+  font-size: var(--sp-font-size);
+  line-height: var(--sp-line-height);
+  color: var(--sp-text);
+  background: var(--sp-bg);
+}
+
+a {
+  color: var(--sp-primary);
+}
+
+a:hover {
+  color: var(--sp-primary-hover);
+}
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(15, 103, 81, 0.15);
+}
+
+.btn-primary {
+  background-color: var(--sp-primary);
+  border-color: var(--sp-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--sp-primary-hover);
+  border-color: var(--sp-primary-hover);
+}
+
+.app-shell-header {
+  background: var(--sp-surface);
+  border-bottom: 1px solid var(--sp-border);
+  min-height: var(--sp-header-height);
+}
+
+.app-shell-header .navbar-brand {
+  color: var(--sp-text-strong);
+  font-weight: 700;
+}
+
+.app-shell-main {
+  padding-block: var(--sp-space-5);
+}
+
+.app-shell-footer {
+  border-top: 1px solid var(--sp-border);
+  color: var(--sp-text-muted);
+  padding: var(--sp-space-4) 0;
+  margin-top: auto;
 }

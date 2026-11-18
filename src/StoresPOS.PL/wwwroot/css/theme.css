@@ -1,0 +1,138 @@
+/* StoresPOS design tokens — extracted from UI mockups */
+:root {
+  /* Brand / actions */
+  --sp-primary: #0f6751;
+  --sp-primary-hover: #0c5543;
+  --sp-primary-soft: #e7f4ef;
+  --sp-primary-border: #b7ddd1;
+
+  /* Surfaces */
+  --sp-sidebar: #1a1d26;
+  --sp-sidebar-text: #e8eaed;
+  --sp-sidebar-muted: #9aa0a6;
+  --sp-bg: #f5f7fa;
+  --sp-surface: #ffffff;
+  --sp-surface-muted: #f8f9fa;
+
+  /* Text */
+  --sp-text: #1f2937;
+  --sp-text-strong: #111827;
+  --sp-text-muted: #6b7280;
+  --sp-text-inverse: #ffffff;
+
+  /* Borders / focus */
+  --sp-border: #e5e7eb;
+  --sp-border-strong: #d1d5db;
+  --sp-focus: var(--sp-primary);
+
+  /* Status */
+  --sp-success: #0f6751;
+  --sp-warning: #d97706;
+  --sp-danger: #dc2626;
+  --sp-info: #2563eb;
+
+  /* Shape */
+  --sp-radius-sm: 8px;
+  --sp-radius: 12px;
+  --sp-radius-lg: 16px;
+  --sp-radius-pill: 999px;
+
+  /* Elevation */
+  --sp-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --sp-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+  --sp-shadow-lg: 0 18px 40px rgba(17, 24, 39, 0.08);
+
+  /* Type */
+  --sp-font: "Segoe UI", Tahoma, "Noto Sans Arabic", Arial, sans-serif;
+  --sp-font-size: 15px;
+  --sp-line-height: 1.45;
+
+  /* Layout */
+  --sp-sidebar-width: 260px;
+  --sp-header-height: 64px;
+  --sp-space-1: 0.25rem;
+  --sp-space-2: 0.5rem;
+  --sp-space-3: 0.75rem;
+  --sp-space-4: 1rem;
+  --sp-space-5: 1.5rem;
+  --sp-space-6: 2rem;
+}
+
+/* Shared utilities driven by tokens */
+.sp-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-sm);
+}
+
+.sp-btn-primary {
+  background: var(--sp-primary);
+  border-color: var(--sp-primary);
+  color: var(--sp-text-inverse);
+  border-radius: var(--sp-radius-sm);
+  font-weight: 600;
+}
+
+.sp-btn-primary:hover,
+.sp-btn-primary:focus {
+  background: var(--sp-primary-hover);
+  border-color: var(--sp-primary-hover);
+  color: var(--sp-text-inverse);
+}
+
+.sp-btn-secondary {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border-strong);
+  color: var(--sp-text);
+  border-radius: var(--sp-radius-sm);
+  font-weight: 500;
+}
+
+.sp-btn-secondary:hover,
+.sp-btn-secondary:focus {
+  background: var(--sp-surface-muted);
+  border-color: var(--sp-border-strong);
+  color: var(--sp-text-strong);
+}
+
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--sp-radius-pill);
+  background: var(--sp-primary-soft);
+  color: var(--sp-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.sp-badge-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--sp-primary);
+}
+
+.sp-input {
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  min-height: 2.75rem;
+  padding: 0.65rem 0.85rem;
+}
+
+.sp-input:focus {
+  border-color: var(--sp-focus);
+  box-shadow: 0 0 0 0.2rem rgba(15, 103, 81, 0.15);
+  outline: 0;
+}
+
+.sp-label {
+  color: var(--sp-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
