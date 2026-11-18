@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StoresPOS.BLL/StoresPOS.BLL.csproj" />
+    <Project Path="src/StoresPOS.DAL/StoresPOS.DAL.csproj" />
+    <Project Path="src/StoresPOS.PL/StoresPOS.PL.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StoresPOS.BLL.Tests/StoresPOS.BLL.Tests.csproj" />
+    <Project Path="tests/StoresPOS.DAL.Tests/StoresPOS.DAL.Tests.csproj" />
+  </Folder>
+</Solution>
