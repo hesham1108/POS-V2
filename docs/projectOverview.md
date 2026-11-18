@@ -8,12 +8,12 @@ It is a desktop/local Windows web application built with **ASP.NET Core MVC**. T
 
 In short:
 
-| Question | Answer |
-|----------|--------|
-| What is it? | A complete cashier + store back-office system |
-| Who is it for? | Store owners, managers, and cashiers |
-| Where does it run? | Local Windows PC / local SQL Server |
-| How is it used? | Browser UI (Razor MVC) talking to a local database |
+| Question                 | Answer                                                  |
+| ------------------------ | ------------------------------------------------------- |
+| What is it?              | A complete cashier + store back-office system           |
+| Who is it for?           | Store owners, managers, and cashiers                    |
+| Where does it run?       | Local Windows PC / local SQL Server                     |
+| How is it used?          | Browser UI (Razor MVC) talking to a local database      |
 | What makes it different? | Offline-ready, simple daily workflows, Arabic + English |
 
 ---
@@ -61,10 +61,10 @@ StoresPOS/
 
 ### Layer responsibilities
 
-| Layer | Project | Responsibility |
-|-------|---------|----------------|
-| **PL** | `StoresPOS.PL` | Controllers, Razor Views, ViewModels, auth UI, static assets |
-| **BLL** | `StoresPOS.BLL` | Services, DTOs, validation, business rules, JWT/password logic |
+| Layer   | Project         | Responsibility                                                   |
+| ------- | --------------- | ---------------------------------------------------------------- |
+| **PL**  | `StoresPOS.PL`  | Controllers, Razor Views, ViewModels, auth UI, static assets     |
+| **BLL** | `StoresPOS.BLL` | Services, DTOs, validation, business rules, JWT/password logic   |
 | **DAL** | `StoresPOS.DAL` | Entities, DbContext, EF configurations, migrations, repositories |
 
 ### Dependency direction
@@ -231,10 +231,10 @@ StoresPOS.DAL/
 
 ## 7. User Roles
 
-| Role | Access |
-|------|--------|
-| **Admin** | Full system: users, permissions, settings, reports |
-| **Manager** | Products, purchases, inventory, sales, returns, reports |
+| Role        | Access                                                            |
+| ----------- | ----------------------------------------------------------------- |
+| **Admin**   | Full system: users, permissions, settings, reports                |
+| **Manager** | Products, purchases, inventory, sales, returns, reports           |
 | **Cashier** | POS, payments, shifts, cash-outs, allowed invoice price overrides |
 
 ---

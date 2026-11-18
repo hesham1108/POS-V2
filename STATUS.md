@@ -54,12 +54,12 @@
 
 ## Tests & Build Results
 
-| Command | Result |
-|---------|--------|
-| `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 5/5 |
-| `dotnet ef database update` | Applied `InitialAuth`; tables `Users`, `Roles` created |
-| App startup seed | Roles Admin/Manager/Cashier + user `admin` created |
+| Command                                 | Result                                                 |
+| --------------------------------------- | ------------------------------------------------------ |
+| `dotnet build StoresPOS.sln`            | Succeeded                                              |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 5/5                                             |
+| `dotnet ef database update`             | Applied `InitialAuth`; tables `Users`, `Roles` created |
+| App startup seed                        | Roles Admin/Manager/Cashier + user `admin` created     |
 
 ## Next Recommended Task
 
@@ -67,12 +67,12 @@ Phase 2 — Products & Categories (hierarchical categories + product CRUD/pricin
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2026-11-17 | Phase 0 foundation verified |
-| 2026-11-17 | Created `plan.md` and `STATUS.md` |
-| 2026-11-17 | Phase 1 custom JWT auth implemented and verified |
-| 2026-11-17 | Login UI restyled from mockups; added `theme.css` design tokens |
+| Date       | Change                                                                |
+| ---------- | --------------------------------------------------------------------- |
+| 2026-11-17 | Phase 0 foundation verified                                           |
+| 2026-11-17 | Created `plan.md` and `STATUS.md`                                     |
+| 2026-11-17 | Phase 1 custom JWT auth implemented and verified                      |
+| 2026-11-17 | Login UI restyled from mockups; added `theme.css` design tokens       |
 | 2026-11-18 | Expanded `docs/projectOverview.md` with project purpose and structure |
 
 ## Local Dev Login (Development only)
