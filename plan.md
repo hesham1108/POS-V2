@@ -19,7 +19,10 @@
 - Initial roles: Admin (مدير النظام) · Manager (مدير) · Cashier (كاشير)
 - Shift model: One open shift, multiple participating cashiers
 - Languages: Arabic (RTL) + English (LTR)
-- Payments: Cash · Visa/Card · InstaPay · Vodafone Cash
+- Payments: Cash · Visa/Card · InstaPay · Vodafone Cash · **Cheque** — payment methods become a managed list (Phase 11), not a fixed enum
+- Money locations: shift drawer → **treasuries** (الخزائن, many, user-defined) (Phase 12)
+- Stock locations: **warehouses** (المخازن, many) with per-warehouse balances (Phase 14)
+- Invoice printing: thermal 80 mm **and** A4 landscape on a regular printer (Phase 11)
 - UI direction: Elegant / premium / modern / practical — green accent `#0F6751`, numbers first, keyboard-first POS
 
 ---
@@ -38,6 +41,11 @@
 10. Admin/Manager may use management screens without an open shift; shift is required for selling only.
 11. A shift is "old" when it was opened before today's local store date — this only triggers the warning in journey C; it never auto-closes.
 12. A cash refund is paid from the drawer of the **currently open** shift, not the shift of the original sale.
+13. A payment method can be deactivated but never deleted once used; historical invoices keep the method they were paid with.
+14. A cheque has: number, bank (optional), due date, amount, direction, party, status. **Incoming** (from a customer) = لينا / receivable; **outgoing** (to a supplier) = علينا / payable. Every cheque is linked to exactly one customer **or** one supplier.
+15. A cheque does not touch any cash total until its status becomes Collected (incoming → treasury in) or Paid (outgoing → treasury out). Bounced / Cancelled cheques move no money. Status changes are logged with user + date.
+16. Every money movement outside the shift drawer goes through a treasury and is recorded in the treasury ledger (no silent balance edits); a treasury with movements can be deactivated, not deleted.
+17. Stock is held per warehouse; every movement names its warehouse. A transfer between warehouses is one document that moves stock out of one and into the other in the same transaction.
 
 ---
 
@@ -48,6 +56,11 @@
 | POS · open/resume shift · cash-outs | ✓ | ✓ | ✓ |
 | Close shift · price override · discounts · returns | ✓ | ✓ | Optional |
 | Products · categories · purchases · inventory · reports | ✓ | ✓ | — |
+| Cheques (view / add / change status) | ✓ | ✓ | — |
+| Treasuries (view · deposit · withdraw · transfer) | ✓ | ✓ | — |
+| Treasuries (create / edit / deactivate) · payment methods setup | ✓ | Optional | — |
+| Warehouses (view · transfer) | ✓ | ✓ | — |
+| Warehouses (create / edit) | ✓ | Optional | — |
 | Users · settings · backup · license | ✓ | — | — |
 
 Admin can toggle any permission per role later from Users & Roles.
@@ -55,9 +68,9 @@ Because of the "Optional" cells, authorization must be **permission-based** (pol
 
 ---
 
-## System Modules (17)
+## System Modules (21)
 
-Login · POS · Shifts · Cash-outs · Products · Categories · Inventory · Purchases · Sales invoices · Returns · Customers · Suppliers · Dashboard · Reports · Users & roles · Settings · Receipts
+Login · POS · Shifts · Cash-outs · Products · Categories · Inventory · Purchases · Sales invoices · Returns · Customers · Suppliers · Dashboard · Reports · Users & roles · Settings · Receipts · **Payment methods** · **Cheques** · **Treasuries** · **Warehouses**
 
 ---
 
@@ -76,6 +89,11 @@ Login · POS · Shifts · Cash-outs · Products · Categories · Inventory · Pu
 | F | شراء من مورد | فاتورة شراء جديدة → الأصناف + التكلفة → حفظ → زيادة المخزون → إعادة حساب الأسعار |
 | G | مرتجع عميل | البحث عن الفاتورة → اختيار الأصناف والكمية → طريقة الاسترداد → تحديث المخزون والوردية |
 | H | إغلاق الوردية | مراجعة الملخص → عدّ النقدية (اختياري) → تأكيد → طباعة التقرير → تسجيل الدخول |
+| I | فاتورة A4 | قائمة المبيعات أو تفاصيل الفاتورة → طباعة A4 بالعرض → كل التفاصيل على طابعة عادية |
+| J | بيع أو شراء بشيك | الدفع → طريقة «شيك» → رقم + تاريخ الاستحقاق + القيمة (+ البنك) → حفظ الفاتورة → الشيك يظهر في الشيكات كـ«تحت التحصيل» مربوطًا بالعميل/المورد |
+| K | متابعة الشيكات | الشيكات → فلتر «لينا / علينا» والحالة وتاريخ الاستحقاق → تحصيل/سداد → اختيار الخزنة → تحديث رصيد الخزنة |
+| L | إدارة الخزنة | الخزائن → إضافة/تعديل خزنة → إيداع / سحب / تحويل بين خزنتين → كشف حركة الخزنة؛ إغلاق الوردية يورّد النقدية لخزنة |
+| M | تحويل بين مخزنين | المخازن → تحويل جديد → من مخزن إلى مخزن + الأصناف والكميات → حفظ → رصيد المخزنين يتحدّث |
 
 ---
 
@@ -209,9 +227,57 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 - [x] Reports: sales, purchases, inventory, shifts (filters + print). (+ cash-outs report)
 - [x] Shift history: participants, sales by cashier, differences, unreconciled.
 
-### Phase 11 — Settings & Delivery ← next
+> **Client request (2026-11-19):** payment methods setup, cheques (number · date · amount · paid or not · linked to customer or supplier · what we are owed vs what we owe), warehouses control, treasuries (add / edit freely), A4 landscape invoice printing. Added as Phases 11–14; Settings & Delivery moved to Phase 15.
 
-- [ ] Store profile, language, tax, numbering, printing.
+### Phase 11 — Payment Methods & A4 Invoice ← next
+
+- [ ] Replace the `PaymentMethod` enum with a `PaymentMethods` table (name ar/en, kind: Cash · Card · Wallet · Bank transfer · Cheque, active, sort order); seed the 4 current methods + **Cheque** with the same ids so existing invoices keep their method.
+- [ ] Only kind = Cash counts in the shift drawer (rule 5 unchanged); other kinds stay in sales/reports.
+- [ ] Payment methods screen: add / rename / reorder / activate-deactivate (no delete once used) — permission `PaymentMethods.Manage`.
+- [ ] POS pay modal, returns refund method, filters and reports read the active list instead of hard-coded buttons.
+- [ ] Optional per method: default treasury it settles into (used from Phase 12).
+- [ ] A4 **landscape** sales invoice (`Receipts/SaleA4/{id}`) for a regular printer: store header + logo + tax/commercial reg., invoice no. / date / cashier / shift, customer name + mobile + address, lines (code · barcode · name · unit · qty · catalog price · charged price · discount · line total), subtotal / discount / VAT / total, amount in words (ar), payment method + tender/change (+ cheque details from Phase 13), returns against the invoice, notes, signature boxes, page numbers + repeated table header on multi-page.
+- [ ] Print buttons: Sales list / Sales details / POS "last invoice" → choose 80 mm or A4; Settings later picks the default.
+- [ ] Same A4 layout reused for purchase invoices and return slips (A4 variant).
+- [ ] Tests: method seed keeps old invoices intact; inactive methods hidden at POS; A4 page renders all fields (ar + en).
+
+### Phase 12 — Treasuries (الخزائن)
+
+- [ ] `Treasury` (name, type: Cash / Bank, opening balance, active, is-default) + `TreasuryTransaction` ledger (in / out, amount, source type + id, user, date, note). Balance = opening + ledger.
+- [ ] Treasuries screen: create / edit / deactivate freely (rule 16) + balance per treasury.
+- [ ] Manual deposit / withdraw (reason required) and transfer between treasuries (one document, two ledger rows, one transaction).
+- [ ] Shift close: hand over counted (or expected) drawer cash to a chosen treasury; shift report shows it.
+- [ ] Non-cash sales settle into the method's default treasury (e.g. Visa → bank account) — confirm with client.
+- [ ] Purchases: record payment from a treasury (cash / bank) at confirm.
+- [ ] Treasury statement (كشف حساب الخزنة) with date filters + print; dashboard card with balances.
+- [ ] Permissions `Treasuries.View`, `Treasuries.Move`, `Treasuries.Manage`.
+
+### Phase 13 — Cheques (الشيكات)
+
+- [ ] `Cheque` (number, bank, due date, amount, direction In/Out, CustomerId **or** SupplierId, status, source invoice, notes) + `ChequeStatusHistory` (status, user, date, treasury, note).
+- [ ] Statuses: incoming — Pending → Collected / Bounced / Cancelled (Endorsed later if needed); outgoing — Pending → Paid / Cancelled.
+- [ ] Add cheque manually from the Cheques screen, from a customer / supplier page, or as the payment method at POS (Cheque kind) and on purchase invoices.
+- [ ] Collect / pay action asks for the treasury → writes the treasury ledger (rule 15); bounce reverses nothing in cash, flags the cheque and the party.
+- [ ] Cheques screen: tabs **لينا (receivable)** / **علينا (payable)**, filters status · party · due date range · overdue, totals per tab; print list.
+- [ ] Customer & supplier pages: their cheques + outstanding cheque total.
+- [ ] Dashboard: cheques due today / this week / overdue, in and out.
+- [ ] Reports: cheques by status and due date; included in the A4 invoice when paid by cheque.
+- [ ] Permissions `Cheques.View`, `Cheques.Manage`, `Cheques.ChangeStatus`.
+
+### Phase 14 — Warehouses (المخازن)
+
+- [ ] `Warehouse` (name ar/en, location, active, is-default) + `WarehouseStock` (warehouse × product quantity); migrate current `Product.StockQuantity` into a default "Main warehouse".
+- [ ] Every `StockMovement` carries `WarehouseId`; product total stock = sum across warehouses.
+- [ ] Warehouses screen: create / edit / deactivate (no delete with stock or movements).
+- [ ] Purchases receive into a chosen warehouse; returns restock into the selling warehouse.
+- [ ] POS sells from the store's selling warehouse (setting); zero-stock rule checked per warehouse.
+- [ ] Stock transfer document between warehouses (rule 17) + transfer list + print.
+- [ ] Adjustments and stock counts per warehouse; inventory balances / low-stock / reports filter by warehouse.
+- [ ] Permissions `Warehouses.View`, `Warehouses.Transfer`, `Warehouses.Manage`.
+
+### Phase 15 — Settings & Delivery
+
+- [ ] Store profile, language, tax, numbering, printing (default receipt: 80 mm or A4; selling warehouse; default treasury).
 - [ ] Database backup / restore.
 - [ ] Offline license activation.
 - [ ] Offline installer / deployment.
@@ -236,6 +302,14 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 | Numerals | Western digits on screen; receipt digits configurable |
 | Dark mode | Proposal promises it "for evening shifts"; tokens in `theme.css` make it cheap — confirm keep (Phase 11) or remove from proposal |
 | Held invoices at close | Close screen lists held invoices: cancel all, or carry over to the next shift |
+
+| Customer / supplier credit (آجل) | "What we are owed / what we owe" currently = cheques only. Confirm whether open-account balances (sell or buy on credit, partial payments) are also wanted — that would add a party ledger to Phase 13 |
+| Cheque at POS | One method per invoice → a cheque pays the full invoice. Partial cheque + cash needs split tender |
+| Endorsed cheques | Passing a customer's cheque to a supplier (تظهير) — not in v1 unless requested |
+| Drawer cash at shift close | Goes to the default cash treasury; closer can pick another |
+| Non-cash methods → treasury | Visa / InstaPay / Vodafone Cash settle into a bank-type treasury per method, or stay outside treasuries |
+| Selling warehouse | One selling warehouse for the store (setting); POS cannot pick per invoice |
+| A4 invoice | Landscape A4, same language as the receipt setting; logo uploaded in Settings |
 
 **Must be confirmed by the client before Phase 7** (they change POS directly): split tender · held invoices · sell at zero stock · tax.
 

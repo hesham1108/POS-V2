@@ -4,7 +4,7 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 10 complete** — next is **Phase 11 (settings & delivery)**
+- Current phase: **Phase 10 complete** — next is **Phase 11 (payment methods & A4 invoice)**; client added phases 11–14, settings & delivery is now Phase 15
 - Overall progress: Phases 1–10 verified (unit + HTTP tests; Phase 10 pages checked in a browser on the Mac dev SQL)
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
@@ -108,7 +108,7 @@
 
 ## Next Recommended Task
 
-Phase 11 — settings (store profile, tax, numbering, printing, language), backup/restore, offline license, installer
+Phase 11 — payment methods table (+ Cheque) and A4 landscape invoice. Then 12 treasuries, 13 cheques, 14 warehouses, 15 settings & delivery
 
 ## Design System Note (2026-11-19)
 
@@ -129,6 +129,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 4 suppliers & purchases implemented and verified                 |
 | 2026-11-19 | Phase 5 inventory (movements, adjust, low-stock) implemented           |
 | 2026-11-19 | `docs/page-composition.md` from flows A–H                              |
+| 2026-11-19 | Client request: plan gained phases 11–14 (payment methods + A4 invoice, treasuries, cheques, warehouses); settings & delivery → Phase 15 |
 | 2026-11-19 | Phase 10 customers (POS F4), dashboard, reports, shift history |
 | 2026-11-19 | Phase 9 cash-outs, returns, return slip, lists |
 | 2026-11-19 | Phase 8 receipts, shift report, printing workflow |
