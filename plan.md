@@ -36,6 +36,8 @@
 8. Markup % drives retail and wholesale sell prices (independent); new purchase cost recalculates both from saved markups.
 9. Historical invoices keep the prices they were sold at.
 10. Admin/Manager may use management screens without an open shift; shift is required for selling only.
+11. A shift is "old" when it was opened before today's local store date — this only triggers the warning in journey C; it never auto-closes.
+12. A cash refund is paid from the drawer of the **currently open** shift, not the shift of the original sale.
 
 ---
 
@@ -49,6 +51,7 @@
 | Users · settings · backup · license | ✓ | — | — |
 
 Admin can toggle any permission per role later from Users & Roles.
+Because of the "Optional" cells, authorization must be **permission-based** (policies per permission), not role-only `[Authorize(Roles=…)]`. The permission store + policies are built at the start of Phase 6; the Users & Roles screen comes later.
 
 ---
 
@@ -148,7 +151,11 @@ Each phase is built, tested, and demoed before the next starts.
 
 ### Phase 6 — Shifts ← next
 
+- [ ] Permission-based authorization: `RolePermissions` table + seed from the default matrix + one policy per permission (e.g. `Shifts.Close`, `Sales.PriceOverride`, `Sales.Discount`, `Returns.Create`).
+- [ ] Localization groundwork: `IStringLocalizer` + resx (ar/en) for the layout/sidebar and all new Phase 6+ screens.
 - [ ] Shift entity + ShiftParticipant entity.
+- [ ] Enforce one open shift in the database (unique filtered index on open status) + transaction.
+- [ ] After login: Cashier → shift gate; Admin/Manager → Dashboard (POS link goes through the gate).
 - [ ] Open shift with optional opening amount.
 - [ ] Detect existing open shift.
 - [ ] Resume without closing; register participants.
@@ -163,7 +170,7 @@ Each phase is built, tested, and demoed before the next starts.
 
 - [ ] Product search and barcode scanning.
 - [ ] Retail / wholesale mode toggle.
-- [ ] Invoice cart with quantity edit.
+- [ ] Invoice cart with quantity edit, persisted server-side as a `Draft` sales invoice per cashier (enables "wait for in-progress sale" on shift close and survives a browser close).
 - [ ] Invoice-only price overrides (permission-gated).
 - [ ] Discounts (permission-gated).
 - [ ] Hold / resume invoices.
@@ -220,6 +227,10 @@ Each phase is built, tested, and demoed before the next starts.
 | Backup | Daily auto + on every shift close; second disk/USB |
 | License | Offline device-bound license file we issue |
 | Numerals | Western digits on screen; receipt digits configurable |
+| Dark mode | Proposal promises it "for evening shifts"; tokens in `theme.css` make it cheap — confirm keep (Phase 11) or remove from proposal |
+| Held invoices at close | Close screen lists held invoices: cancel all, or carry over to the next shift |
+
+**Must be confirmed by the client before Phase 7** (they change POS directly): split tender · held invoices · sell at zero stock · tax.
 
 ---
 
