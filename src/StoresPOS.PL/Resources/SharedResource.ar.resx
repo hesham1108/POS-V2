@@ -219,4 +219,80 @@
   <data name="The shift report was sent to the printer." xml:space="preserve"><value>تم إرسال تقرير الوردية للطابعة.</value></data>
   <data name="Total before discount" xml:space="preserve"><value>الإجمالي قبل الخصم</value></data>
   <data name="Total sales" xml:space="preserve"><value>إجمالي المبيعات</value></data>
+  <!-- Phase 9: cash-outs and returns -->
+  <data name="A cash refund needs an open shift — the money comes out of the drawer." xml:space="preserve"><value>الاسترداد النقدي يحتاج وردية مفتوحة — الفلوس بتطلع من الدرج.</value></data>
+  <data name="Can return" xml:space="preserve"><value>المتاح للإرجاع</value></data>
+  <data name="Cash from drawer" xml:space="preserve"><value>نقدي من الدرج</value></data>
+  <data name="Cash taken from the drawer appears here and lowers expected cash." xml:space="preserve"><value>النقدية المسحوبة من الدرج تظهر هنا وتقلّل النقدية المتوقعة.</value></data>
+  <data name="Cash taken from the drawer · each one lowers the shift's expected cash" xml:space="preserve"><value>نقدية مسحوبة من الدرج · كل مصروف يقلّل النقدية المتوقعة للوردية</value></data>
+  <data name="Cash taken out of the drawer appears here." xml:space="preserve"><value>النقدية المسحوبة من الدرج تظهر هنا.</value></data>
+  <data name="Cash-out of {0} EGP saved. Expected in drawer: {1} EGP." xml:space="preserve"><value>تم حفظ مصروف بقيمة {0} ج.م. المتوقع في الدرج: {1} ج.م.</value></data>
+  <data name="Cash-outs of the shift you are working in" xml:space="preserve"><value>مصروفات الوردية الحالية</value></data>
+  <data name="Choose at least one item to return." xml:space="preserve"><value>اختر صنفًا واحدًا على الأقل للإرجاع.</value></data>
+  <data name="Confirm return" xml:space="preserve"><value>تأكيد المرتجع</value></data>
+  <data name="Customer returns · refunded at the prices on the original invoice" xml:space="preserve"><value>مرتجعات العملاء · تُسترد بأسعار الفاتورة الأصلية</value></data>
+  <data name="Earlier returns on this invoice" xml:space="preserve"><value>مرتجعات سابقة على هذه الفاتورة</value></data>
+  <data name="Enter a valid amount greater than zero." xml:space="preserve"><value>أدخل مبلغًا صحيحًا أكبر من صفر.</value></data>
+  <data name="Enter the reason for this cash-out." xml:space="preserve"><value>السبب مطلوب.</value></data>
+  <data name="Enter the reason for this return." xml:space="preserve"><value>سبب المرتجع مطلوب.</value></data>
+  <data name="Everything on this invoice has already been returned." xml:space="preserve"><value>كل أصناف هذه الفاتورة تم إرجاعها بالفعل.</value></data>
+  <data name="Find invoice" xml:space="preserve"><value>بحث عن الفاتورة</value></data>
+  <data name="Fully returned" xml:space="preserve"><value>مرتجع كلي</value></data>
+  <data name="Invoice not found." xml:space="preserve"><value>الفاتورة غير موجودة.</value></data>
+  <data name="Invoice total" xml:space="preserve"><value>إجمالي الفاتورة</value></data>
+  <data name="New cash-out" xml:space="preserve"><value>مصروف جديد</value></data>
+  <data name="New return" xml:space="preserve"><value>مرتجع جديد</value></data>
+  <data name="No cash-outs found" xml:space="preserve"><value>لا توجد مصروفات</value></data>
+  <data name="No completed invoice with number &quot;{0}&quot;." xml:space="preserve"><value>لا توجد فاتورة مكتملة بالرقم "{0}".</value></data>
+  <data name="No returns found" xml:space="preserve"><value>لا توجد مرتجعات</value></data>
+  <data name="No shift is open: a cash refund is not possible right now." xml:space="preserve"><value>لا توجد وردية مفتوحة: الاسترداد النقدي غير متاح الآن.</value></data>
+  <data name="Non-cash refunds" xml:space="preserve"><value>مرتجعات غير نقدية</value></data>
+  <data name="Only {0} of &quot;{1}&quot; can still be returned." xml:space="preserve"><value>المتاح للإرجاع من "{1}" هو {0} فقط.</value></data>
+  <data name="Open or join the shift before taking cash out." xml:space="preserve"><value>افتح الوردية أو انضم لها قبل صرف نقدية.</value></data>
+  <data name="Open or join the shift to see and record cash-outs." xml:space="preserve"><value>افتح الوردية أو انضم لها لعرض وتسجيل المصروفات.</value></data>
+  <data name="Original invoice" xml:space="preserve"><value>الفاتورة الأصلية</value></data>
+  <data name="Original payment method" xml:space="preserve"><value>نفس طريقة الدفع الأصلية</value></data>
+  <data name="Paid by" xml:space="preserve"><value>طريقة الدفع</value></data>
+  <data name="Partly returned" xml:space="preserve"><value>مرتجع جزئي</value></data>
+  <data name="Print again" xml:space="preserve"><value>طباعة مرة أخرى</value></data>
+  <data name="Reason" xml:space="preserve"><value>السبب</value></data>
+  <data name="Refund" xml:space="preserve"><value>المبلغ المسترد</value></data>
+  <data name="Refund in cash or by the invoice's original payment method." xml:space="preserve"><value>الاسترداد يكون نقدًا أو بنفس طريقة دفع الفاتورة الأصلية.</value></data>
+  <data name="Refund method" xml:space="preserve"><value>طريقة الاسترداد</value></data>
+  <data name="Refunded before" xml:space="preserve"><value>تم استرداده سابقًا</value></data>
+  <data name="Refunded by InstaPay" xml:space="preserve"><value>استرداد عبر إنستاباي</value></data>
+  <data name="Refunded by Vodafone Cash" xml:space="preserve"><value>استرداد عبر فودافون كاش</value></data>
+  <data name="Refunded in cash" xml:space="preserve"><value>استرداد نقدي</value></data>
+  <data name="Refunded to Visa / Card" xml:space="preserve"><value>استرداد على فيزا / كارت</value></data>
+  <data name="Return from invoice {0}" xml:space="preserve"><value>مرتجع من الفاتورة {0}</value></data>
+  <data name="Return or invoice number" xml:space="preserve"><value>رقم المرتجع أو الفاتورة</value></data>
+  <data name="Return qty" xml:space="preserve"><value>كمية الإرجاع</value></data>
+  <data name="Return quantity must be greater than zero." xml:space="preserve"><value>كمية الإرجاع لازم تكون أكبر من صفر.</value></data>
+  <data name="Return slip" xml:space="preserve"><value>إيصال مرتجع</value></data>
+  <data name="Return {0} saved. Give the customer {1} EGP from the drawer." xml:space="preserve"><value>تم حفظ المرتجع {0}. سلّم العميل {1} ج.م من الدرج.</value></data>
+  <data name="Return {0} saved. Refund {1} EGP by the original payment method." xml:space="preserve"><value>تم حفظ المرتجع {0}. استرد {1} ج.م بنفس طريقة الدفع الأصلية.</value></data>
+  <data name="Returned before" xml:space="preserve"><value>المُرتجع سابقًا</value></data>
+  <data name="Returns are made from the original invoice: scan its receipt barcode." xml:space="preserve"><value>المرتجع يتم من الفاتورة الأصلية: امسح باركود الإيصال.</value></data>
+  <data name="Returns made in the shift you are working in" xml:space="preserve"><value>مرتجعات الوردية الحالية</value></data>
+  <data name="Returns on this invoice · {0} EGP refunded" xml:space="preserve"><value>مرتجعات هذه الفاتورة · تم استرداد {0} ج.م</value></data>
+  <data name="Save cash-out" xml:space="preserve"><value>حفظ المصروف</value></data>
+  <data name="Scan the barcode on the customer's receipt, or type the invoice number." xml:space="preserve"><value>امسح باركود إيصال العميل أو اكتب رقم الفاتورة.</value></data>
+  <data name="Sold" xml:space="preserve"><value>المُباع</value></data>
+  <data name="Taken from the drawer of the open shift. Reduces expected cash." xml:space="preserve"><value>يُخصم من درج الوردية المفتوحة ويقلّل النقدية المتوقعة.</value></data>
+  <data name="That item is not on this invoice." xml:space="preserve"><value>هذا الصنف غير موجود في الفاتورة.</value></data>
+  <data name="The reason is too long (300 characters max)." xml:space="preserve"><value>السبب طويل جدًا (300 حرف كحد أقصى).</value></data>
+  <data name="The return could not be saved. Try again." xml:space="preserve"><value>تعذّر حفظ المرتجع. حاول مرة أخرى.</value></data>
+  <data name="The return slip was sent to the printer." xml:space="preserve"><value>تم إرسال إيصال المرتجع للطابعة.</value></data>
+  <data name="This invoice is older than {0} days and can no longer be returned." xml:space="preserve"><value>هذه الفاتورة أقدم من {0} يوم ولا يمكن إرجاعها.</value></data>
+  <data name="Time" xml:space="preserve"><value>الوقت</value></data>
+  <data name="Total refund" xml:space="preserve"><value>إجمالي المسترد</value></data>
+  <data name="User" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="Warning: this is more than the drawer was expected to hold." xml:space="preserve"><value>تنبيه: المبلغ أكبر من النقدية المتوقعة في الدرج.</value></data>
+  <data name="You are not in a shift" xml:space="preserve"><value>أنت لست في وردية</value></data>
+  <data name="You do not have permission to make returns." xml:space="preserve"><value>ليس لديك صلاحية عمل مرتجعات.</value></data>
+  <data name="e.g. cleaning supplies" xml:space="preserve"><value>مثال: أدوات نظافة</value></data>
+  <data name="e.g. damaged item" xml:space="preserve"><value>مثال: صنف تالف</value></data>
+  <data name="{0} after discount" xml:space="preserve"><value>{0} بعد الخصم</value></data>
+  <data name="{0} cash-outs" xml:space="preserve"><value>{0} مصروف</value></data>
+  <data name="{0} returns" xml:space="preserve"><value>{0} مرتجع</value></data>
 </root>

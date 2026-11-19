@@ -1,0 +1,11 @@
+@model PaymentMethod
+@{
+    var text = Model switch
+    {
+        PaymentMethod.Cash => L["Cash from drawer"].Value,
+        PaymentMethod.Card => L["Visa / Card"].Value,
+        PaymentMethod.InstaPay => L["InstaPay"].Value,
+        _ => L["Vodafone Cash"].Value
+    };
+}
+<span class="sp-status @(Model == PaymentMethod.Cash ? "sp-status-warn" : "sp-status-info")">@text</span>

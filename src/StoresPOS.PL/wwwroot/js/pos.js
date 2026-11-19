@@ -357,6 +357,13 @@
 
   document.querySelectorAll(".modal").forEach((m) => m.addEventListener("hidden.bs.modal", focusSearch));
 
+  // Cash-out saved from the header modal (cashout.js): show the toast instead of reloading the till.
+  document.addEventListener("storespos:cashout", (e) => {
+    e.preventDefault();
+    toast(e.detail.message, e.detail.warning ? "error" : "ok");
+    focusSearch();
+  });
+
   function anyModalOpen() { return document.querySelector(".modal.show") !== null; }
 
   document.addEventListener("keydown", (e) => {

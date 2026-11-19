@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 8 complete** — next is **Phase 9 (cash-outs & returns)**
-- Overall progress: Phases 1–8 verified (unit + HTTP tests; receipts checked visually; not yet on SQL Server)
+- Current phase: **Phase 9 complete** — next is **Phase 10 (customers, dashboard & reports)**
+- Overall progress: Phases 1–9 verified (unit + HTTP tests; receipts checked visually; not yet on SQL Server)
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -60,11 +60,25 @@
 - Store name from settings in sidebar and POS header
 - Tests: BLL 61/61, PL 9/9 (receipt + shift report content, Code 128 table/checksum); receipt/report rendered and checked in a browser at 80 mm (Arabic)
 
+### Phase 9 — Cash-outs & returns
+
+- `CashOut` (shift, user, amount, reason) — `ICashOutService`: amount > 0 + reason required, user must be in the open shift, more than the drawer = warning (not blocked)
+- `SalesReturn` / `SalesReturnItem` (`R-000001`, original invoice, shift, user, refund method, reason, line snapshots)
+- `IReturnService`: find invoice by number (scanned barcode or bare sequence), returnable quantities per line, refund at charged price × (Total/Subtotal) so the invoice discount is shared; the return that empties an invoice refunds exactly what is left; `Returns.Create` checked in DB; 14-day window (`Store:ReturnWindowDays`, 0 = off); cash refund needs an open shift, non-cash only by the original method (recorded, not in drawer)
+- Stock back via `SaleReturn` movements (`IInventoryService.ApplySaleReturnAsync`)
+- Shift totals: cash refunds + cash-outs lower expected cash; non-cash refunds shown separately; cash-outs per participant
+- PL: cash-out modal (`_CashOutModal` + `cashout.js`) on POS header and `Shifts/Current`; `CashOuts/Index`; `Returns/Create` (scan → lines → method → reason), `Returns/Index`; `Receipts/Return/{id}` 80 mm slip auto-prints after saving; Sales list "partly/fully returned" chips; Sales details lists returns + "Start return"; sidebar links; POS "Return" button (with permission)
+- List visibility: Reports.View sees all; otherwise the current shift only (policies `CashOuts.View`, `Returns.View`)
+- Arabic strings for all Phase 9 screens and messages
+- Migration `CashOutsAndReturns`
+- Tests: BLL 73/73, PL 10/10
+
 ## Pending Tasks
 
-- Phase 9: cash-outs, returns (scan the receipt barcode to find the invoice)
+- Phase 10: customers, dashboard, reports, shift history
+- Returns: no in-line manager approval for cashiers yet (manager makes the return) — confirm with client
 - Silent printing on the real thermal printer not tested (no printer here) — follow `docs/printing.md` on the store PC
-- Apply migrations `ShiftsAndPermissions` + `SalesInvoices` on SQL Server; click through POS in a browser (en + ar) — not possible on the dev Mac (no SQL Server)
+- Apply migrations `ShiftsAndPermissions` + `SalesInvoices` + `CashOutsAndReturns` on SQL Server; click through POS in a browser (en + ar) — not possible on the dev Mac (no SQL Server)
 - Client to confirm the POS open decisions applied as defaults (split tender, zero stock, held at close, tax)
 - Error messages that name a product use the English name even in Arabic UI
 
@@ -73,13 +87,13 @@
 | Command | Result |
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 61/61 |
-| `dotnet test tests/StoresPOS.PL.Tests` | Passed 9/9 |
-| `dotnet ef database update` | `ShiftsAndPermissions`, `SalesInvoices` not yet applied to SQL Server |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 73/73 |
+| `dotnet test tests/StoresPOS.PL.Tests` | Passed 10/10 |
+| `dotnet ef database update` | `ShiftsAndPermissions`, `SalesInvoices`, `CashOutsAndReturns` not yet applied to SQL Server |
 
 ## Next Recommended Task
 
-Phase 9 — cash-outs (modal on POS + Current shift) and returns from the original invoice
+Phase 10 — customers (+ walk-in), dashboard, reports, shift history
 
 ## Design System Note (2026-11-19)
 
@@ -100,6 +114,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 4 suppliers & purchases implemented and verified                 |
 | 2026-11-19 | Phase 5 inventory (movements, adjust, low-stock) implemented           |
 | 2026-11-19 | `docs/page-composition.md` from flows A–H                              |
+| 2026-11-19 | Phase 9 cash-outs, returns, return slip, lists |
 | 2026-11-19 | Phase 8 receipts, shift report, printing workflow |
 | 2026-11-19 | Phase 7 POS, sales invoices, shift totals + close guard |
 | 2026-11-19 | Phase 6 shifts + permissions + ar/en localization groundwork |

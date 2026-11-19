@@ -1,0 +1,76 @@
+@model ReturnReceiptViewModel
+@{
+    Layout = "_PrintLayout";
+    var f = Model.Format;
+    f.ApplyCulture();
+    var r = Model.Return;
+    var lang = f.Language;
+    var isAr = lang == "ar";
+    ViewData["ReceiptFormat"] = f;
+    ViewData["AutoPrint"] = Model.AutoPrint;
+    ViewData["Title"] = r.ReturnNumber;
+    var method = r.RefundMethod switch
+    {
+        PaymentMethod.Cash => L["Refunded in cash"].Value,
+        PaymentMethod.Card => L["Refunded to Visa / Card"].Value,
+        PaymentMethod.InstaPay => L["Refunded by InstaPay"].Value,
+        _ => L["Refunded by Vodafone Cash"].Value
+    };
+}
+<article class="receipt">
+    <header class="receipt__store">
+        <h1>@f.Settings.NameFor(lang)</h1>
+        @if (!string.IsNullOrWhiteSpace(f.Settings.AddressFor(lang)))
+        {
+            <p>@f.Settings.AddressFor(lang)</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(f.Settings.Phone))
+        {
+            <p>@L["Phone"] <bdi dir="ltr">@f.Digits(f.Settings.Phone)</bdi></p>
+        }
+    </header>
+
+    <section class="receipt__meta">
+        <div class="receipt__title">
+            <strong>@L["Return slip"]</strong>
+            <strong dir="ltr">@r.ReturnNumber</strong>
+        </div>
+        <div><span>@L["Original invoice"]</span><span dir="ltr">@r.OriginalInvoiceNumber</span></div>
+        <div><span>@L["Date"]</span><span dir="ltr">@f.DateTime(r.CreatedAtUtc)</span></div>
+        <div><span>@L["User"]</span><span>@r.UserDisplayName</span></div>
+        <div><span>@L["Reason"]</span><span>@r.Reason</span></div>
+    </section>
+
+    <table class="receipt__lines">
+        <thead>
+            <tr>
+                <th>@L["Item"]</th>
+                <th class="n">@L["Qty"]</th>
+                <th class="n">@L["Price"]</th>
+                <th class="n">@L["Refund"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in r.Lines)
+            {
+                <tr>
+                    <td>@(isAr ? line.NameAr : line.NameEn)</td>
+                    <td class="n">@f.Qty(line.Quantity)</td>
+                    <td class="n">@f.Money(line.UnitPrice)</td>
+                    <td class="n">@f.Money(line.RefundAmount)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <section class="receipt__totals">
+        <div><span>@L["Item count"]</span><span>@f.Qty(r.Lines.Sum(x => x.Quantity))</span></div>
+        <div class="receipt__grand"><span>@L["Total refund"]</span><span>@f.Money(r.TotalAmount) @L["EGP"]</span></div>
+        <div><span>@method</span><span>@f.Money(r.TotalAmount)</span></div>
+    </section>
+
+    <footer class="receipt__footer">
+        <div class="receipt__barcode">@Html.Raw(Model.BarcodeSvg)</div>
+        <p dir="ltr" class="receipt__number">@r.ReturnNumber</p>
+    </footer>
+</article>

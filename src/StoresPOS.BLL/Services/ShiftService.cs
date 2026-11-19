@@ -190,6 +190,8 @@ public class ShiftService : IShiftService
                 participant.CashSales = mine.CashSales;
                 participant.NonCashSales = mine.NonCashSales;
             }
+
+            participant.CashOuts = totals.CashOutsByUser.GetValueOrDefault(participant.UserId);
         }
 
         var heldCount = await _db.SalesInvoices
@@ -208,6 +210,8 @@ public class ShiftService : IShiftService
             CashRefunds = totals.CashRefunds,
             CashOutsTotal = totals.CashOuts,
             CashOutsCount = totals.CashOutsCount,
+            NonCashRefunds = totals.NonCashRefunds,
+            ReturnsCount = totals.ReturnsCount,
             // Closed shifts show the snapshot taken at close; open shifts are live.
             ExpectedCash = shift.ExpectedCash
                 ?? ShiftCalculator.ExpectedCash(shift.OpeningAmount, totals.CashSales, totals.CashRefunds, totals.CashOuts),
@@ -306,8 +310,11 @@ public class ShiftService : IShiftService
     private sealed record ShiftTotals(
         decimal CashSales,
         decimal CashRefunds,
+        decimal NonCashRefunds,
+        int ReturnsCount,
         decimal CashOuts,
         int CashOutsCount,
+        IReadOnlyDictionary<int, decimal> CashOutsByUser,
         decimal CardSales,
         decimal InstaPaySales,
         decimal VodafoneCashSales,
@@ -315,8 +322,8 @@ public class ShiftService : IShiftService
         IReadOnlyDictionary<int, CashierTotals> ByCashier);
 
     /// <summary>
-    /// Single place where shift money is aggregated. Completed sales feed it now;
-    /// returns and cash-outs (Phase 9) plug in here and stay zero until then.
+    /// Single place where shift money is aggregated: completed sales, returns refunded in this shift
+    /// (cash leaves the drawer; non-cash is recorded only) and cash-outs.
     /// </summary>
     private async Task<ShiftTotals> ComputeTotalsAsync(int shiftId, CancellationToken cancellationToken)
     {
@@ -324,6 +331,18 @@ public class ShiftService : IShiftService
             .AsNoTracking()
             .Where(x => x.ShiftId == shiftId && x.Status == SalesInvoiceStatus.Completed)
             .Select(x => new { x.CashierUserId, x.PaymentMethod, x.Total })
+            .ToListAsync(cancellationToken);
+
+        var refunds = await _db.SalesReturns
+            .AsNoTracking()
+            .Where(x => x.ShiftId == shiftId)
+            .Select(x => new { x.RefundMethod, x.TotalAmount })
+            .ToListAsync(cancellationToken);
+
+        var cashOuts = await _db.CashOuts
+            .AsNoTracking()
+            .Where(x => x.ShiftId == shiftId)
+            .Select(x => new { x.UserId, x.Amount })
             .ToListAsync(cancellationToken);
 
         decimal Sum(PaymentMethod method) => sales.Where(x => x.PaymentMethod == method).Sum(x => x.Total);
@@ -339,9 +358,12 @@ public class ShiftService : IShiftService
 
         return new ShiftTotals(
             CashSales: Sum(PaymentMethod.Cash),
-            CashRefunds: 0m,
-            CashOuts: 0m,
-            CashOutsCount: 0,
+            CashRefunds: refunds.Where(x => x.RefundMethod == PaymentMethod.Cash).Sum(x => x.TotalAmount),
+            NonCashRefunds: refunds.Where(x => x.RefundMethod != PaymentMethod.Cash).Sum(x => x.TotalAmount),
+            ReturnsCount: refunds.Count,
+            CashOuts: cashOuts.Sum(x => x.Amount),
+            CashOutsCount: cashOuts.Count,
+            CashOutsByUser: cashOuts.GroupBy(x => x.UserId).ToDictionary(g => g.Key, g => g.Sum(x => x.Amount)),
             CardSales: Sum(PaymentMethod.Card),
             InstaPaySales: Sum(PaymentMethod.InstaPay),
             VodafoneCashSales: Sum(PaymentMethod.VodafoneCash),

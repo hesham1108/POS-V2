@@ -23,7 +23,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<ShiftParticipant> ShiftParticipants => Set<ShiftParticipant>();
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
     public DbSet<SalesInvoiceItem> SalesInvoiceItems => Set<SalesInvoiceItem>();
-
+    public DbSet<CashOut> CashOuts => Set<CashOut>();
+    public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
+    public DbSet<SalesReturnItem> SalesReturnItems => Set<SalesReturnItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

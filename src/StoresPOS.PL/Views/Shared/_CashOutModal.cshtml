@@ -1,0 +1,31 @@
+@*
+    Journey E quick cash-out (docs/page-composition.md §10.1). Used on the POS header and Shifts/Current.
+    The shift and user are attached server-side. Wired by wwwroot/js/cashout.js.
+*@
+<div class="modal fade" id="cashout-modal" tabindex="-1" aria-labelledby="cashout-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content" id="cashout-form" novalidate
+              data-url="@Url.Action("Create", "CashOuts")"
+              data-msg-amount="@L["Enter a valid amount greater than zero."]"
+              data-msg-reason="@L["Enter the reason for this cash-out."]"
+              data-msg-error="@L["Something went wrong. Try again."]">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <h2 class="modal-title h6" id="cashout-title">@L["Cash-out"]</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label" for="cashout-amount">@L["Amount"]</label>
+                <input id="cashout-amount" name="amount" class="form-control form-control-lg num" inputmode="decimal" autocomplete="off" required />
+                <label class="form-label mt-3" for="cashout-reason">@L["Reason"]</label>
+                <input id="cashout-reason" name="reason" class="form-control" maxlength="300" autocomplete="off" required
+                       placeholder="@L["e.g. cleaning supplies"]" />
+                <p class="form-text mb-0">@L["Taken from the drawer of the open shift. Reduces expected cash."]</p>
+                <div class="text-danger mt-2" id="cashout-error" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn sp-btn-primary">@L["Save cash-out"]</button>
+            </div>
+        </form>
+    </div>
+</div>

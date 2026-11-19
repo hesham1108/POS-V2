@@ -38,4 +38,14 @@ public interface IInventoryService
         IReadOnlyList<SaleStockLineDto> lines,
         int userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Puts returned goods back on the shelf and writes SaleReturn movements (reference: SalesReturn).
+    /// Must be called inside the caller's DB transaction when using SQL Server.
+    /// </summary>
+    Task ApplySaleReturnAsync(
+        int salesReturnId,
+        IReadOnlyList<SaleStockLineDto> lines,
+        int userId,
+        CancellationToken cancellationToken = default);
 }

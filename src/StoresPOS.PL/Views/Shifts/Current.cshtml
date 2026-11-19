@@ -17,6 +17,10 @@
     {
         <button type="button" class="btn sp-btn-secondary" data-print-url="@Url.Action("Shift", "Receipts", new { id = Model.Summary.Id })">@L["Print X report"]</button>
     }
+    @if (Model.CanCashOut)
+    {
+        <button type="button" class="btn sp-btn-secondary" data-cashout>@L["New cash-out"]</button>
+    }
     @if (Model.CanClose)
     {
         <a class="btn sp-btn-primary" asp-action="Close">@L["Close shift"]</a>
@@ -40,6 +44,7 @@
                         <th class="text-end">@L["Invoices"]</th>
                         <th class="text-end">@L["Cash"]</th>
                         <th class="text-end">@L["Non-cash"]</th>
+                        <th class="text-end">@L["Cash-outs"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,6 +55,7 @@
                             <td class="text-end num">@p.InvoiceCount</td>
                             <td class="text-end num">@p.CashSales.ToString("N2")</td>
                             <td class="text-end num">@p.NonCashSales.ToString("N2")</td>
+                            <td class="text-end num">@p.CashOuts.ToString("N2")</td>
                         </tr>
                     }
                 </tbody>
@@ -63,11 +69,49 @@
 
     <section class="sp-card p-4">
         <h2 class="shift-section-title">@L["Cash-outs"]</h2>
-        @* Phase 9: list + "New cash-out" modal (journey E) *@
-        @{
-            var empty = (L["No cash-outs yet"].Value, L["Cash-outs arrive in Phase 9. They will appear here and reduce expected cash."].Value);
+        @if (Model.CashOuts.Count == 0)
+        {
+            var empty = (L["No cash-outs yet"].Value, L["Cash taken from the drawer appears here and lowers expected cash."].Value);
+            <partial name="_EmptyState" model="empty" />
         }
-        <partial name="_EmptyState" model="empty" />
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>@L["Time"]</th>
+                            <th>@L["User"]</th>
+                            <th>@L["Reason"]</th>
+                            <th class="text-end">@L["Amount"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.CashOuts)
+                        {
+                            <tr>
+                                <td class="num">@c.CreatedAtUtc.ToLocalTime().ToString("HH:mm")</td>
+                                <td>@c.UserDisplayName</td>
+                                <td>@c.Reason</td>
+                                <td class="text-end num">@c.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </section>
 </div>
 </div>
+
+@if (Model.CanCashOut)
+{
+    <partial name="_CashOutModal" />
+}
+
+@section Scripts {
+    @if (Model.CanCashOut)
+    {
+        <script src="~/js/cashout.js" asp-append-version="true"></script>
+    }
+}

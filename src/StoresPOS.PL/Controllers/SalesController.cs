@@ -8,15 +8,17 @@ using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
 
-/// <summary>Completed sales invoices (docs/page-composition.md §11). Reprint arrives in Phase 8, returns in Phase 9.</summary>
+/// <summary>Completed sales invoices (docs/page-composition.md §11): list, details, reprint, linked returns.</summary>
 [Authorize(Policy = AppPermissions.ReportsView)]
 public class SalesController : Controller
 {
     private readonly ISalesService _sales;
+    private readonly IReturnService _returns;
 
-    public SalesController(ISalesService sales)
+    public SalesController(ISalesService sales, IReturnService returns)
     {
         _sales = sales;
+        _returns = returns;
     }
 
     [HttpGet]
@@ -53,6 +55,12 @@ public class SalesController : Controller
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
     {
         var invoice = await _sales.GetInvoiceAsync(id, cancellationToken);
-        return invoice is null ? NotFound() : View(invoice);
+        if (invoice is null)
+        {
+            return NotFound();
+        }
+
+        ViewData["Returns"] = await _returns.GetListAsync(new SalesReturnFilterDto { InvoiceId = id }, cancellationToken);
+        return View(invoice);
     }
 }

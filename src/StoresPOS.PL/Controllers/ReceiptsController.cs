@@ -19,17 +19,20 @@ public class ReceiptsController : Controller
 {
     private readonly ISalesService _sales;
     private readonly IShiftService _shifts;
+    private readonly IReturnService _returns;
     private readonly StoreSettings _store;
     private readonly TimeProvider _time;
 
     public ReceiptsController(
         ISalesService sales,
         IShiftService shifts,
+        IReturnService returns,
         IOptions<StoreSettings> store,
         TimeProvider time)
     {
         _sales = sales;
         _shifts = shifts;
+        _returns = returns;
         _store = store.Value;
         _time = time;
     }
@@ -60,6 +63,35 @@ public class ReceiptsController : Controller
             Invoice = invoice,
             Format = new ReceiptFormat(_store),
             BarcodeSvg = Code128.ToSvg(invoice.InvoiceNumber),
+            AutoPrint = autoprint
+        });
+    }
+
+    /// <summary>Return slip (80 mm) handed to the customer with the refund.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Return(int id, bool autoprint, CancellationToken cancellationToken)
+    {
+        var ret = await _returns.GetAsync(id, cancellationToken);
+        if (ret is null)
+        {
+            return NotFound();
+        }
+
+        // Same rule as sale receipts: back office any, otherwise only returns of the user's current shift.
+        if (!User.HasPermission(AppPermissions.ReportsView))
+        {
+            var activeShift = await _shifts.GetActiveShiftIdForUserAsync(this.GetRequiredUserId(), cancellationToken);
+            if (!User.HasPermission(AppPermissions.ReturnsCreate) || activeShift is null || activeShift != ret.ShiftId)
+            {
+                return Forbid();
+            }
+        }
+
+        return View(new ReturnReceiptViewModel
+        {
+            Return = ret,
+            Format = new ReceiptFormat(_store),
+            BarcodeSvg = Code128.ToSvg(ret.ReturnNumber),
             AutoPrint = autoprint
         });
     }

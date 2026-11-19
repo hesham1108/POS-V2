@@ -621,7 +621,10 @@ public class SalesService : ISalesService
                 SaleType = x.SaleType,
                 PaymentMethod = x.PaymentMethod!.Value,
                 LineCount = x.Items.Count,
-                Total = x.Total
+                Total = x.Total,
+                ReturnedAmount = _db.SalesReturns
+                    .Where(r => r.OriginalSalesInvoiceId == x.Id)
+                    .Sum(r => (decimal?)r.TotalAmount) ?? 0m
             })
             .ToListAsync(cancellationToken);
     }
