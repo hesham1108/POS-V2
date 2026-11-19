@@ -284,7 +284,7 @@ Already in place:
 
 Next major phase:
 
-- **Phase 2 — Products & Categories**
+- **Phase 5 — Inventory**
 
 Track details in:
 

@@ -1,0 +1,16 @@
+@model ProductFormViewModel
+@{
+    ViewData["Title"] = "Edit product";
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-1">Edit product</h1>
+    <p class="text-muted mb-0">Catalog price changes do not rewrite historical invoices</p>
+</div>
+
+<partial name="_ProductForm" model="Model" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/product-pricing.js" asp-append-version="true"></script>
+}

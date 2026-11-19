@@ -1,0 +1,15 @@
+@model SupplierFormViewModel
+@{
+    ViewData["Title"] = "Add supplier";
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-1">Add supplier</h1>
+    <p class="text-muted mb-0">Contact details for purchase invoices</p>
+</div>
+
+<partial name="_SupplierForm" model="Model" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

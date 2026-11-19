@@ -3,14 +3,15 @@
 ## Project Status
 
 - Project name: StoresPOS
-- Current phase: Phase 1 complete — next is Phase 2 (Products & Categories)
-- Overall progress: Phase 0 and Phase 1 verified
+- Master plan: `plan.md` (source of truth)
+- Current phase: **Phase 4 complete** — next is **Phase 5 (Inventory)**
+- Overall progress: Phases 1–4 verified
 - Latest verified build result: Succeeded
-- Last update date: 2026-11-18
+- Last update date: 2026-11-19
 
 ## Completed Tasks
 
-### Phase 0 — Foundation
+### Phase 1 — Foundation
 
 - Solution + PL/BLL/DAL + references
 - EF Core SQL Server connection
@@ -18,19 +19,26 @@
 - Offline Bootstrap assets
 - Build verified
 
-### Phase 1 — Custom JWT Authentication
+### Phase 2 — Login & Roles
 
-- Custom `Users` and `Roles` tables (no ASP.NET Identity)
-- `User` / `Role` entities + EF configurations + migration `InitialAuth`
-- PBKDF2 password hashing (`Pbkdf2PasswordHasher`)
-- Login page + Login/Logout (`AccountController`)
-- JWT create/validate (`JwtTokenService`)
-- JWT Bearer auth reading HttpOnly cookie `StoresPOS.AccessToken`
-- Role-based authorization (`Admin`, `Manager`, `Cashier`)
-- Initial Admin seed from `AdminSeed` config (Development)
-- Unauthorized redirect to Login; forbidden to AccessDenied
-- Controllers protected with `[Authorize]`
-- Unit tests for hashing, login success/failure, expired token
+- Custom JWT auth, roles, login UI, seed admin, tests
+
+### Phase 3 — Products & Categories
+
+- Hierarchical categories, product CRUD, markup pricing, low-stock threshold
+
+### Phase 4 — Suppliers & Purchases
+
+- `Supplier` CRUD with confirmed purchase count/total
+- `PurchaseInvoice` + `PurchaseInvoiceItem` (Draft / Confirmed)
+- Auto invoice number `P-yyyyMMdd-####` (or manual unique)
+- Line validation: qty > 0, cost ≥ 0, no duplicate products
+- Confirm (or create+confirm): increase `StockQuantity`, set `PurchasePrice`, recalc retail/wholesale from saved markups
+- Line snapshots (name AR/EN, unit, unit cost) preserve history
+- Confirmed invoices locked from edit
+- PL: Suppliers + Purchases screens, dynamic line form JS
+- Migration `SuppliersAndPurchases`
+- Unit tests for suppliers & purchases
 
 ## In Progress
 
@@ -38,45 +46,34 @@
 
 ## Pending Tasks
 
-- Phase 2 onward in `plan.md`
+- Phase 5 onward in `plan.md`
 
 ## Blockers
 
 - None
 
-## Files Created or Modified
-
-- `plan.md`, `STATUS.md`
-- DAL: `Entities/User.cs`, `Entities/Role.cs`, `Configurations/*`, `Context/ApplicationDbContext.cs`, `Migrations/*`
-- BLL: auth interfaces/services/DTOs/constants/extensions
-- PL: `AccountController`, Login/AccessDenied views, JWT auth extensions, `Program.cs`, appsettings
-- Tests: `PasswordHasherTests`, `AuthServiceTests`
-
 ## Tests & Build Results
 
-| Command                                 | Result                                                 |
-| --------------------------------------- | ------------------------------------------------------ |
-| `dotnet build StoresPOS.sln`            | Succeeded                                              |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 5/5                                             |
-| `dotnet ef database update`             | Applied `InitialAuth`; tables `Users`, `Roles` created |
-| App startup seed                        | Roles Admin/Manager/Cashier + user `admin` created     |
+| Command                                 | Result                                                               |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| `dotnet build StoresPOS.sln`            | Succeeded (0 warnings)                                               |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 24/24                                                         |
+| `dotnet ef database update`             | Applied `SuppliersAndPurchases`                                      |
 
 ## Next Recommended Task
 
-Phase 2 — Products & Categories (hierarchical categories + product CRUD/pricing).
+Phase 5 — Inventory (stock movements, balances, low-stock list, authorized adjustments).
 
 ## Change Log
 
-| Date       | Change                                                                |
-| ---------- | --------------------------------------------------------------------- |
-| 2026-11-17 | Phase 0 foundation verified                                           |
-| 2026-11-17 | Created `plan.md` and `STATUS.md`                                     |
-| 2026-11-17 | Phase 1 custom JWT auth implemented and verified                      |
-| 2026-11-17 | Login UI restyled from mockups; added `theme.css` design tokens       |
-| 2026-11-18 | Expanded `docs/projectOverview.md` with project purpose and structure |
+| Date       | Change                                                     |
+| ---------- | ---------------------------------------------------------- |
+| 2026-11-17 | Phase 1 foundation + Phase 2 auth                          |
+| 2026-11-19 | `plan.md` master plan (P1–P11); Phase 3 products/categories |
+| 2026-11-19 | Phase 4 suppliers & purchases implemented and verified     |
 
 ## Local Dev Login (Development only)
 
 - Username: `admin`
-- Password: `Admin@12345` (from `appsettings.Development.json` — change before any real deployment)
+- Password: `Admin@12345`
 - Run: `dotnet run --project src/StoresPOS.PL` (http://127.0.0.1:5188)

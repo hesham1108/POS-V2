@@ -1,19 +1,91 @@
-# PLANB.md — StoresPOS Master Development Plan
+# StoresPOS — Master Development Plan
+
+> **هذا الملف هو المصدر الأساسي للخطة.** أي تعديل على النطاق أو المراحل أو القرارات يتم هنا.  
+> المرجع البصري/الوظيفي: [Claude Artifact](https://claude.ai/artifact/Gw9yNGvgsoa9WEGjYxZ8Eo) · الإصدار 1.0 · 18 نوفمبر 2026  
+> التقدم الفعلي المُتحقَّق يُسجَّل في `STATUS.md` فقط.
+
+---
 
 ## Project Decisions
 
-- Framework: ASP.NET Core MVC
-- Architecture: 3-Tier (PL, BLL, DAL)
-- Database: SQL Server / SQL Server Express
-- Runtime: Local and Offline
-- Authentication: Custom JWT Authentication (JWT stored in HttpOnly cookie for MVC)
-- ASP.NET Core Identity: Not Used
-- Initial Roles: Admin, Manager, Cashier
-- Shift Model: One Open Shift, Multiple Cashiers
-- UI Design: Design-agnostic functional requirements
-- Languages: Arabic and English
+- Framework: ASP.NET Core MVC + Razor
+- Architecture: 3-Tier (PL → BLL → DAL)
+- Database: SQL Server / SQL Server Express (local)
+- Runtime: Local store device, offline (no internet-dependent assets)
+- Currency: EGP, 2 decimal places
+- Authentication: Custom JWT in HttpOnly cookie (`StoresPOS.AccessToken`)
+- ASP.NET Core Identity: Not used
+- Initial roles: Admin (مدير النظام) · Manager (مدير) · Cashier (كاشير)
+- Shift model: One open shift, multiple participating cashiers
+- Languages: Arabic (RTL) + English (LTR)
+- Payments: Cash · Visa/Card · InstaPay · Vodafone Cash
+- UI direction: Elegant / premium / modern / practical — green accent `#0F6751`, numbers first, keyboard-first POS
 
-## Phase 0 — Foundation
+---
+
+## Business Rules (locked)
+
+1. One open shift for the whole store; second cashier joins as participant with per-cashier tracking.
+2. Logout does **not** close the shift; close is an explicit authorized action.
+3. Opening amount is optional (empty = 0).
+4. Cash count on close is optional (empty = Not Reconciled — not treated as counted zero).
+5. Only cash enters expected drawer totals; Visa / InstaPay / wallet stay in sales/reports only.
+6. Price override applies to the invoice line only; catalog price unchanged; both prices + user are stored.
+7. Cash-out = amount + reason; tied to open shift and user; reduces expected cash.
+8. Markup % drives retail and wholesale sell prices (independent); new purchase cost recalculates both from saved markups.
+9. Historical invoices keep the prices they were sold at.
+10. Admin/Manager may use management screens without an open shift; shift is required for selling only.
+
+---
+
+## Roles (default matrix)
+
+| Permission | Admin | Manager | Cashier |
+| --- | --- | --- | --- |
+| POS · open/resume shift · cash-outs | ✓ | ✓ | ✓ |
+| Close shift · price override · discounts · returns | ✓ | ✓ | Optional |
+| Products · categories · purchases · inventory · reports | ✓ | ✓ | — |
+| Users · settings · backup · license | ✓ | — | — |
+
+Admin can toggle any permission per role later from Users & Roles.
+
+---
+
+## System Modules (17)
+
+Login · POS · Shifts · Cash-outs · Products · Categories · Inventory · Purchases · Sales invoices · Returns · Customers · Suppliers · Dashboard · Reports · Users & roles · Settings · Receipts
+
+---
+
+## User Journeys (test against these)
+
+| ID | Journey |
+| --- | --- |
+| A | First cashier of the day → open shift → sell → close |
+| B | Second cashier → join open shift as participant → POS |
+| C | Left-open shift → resume or close → open new → POS |
+| D | Retail sale |
+| E | Cash-out (amount + reason) |
+| F | Supplier purchase → stock up → price recalc |
+| G | Customer return from original invoice |
+| H | Close shift (optional cash count) → print report → login |
+
+---
+
+## Design System (must follow)
+
+- Tokens: primary `#0F6751`, primary-soft `#E7F4EF`, dark `#1A1D26`, bg `#F5F7FA`, surface `#FFFFFF`, text `#1F2937`, muted `#6B7280`, border `#E5E7EB`, warn `#D97706`, danger `#DC2626`, info `#2563EB`, neutral `#EEF0F3`
+- Fonts (bundled offline): IBM Plex Sans Arabic · Manrope (EN headings) · Inter (EN body); tabular numerals
+- Touch targets ≥ 44px; primary pay button 56px; target screens 1366×768+
+- POS shortcuts: F2 search/scan · F4 customer · F6 discount · F7 resume held · F8 hold · F9 pay & print · +/−/Del qty
+
+---
+
+## Delivery Phases
+
+Each phase is built, tested, and demoed before the next starts.
+
+### Phase 1 — Foundation
 
 - [x] Create StoresPOS solution.
 - [x] Create StoresPOS.PL MVC project.
@@ -26,150 +98,142 @@
 - [x] Configure offline static assets.
 - [x] Verify successful build.
 
-## Phase 1 — Custom JWT Authentication
+### Phase 2 — Login & Roles
 
 - [x] Create custom Users and Roles tables.
 - [x] Create User and Role entities.
 - [x] Implement secure password hashing using PBKDF2.
-- [x] Create a simple Login page (Username + Password).
+- [x] Create Login page (Username + Password + language hook).
 - [x] Implement Login and Logout.
 - [x] Implement JWT generation and validation.
-- [x] Configure JWT Bearer Authentication.
+- [x] Configure JWT Bearer Authentication (HttpOnly cookie).
 - [x] Implement role-based authorization.
 - [x] Create three initial roles: Admin, Manager, Cashier.
-- [x] Create secure initial Admin setup.
+- [x] Create secure initial Admin seed.
 - [x] Handle token expiration and unauthorized access.
-- [x] Implement secure token storage and handling for MVC.
 - [x] Protect Controllers and sensitive endpoints.
 - [x] Test authentication, authorization, expired tokens, and logout.
 
-## Phase 2 — Products & Categories
+### Phase 3 — Products & Categories
 
-- [ ] Implement hierarchical categories.
-- [ ] Implement Product entity and CRUD.
-- [ ] Add Arabic and English names.
-- [ ] Support barcode and unit.
-- [ ] Add purchase price.
-- [ ] Add retail and wholesale selling prices.
-- [ ] Implement markup calculations.
-- [ ] Implement low-stock thresholds.
+- [x] Implement hierarchical categories (unlimited depth, reorder/move).
+- [x] Implement Product entity and CRUD.
+- [x] Arabic and English names.
+- [x] Barcode and unit.
+- [x] Purchase (cost) price.
+- [x] Retail and wholesale selling prices.
+- [x] Markup % calculations (edit price ↔ edit %; retail independent of wholesale).
+- [x] Low-stock threshold per product.
 
-## Phase 3 — Suppliers & Purchases
+### Phase 4 — Suppliers & Purchases
 
-- [ ] Create Supplier management.
-- [ ] Create Purchase Invoice and items.
-- [ ] Validate quantities and costs.
-- [ ] Increase inventory on confirmed purchase.
-- [ ] Recalculate product selling prices using markup.
-- [ ] Preserve purchase history.
+- [x] Supplier management (contact + purchase history totals).
+- [x] Purchase invoice and line items.
+- [x] Validate quantities and costs.
+- [x] Increase inventory on confirmed purchase.
+- [x] Recalculate product selling prices from saved markups.
+- [x] Preserve purchase history (prices at time of purchase).
 
-## Phase 4 — Inventory
+### Phase 5 — Inventory ← next
 
-- [ ] Create stock movement records.
-- [ ] Implement stock balance calculations.
-- [ ] Implement low-stock notifications.
-- [ ] Implement stock adjustments.
-- [ ] Track the user performing adjustments.
+- [ ] Stock movement records.
+- [ ] Stock balance calculations.
+- [ ] Low-stock list / notifications.
+- [ ] Authorized stock adjustments.
+- [ ] Track user performing adjustments.
 
-## Phase 5 — Simple Shift Management
+### Phase 6 — Shifts
 
-- [ ] Create Shift entity.
-- [ ] Create ShiftParticipant entity.
+- [ ] Shift entity + ShiftParticipant entity.
 - [ ] Open shift with optional opening amount.
 - [ ] Detect existing open shift.
-- [ ] Resume shift without closing it.
-- [ ] Record multiple participating cashiers.
-- [ ] Register cashier activities against the shift.
-- [ ] Close shift with optional actual cash.
-- [ ] Calculate cash difference when actual amount is supplied.
-- [ ] Support Not Reconciled status.
-- [ ] Allow closing an old shift and opening a new one.
-- [ ] Prevent simultaneous conflicting shift opening/closing operations.
+- [ ] Resume without closing; register participants.
+- [ ] Attribute cashier activities to the shift.
+- [ ] Close with optional actual cash; compute surplus/shortage when provided.
+- [ ] Support Not Reconciled status when count skipped.
+- [ ] Close old open shift then open a new one.
+- [ ] Prevent conflicting concurrent open/close operations.
+- [ ] If another cashier is mid-sale, wait until complete or held before close.
 
-## Phase 6 — POS & Sales
+### Phase 7 — POS & Sales
 
-- [ ] Implement product search and barcode scanning.
-- [ ] Implement retail/wholesale mode.
-- [ ] Implement invoice cart.
-- [ ] Implement quantity editing.
-- [ ] Implement invoice-only price overrides.
-- [ ] Implement discounts.
-- [ ] Implement held invoices.
-- [ ] Create sales invoices and invoice items.
-- [ ] Associate sales with shift and performing cashier.
+- [ ] Product search and barcode scanning.
+- [ ] Retail / wholesale mode toggle.
+- [ ] Invoice cart with quantity edit.
+- [ ] Invoice-only price overrides (permission-gated).
+- [ ] Discounts (permission-gated).
+- [ ] Hold / resume invoices.
+- [ ] Sales invoices + items; associate shift + cashier.
 - [ ] Deduct stock on completed sales.
+- [ ] Keyboard shortcuts (F2/F4/F6/F7/F8/F9).
 
-## Phase 7 — Payments & Printing
+### Phase 8 — Payments & Printing
 
-- [ ] Implement cash payments.
-- [ ] Implement Visa/Card payment records.
-- [ ] Implement InstaPay payment records.
-- [ ] Implement wallet payment records.
-- [ ] Calculate cash change.
-- [ ] Separate cash and non-cash shift totals.
-- [ ] Create printable sales receipts.
-- [ ] Support Arabic receipt formatting.
-- [ ] Support local thermal printer workflows.
+- [ ] Cash payment + change calculation.
+- [ ] Visa/Card, InstaPay, Vodafone Cash payment records.
+- [ ] Separate cash vs non-cash shift totals.
+- [ ] Thermal 80mm sales receipt (Arabic-capable; store language default).
+- [ ] Receipt fields: store header, invoice meta, lines at charged prices, discount, tender, change, barcode.
+- [ ] Local thermal printer workflow; reprint from sales list.
+- [ ] Shift close report printout.
 
-## Phase 8 — Cash Outs & Returns
+### Phase 9 — Cash-outs & Returns
 
-- [ ] Implement Cash Out with Amount and Reason.
-- [ ] Associate cash-outs with shift and user.
-- [ ] Deduct cash-outs from expected cash.
-- [ ] Implement sales returns.
-- [ ] Link returns to original invoices.
-- [ ] Update stock and financial records.
-- [ ] Record cash refunds against shifts.
+- [ ] Cash-out: amount + reason; tie to shift + user; reduce expected cash.
+- [ ] Returns linked to original invoice (original prices).
+- [ ] Select lines/qty; refund method; restock + update shift cash when cash refund.
+- [ ] Cash-out and return lists with filters.
 
-## Phase 9 — Customers, Dashboard & Reports
+### Phase 10 — Customers, Dashboard & Reports
 
-- [ ] Implement Customer management.
-- [ ] Implement Walk-in Customer.
-- [ ] Implement dashboard summaries.
-- [ ] Create sales reports.
-- [ ] Create purchase reports.
-- [ ] Create inventory reports.
-- [ ] Create shift history and details.
-- [ ] Show cashiers participating in each shift.
-- [ ] Show sales by cashier.
-- [ ] Show cash differences and unreconciled shifts.
+- [ ] Customer management + default Walk-in ("عميل نقدي").
+- [ ] Dashboard: today sales, cash vs non-cash, low stock, shift status, recent activity.
+- [ ] Reports: sales, purchases, inventory, shifts (filters + print).
+- [ ] Shift history: participants, sales by cashier, differences, unreconciled.
 
-## Phase 10 — Settings & Delivery
+### Phase 11 — Settings & Delivery
 
-- [ ] Store profile.
-- [ ] Arabic/English language settings.
-- [ ] Tax and invoice settings.
-- [ ] Printing settings.
-- [ ] Local database backups.
-- [ ] Database restore.
-- [ ] Offline deployment.
-- [ ] Functional and integration testing.
-- [ ] Prepare installation instructions.
+- [ ] Store profile, language, tax, numbering, printing.
+- [ ] Database backup / restore.
+- [ ] Offline license activation.
+- [ ] Offline installer / deployment.
+- [ ] End-to-end functional testing.
+- [ ] Installation instructions.
+
+---
+
+## Open Decisions (proposals — confirm or replace)
+
+| Topic | Proposal |
+| --- | --- |
+| Cash drawers | One shared drawer (matches one-shift model) |
+| Split tender | Not in v1; add later if needed |
+| Held invoices | Survive until shift close; then cancel/resume list |
+| Returns policy | Manager approval; within 14 days |
+| Sell at zero stock | Block by default; Manager override |
+| Tax | Prices inclusive of 14% VAT; show on receipt |
+| Profit costing | Weighted average cost |
+| Backup | Daily auto + on every shift close; second disk/USB |
+| License | Offline device-bound license file we issue |
+| Numerals | Western digits on screen; receipt digits configurable |
+
+---
 
 ## Development Rules
 
-1. Implement one phase at a time.
-2. Use the existing three-tier structure.
-3. Controllers never access DbContext directly.
-4. All sensitive business rules are validated server-side.
-5. Use database transactions for financial operations.
-6. Use decimal for monetary values.
-7. No internet-dependent runtime assets.
-8. Do not add ASP.NET Core Identity.
-9. Keep UI decisions separate from business requirements.
-10. Update STATUS.md after verified progress.
+1. Implement **one phase at a time**.
+2. Keep the three-tier structure; Controllers never access `DbContext` directly.
+3. Validate all sensitive business rules server-side.
+4. Use database transactions for financial operations.
+5. Use `decimal` for money; EGP with 2 decimals.
+6. No internet-dependent runtime assets (fonts, CSS, JS bundled).
+7. Do **not** add ASP.NET Core Identity.
+8. Follow the design system tokens above for PL UI work.
+9. Screen states for every screen: normal · empty · loading · error · confirm.
+10. Update `STATUS.md` only after verified progress (build/tests/demo notes).
+
+---
 
 ## Definition of Done
 
-A task is complete only after implementation, successful relevant verification, and documentation updates.
-
-## Important Open Decisions
-
-- Multiple physical drawers or one shared drawer.
-- Mixed payment methods in one invoice.
-- Return authorization policy.
-- Negative stock policy.
-- Exact tax calculation rules.
-- Profit costing method.
-- Backup frequency.
-- Offline license mechanism.
+A phase task is done only after: implementation + relevant verification (build/tests) + `STATUS.md` update.

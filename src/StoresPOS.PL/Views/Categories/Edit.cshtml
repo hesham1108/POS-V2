@@ -1,0 +1,45 @@
+@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "Edit category";
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-1">Edit category</h1>
+    <p class="text-muted mb-0">Update names, parent, or sort order</p>
+</div>
+
+<partial name="_CategoryForm" model="Model" />
+
+@if (Model.Id.HasValue)
+{
+    <div class="sp-card p-4 mt-4">
+        <h2 class="h6">Move under another parent</h2>
+        <form asp-action="Move" asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end">
+            @Html.AntiForgeryToken()
+            <div class="col-md-6">
+                <label class="form-label" for="parentCategoryId">New parent</label>
+                <select class="form-select" id="parentCategoryId" name="parentCategoryId">
+                    <option value="">— Root —</option>
+                    @foreach (var opt in Model.ParentOptions)
+                    {
+                        if (Model.ParentCategoryId == opt.Id)
+                        {
+                            <option value="@opt.Id" selected>@opt.DisplayName</option>
+                        }
+                        else
+                        {
+                            <option value="@opt.Id">@opt.DisplayName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn sp-btn-secondary">Move</button>
+            </div>
+        </form>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
