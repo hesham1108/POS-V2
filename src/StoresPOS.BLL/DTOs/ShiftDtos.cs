@@ -90,3 +90,54 @@ public class CloseShiftDto
 
     public string? Notes { get; set; }
 }
+
+/// <summary>Shift history filter "result" (docs/page-composition.md §6.2).</summary>
+public enum ShiftResultFilter
+{
+    Open = 1,
+    Matched = 2,
+    Surplus = 3,
+    Shortage = 4,
+    NotReconciled = 5
+}
+
+public class ShiftHistoryFilterDto
+{
+    /// <summary>Shifts opened on/after this instant.</summary>
+    public DateTime? FromUtc { get; set; }
+
+    /// <summary>Shifts opened before this instant.</summary>
+    public DateTime? ToUtc { get; set; }
+
+    /// <summary>Shifts the user opened, closed or worked in.</summary>
+    public int? UserId { get; set; }
+
+    public ShiftResultFilter? Result { get; set; }
+    public int Take { get; set; } = 500;
+}
+
+public class ShiftHistoryItemDto
+{
+    public int Id { get; set; }
+    public ShiftStatus Status { get; set; }
+    public DateTime OpenedAtUtc { get; set; }
+    public DateTime? ClosedAtUtc { get; set; }
+    public string OpenedByDisplayName { get; set; } = string.Empty;
+    public string? ClosedByDisplayName { get; set; }
+    public IReadOnlyList<string> Participants { get; set; } = [];
+    public int InvoiceCount { get; set; }
+    public decimal SalesTotal { get; set; }
+
+    /// <summary>Snapshot at close; live figure while the shift is open.</summary>
+    public decimal ExpectedCash { get; set; }
+    public decimal? ActualCash { get; set; }
+    public decimal? CashDifference { get; set; }
+    public ShiftReconciliation? Reconciliation { get; set; }
+}
+
+/// <summary>Bridges the history row to the status chip partial.</summary>
+public static class ShiftHistoryItemExtensions
+{
+    public static ShiftSummaryDto ToChip(this ShiftHistoryItemDto item) =>
+        new() { Id = item.Id, Status = item.Status, Reconciliation = item.Reconciliation };
+}

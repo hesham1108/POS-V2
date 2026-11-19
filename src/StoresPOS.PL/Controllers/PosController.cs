@@ -21,12 +21,18 @@ public class PosController : Controller
 {
     private readonly ISalesService _sales;
     private readonly IShiftService _shifts;
+    private readonly ICustomerService _customers;
     private readonly IStringLocalizer<SharedResource> _l;
 
-    public PosController(ISalesService sales, IShiftService shifts, IStringLocalizer<SharedResource> localizer)
+    public PosController(
+        ISalesService sales,
+        IShiftService shifts,
+        ICustomerService customers,
+        IStringLocalizer<SharedResource> localizer)
     {
         _sales = sales;
         _shifts = shifts;
+        _customers = customers;
         _l = localizer;
     }
 
@@ -118,6 +124,27 @@ public class PosController : Controller
     [ValidateAntiForgeryToken]
     public Task<IActionResult> Hold(CancellationToken cancellationToken) =>
         CartAction(userId => _sales.HoldAsync(userId, cancellationToken));
+
+    /// <summary>F4 picker: customers matching name or mobile.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Customers(string? term, CancellationToken cancellationToken) =>
+        await Run(async _ => PartialView("_PosCustomers", await _customers.SearchAsync(term, 20, cancellationToken)));
+
+    /// <summary>Sets the invoice customer; empty = walk-in.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> Customer(int? customerId, CancellationToken cancellationToken) =>
+        CartAction(userId => _sales.SetCustomerAsync(userId, customerId, cancellationToken));
+
+    /// <summary>Quick add from the till: name + mobile only, then picked for the invoice.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> QuickCustomer(string? name, string? phone, CancellationToken cancellationToken) =>
+        CartAction(async userId =>
+        {
+            var created = await _customers.CreateAsync(new CustomerUpsertDto { Name = name ?? string.Empty, Phone = phone }, cancellationToken);
+            return await _sales.SetCustomerAsync(userId, created.Id, cancellationToken);
+        });
 
     [HttpGet]
     public async Task<IActionResult> Held(CancellationToken cancellationToken) =>

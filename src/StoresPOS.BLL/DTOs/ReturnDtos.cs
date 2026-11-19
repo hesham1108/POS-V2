@@ -63,6 +63,7 @@ public class SalesReturnFilterDto
     public int? UserId { get; set; }
     public int? ShiftId { get; set; }
     public int? InvoiceId { get; set; }
+    public int? CustomerId { get; set; }
 
     /// <summary>Return number or original invoice number (contains).</summary>
     public string? Search { get; set; }

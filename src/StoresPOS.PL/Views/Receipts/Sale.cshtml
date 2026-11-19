@@ -42,7 +42,11 @@
         </div>
         <div><span>@L["Date"]</span><span dir="ltr">@f.DateTime(i.CompletedAtUtc)</span></div>
         <div><span>@L["Cashier"]</span><span>@i.CashierDisplayName</span></div>
-        <div><span>@L["Customer"]</span><span>@L["Walk-in customer"]</span></div>
+        <div><span>@L["Customer"]</span><span>@(i.CustomerName ?? L["Walk-in customer"].Value)</span></div>
+        @if (!string.IsNullOrEmpty(i.CustomerPhone))
+        {
+            <div><span>@L["Mobile"]</span><span dir="ltr">@f.Digits(i.CustomerPhone)</span></div>
+        }
     </section>
 
     <table class="receipt__lines">

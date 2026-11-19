@@ -296,6 +296,101 @@ public class ShiftService : IShiftService
         return (await GetSummaryAsync(shift.Id, cancellationToken))!;
     }
 
+    public async Task<IReadOnlyList<ShiftHistoryItemDto>> GetHistoryAsync(
+        ShiftHistoryFilterDto? filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        filter ??= new ShiftHistoryFilterDto();
+        var query = _db.Shifts.AsNoTracking().AsQueryable();
+
+        if (filter.FromUtc.HasValue)
+        {
+            query = query.Where(x => x.OpenedAtUtc >= filter.FromUtc.Value);
+        }
+
+        if (filter.ToUtc.HasValue)
+        {
+            query = query.Where(x => x.OpenedAtUtc < filter.ToUtc.Value);
+        }
+
+        if (filter.UserId.HasValue)
+        {
+            var uid = filter.UserId.Value;
+            query = query.Where(x => x.OpenedByUserId == uid
+                                     || x.ClosedByUserId == uid
+                                     || x.Participants.Any(p => p.UserId == uid));
+        }
+
+        query = filter.Result switch
+        {
+            ShiftResultFilter.Open => query.Where(x => x.Status == ShiftStatus.Open),
+            ShiftResultFilter.Matched => query.Where(x => x.Reconciliation == ShiftReconciliation.Matched),
+            ShiftResultFilter.Surplus => query.Where(x => x.Reconciliation == ShiftReconciliation.Surplus),
+            ShiftResultFilter.Shortage => query.Where(x => x.Reconciliation == ShiftReconciliation.Shortage),
+            ShiftResultFilter.NotReconciled => query.Where(x => x.Reconciliation == ShiftReconciliation.NotReconciled),
+            _ => query
+        };
+
+        var take = filter.Take <= 0 ? 500 : Math.Min(filter.Take, 2000);
+        var rows = await query
+            .OrderByDescending(x => x.OpenedAtUtc)
+            .Take(take)
+            .Select(x => new
+            {
+                x.Id,
+                x.Status,
+                x.OpenedAtUtc,
+                x.ClosedAtUtc,
+                OpenedBy = x.OpenedByUser.DisplayName,
+                ClosedBy = x.ClosedByUser != null ? x.ClosedByUser.DisplayName : null,
+                Participants = x.Participants.OrderBy(p => p.JoinedAtUtc).Select(p => p.User.DisplayName).ToList(),
+                x.ExpectedCash,
+                x.ActualCash,
+                x.CashDifference,
+                x.Reconciliation
+            })
+            .ToListAsync(cancellationToken);
+
+        var ids = rows.Select(x => x.Id).ToList();
+        var sales = (await _db.SalesInvoices.AsNoTracking()
+                .Where(x => ids.Contains(x.ShiftId) && x.Status == SalesInvoiceStatus.Completed)
+                .Select(x => new { x.ShiftId, x.Total })
+                .ToListAsync(cancellationToken))
+            .GroupBy(x => x.ShiftId)
+            .ToDictionary(g => g.Key, g => (Count: g.Count(), Total: g.Sum(x => x.Total)));
+
+        var result = new List<ShiftHistoryItemDto>(rows.Count);
+        foreach (var row in rows)
+        {
+            var expected = row.ExpectedCash;
+            if (row.Status == ShiftStatus.Open)
+            {
+                // Not snapshotted yet: use the live drawer figure.
+                expected = (await GetSummaryAsync(row.Id, cancellationToken))?.ExpectedCash ?? 0m;
+            }
+
+            var s = sales.GetValueOrDefault(row.Id);
+            result.Add(new ShiftHistoryItemDto
+            {
+                Id = row.Id,
+                Status = row.Status,
+                OpenedAtUtc = row.OpenedAtUtc,
+                ClosedAtUtc = row.ClosedAtUtc,
+                OpenedByDisplayName = row.OpenedBy,
+                ClosedByDisplayName = row.ClosedBy,
+                Participants = row.Participants,
+                InvoiceCount = s.Count,
+                SalesTotal = s.Total,
+                ExpectedCash = expected ?? 0m,
+                ActualCash = row.ActualCash,
+                CashDifference = row.CashDifference,
+                Reconciliation = row.Reconciliation
+            });
+        }
+
+        return result;
+    }
+
     /// <summary>A shift opened before today's local store date counts as "old" (rule 11) — warning only.</summary>
     private bool IsBeforeToday(DateTime openedAtUtc)
     {

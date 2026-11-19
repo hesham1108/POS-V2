@@ -340,6 +340,11 @@ public class ReturnService : IReturnService
             query = query.Where(x => x.OriginalSalesInvoiceId == filter.InvoiceId.Value);
         }
 
+        if (filter.CustomerId.HasValue)
+        {
+            query = query.Where(x => x.OriginalSalesInvoice.CustomerId == filter.CustomerId.Value);
+        }
+
         if (filter.RefundMethod.HasValue)
         {
             query = query.Where(x => x.RefundMethod == filter.RefundMethod.Value);

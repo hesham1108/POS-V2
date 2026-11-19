@@ -1,0 +1,11 @@
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Css(string name) => string.Equals(action, name, StringComparison.OrdinalIgnoreCase) ? "is-active" : "";
+}
+<nav class="report-tabs" aria-label="@L["Reports"]">
+    <a class="@Css("Sales")" asp-action="Sales">@L["Sales"]</a>
+    <a class="@Css("Purchases")" asp-action="Purchases">@L["Purchases"]</a>
+    <a class="@Css("Inventory")" asp-action="Inventory">@L["Inventory"]</a>
+    <a class="@Css("Shifts")" asp-action="Shifts">@L["Shifts"]</a>
+    <a class="@Css("CashOuts")" asp-action="CashOuts">@L["Cash-outs"]</a>
+</nav>

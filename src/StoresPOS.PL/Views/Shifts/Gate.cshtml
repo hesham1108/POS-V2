@@ -5,6 +5,13 @@
     var gate = Model.Gate;
 }
 
+@section PageActions {
+    @if (User.HasClaim(AppPermissions.ClaimType, AppPermissions.ReportsView))
+    {
+        <a class="btn sp-btn-secondary" asp-action="Index">@L["Shift history"]</a>
+    }
+}
+
 <partial name="_Flash" />
 
 <div class="shift-gate">

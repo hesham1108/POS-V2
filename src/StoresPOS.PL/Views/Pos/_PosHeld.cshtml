@@ -11,7 +11,7 @@ else
             <li>
                 <div>
                     <strong class="num">@h.Total.ToString("N2")</strong>
-                    <span class="text-muted">· @string.Format(L["{0} items"].Value, h.LineCount) · @h.CashierDisplayName · <span class="num">@h.HeldAtUtc.ToLocalTime().ToString("HH:mm")</span></span>
+                    <span class="text-muted">· @string.Format(L["{0} items"].Value, h.LineCount) · @h.CashierDisplayName@(h.CustomerName is null ? "" : " · " + h.CustomerName) · <span class="num">@h.HeldAtUtc.ToLocalTime().ToString("HH:mm")</span></span>
                 </div>
                 <button type="button" class="btn btn-sm sp-btn-primary" data-resume-id="@h.Id">@L["Resume"]</button>
             </li>

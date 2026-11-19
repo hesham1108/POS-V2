@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoresPOS.BLL.Constants;
+using StoresPOS.BLL.Interfaces;
 using StoresPOS.PL.Models;
 
 namespace StoresPOS.PL.Controllers;
@@ -9,14 +10,14 @@ namespace StoresPOS.PL.Controllers;
 [Authorize]
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly IDashboardService _dashboard;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(IDashboardService dashboard)
     {
-        _logger = logger;
+        _dashboard = dashboard;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         // Cashiers (no back-office access) always pass through the shift gate (journeys A/B/C).
         if (!User.HasPermission(AppPermissions.DashboardView))
@@ -24,7 +25,7 @@ public class HomeController : Controller
             return RedirectToAction("Gate", "Shifts");
         }
 
-        return View();
+        return View(await _dashboard.GetAsync(cancellationToken));
     }
 
     [Authorize(Policy = AppPermissions.DashboardView)]

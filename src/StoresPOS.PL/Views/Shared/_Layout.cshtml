@@ -105,8 +105,16 @@
                     <span class="app-sidebar__link is-disabled" title="@denied">@L["Suppliers"]</span>
                 }
 
-                <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.ReportsView) ? soon : denied)">@L["Customers"]</span>
-                <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.ReportsView) ? soon : denied)">@L["Reports"]</span>
+                @if (Can(AppPermissions.ReportsView))
+                {
+                    <a class="@NavClass(IsCtrl("Customers"))" asp-controller="Customers" asp-action="Index">@L["Customers"]</a>
+                    <a class="@NavClass(IsCtrl("Reports"))" asp-controller="Reports" asp-action="Sales">@L["Reports"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Customers"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Reports"]</span>
+                }
                 <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.UsersManage) ? soon : denied)">@L["Users and roles"]</span>
                 <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.SettingsManage) ? soon : denied)">@L["Settings"]</span>
             </nav>

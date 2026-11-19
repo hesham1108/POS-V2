@@ -16,7 +16,8 @@
     pay: bootstrap.Modal.getOrCreateInstance(document.getElementById("pay-modal")),
     price: bootstrap.Modal.getOrCreateInstance(document.getElementById("price-modal")),
     discount: bootstrap.Modal.getOrCreateInstance(document.getElementById("discount-modal")),
-    held: bootstrap.Modal.getOrCreateInstance(document.getElementById("held-modal"))
+    held: bootstrap.Modal.getOrCreateInstance(document.getElementById("held-modal")),
+    customer: bootstrap.Modal.getOrCreateInstance(document.getElementById("customer-modal"))
   };
 
   let categoryId = "";
@@ -190,8 +191,8 @@
         if (await cartAction("/Pos/SaleType", { saleType: button.dataset.value })) loadProducts();
         break;
       case "customer":
-        toast(msg.msgCustomer, "ok");
-        break;
+        openCustomer();
+        return;
       case "discount":
         openDiscount();
         return;
@@ -274,6 +275,92 @@
     if (await cartAction("/Pos/Resume", { invoiceId: button.dataset.resumeId })) {
       modals.held.hide();
       focusSearch();
+    }
+  });
+
+  // ------------------------------------------------------------------ customer (F4)
+
+  const customerSearch = document.getElementById("customer-search");
+  const customerList = document.getElementById("customer-list");
+  const customerError = document.getElementById("customer-error");
+  let customerTimer = null;
+
+  async function loadCustomers() {
+    const params = new URLSearchParams({ term: customerSearch.value.trim() });
+    try {
+      customerList.innerHTML = await request("/Pos/Customers?" + params.toString());
+    } catch (error) {
+      fail(error);
+    }
+  }
+
+  async function pickCustomer(customerId) {
+    if (await cartAction("/Pos/Customer", { customerId: customerId || "" })) {
+      modals.customer.hide();
+      loadProducts(); // the customer's default sale type may have changed the prices
+    }
+  }
+
+  function openCustomer() {
+    customerSearch.value = "";
+    document.getElementById("quick-name").value = "";
+    document.getElementById("quick-phone").value = "";
+    customerError.textContent = "";
+    loadCustomers();
+    modals.customer.show();
+    setTimeout(() => customerSearch.focus(), 150);
+  }
+
+  customerSearch.addEventListener("input", () => {
+    clearTimeout(customerTimer);
+    customerTimer = setTimeout(loadCustomers, 200);
+  });
+
+  // Enter picks the first match; arrows move through the list.
+  customerSearch.addEventListener("keydown", (e) => {
+    const first = customerList.querySelector("[data-customer-id]");
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (first) pickCustomer(first.dataset.customerId);
+    } else if (e.key === "ArrowDown" && first) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  customerList.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const items = Array.from(customerList.querySelectorAll("[data-customer-id]"));
+    const i = items.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    if (e.key === "ArrowUp" && i === 0) customerSearch.focus();
+    else items[Math.min(Math.max(i + (e.key === "ArrowUp" ? -1 : 1), 0), items.length - 1)].focus();
+  });
+
+  customerList.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-customer-id]");
+    if (b) pickCustomer(b.dataset.customerId);
+  });
+
+  document.querySelector("[data-walk-in]").addEventListener("click", () => pickCustomer(""));
+
+  document.getElementById("customer-quick").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    const name = document.getElementById("quick-name").value.trim();
+    const phone = document.getElementById("quick-phone").value.trim();
+    customerError.textContent = "";
+    busy = true;
+    try {
+      renderCart(await post("/Pos/QuickCustomer", { name, phone }));
+      modals.customer.hide();
+      loadProducts();
+    } catch (error) {
+      if (error && error.userFacing) customerError.textContent = error.message;
+      else fail(error);
+    } finally {
+      busy = false;
     }
   });
 
@@ -375,7 +462,7 @@
       if (anyModalOpen()) return;
       switch (key) {
         case "F2": focusSearch(); break;
-        case "F4": toast(msg.msgCustomer, "ok"); break;
+        case "F4": openCustomer(); break;
         case "F6": openDiscount(); break;
         case "F7": if (!cartEl.querySelector('[data-action="held"]').disabled) openHeld(); break;
         case "F8": if (!cartEmpty()) cartAction("/Pos/Hold"); break;

@@ -23,6 +23,9 @@ public interface ISalesService
     Task<CartDto> RemoveLineAsync(int userId, int lineId, CancellationToken cancellationToken = default);
     Task<CartDto> SetSaleTypeAsync(int userId, SaleType saleType, CancellationToken cancellationToken = default);
 
+    /// <summary>F4: sets the invoice customer (null = walk-in) and switches to the customer's default sale type.</summary>
+    Task<CartDto> SetCustomerAsync(int userId, int? customerId, CancellationToken cancellationToken = default);
+
     /// <summary>Invoice-line-only price change (rule 6). Requires Sales.PriceOverride.</summary>
     Task<CartDto> OverridePriceAsync(int userId, int lineId, decimal unitPrice, CancellationToken cancellationToken = default);
 

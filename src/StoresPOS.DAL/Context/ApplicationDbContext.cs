@@ -26,6 +26,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<CashOut> CashOuts => Set<CashOut>();
     public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
     public DbSet<SalesReturnItem> SalesReturnItems => Set<SalesReturnItem>();
+    public DbSet<Customer> Customers => Set<Customer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

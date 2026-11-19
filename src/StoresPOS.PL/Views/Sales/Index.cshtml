@@ -66,6 +66,7 @@ else
                         <th>@L["Date"]</th>
                         <th>@L["Shift"]</th>
                         <th>@L["Cashier"]</th>
+                        <th>@L["Customer"]</th>
                         <th>@L["Sale type"]</th>
                         <th>@L["Payment method"]</th>
                         <th class="text-end">@L["Items"]</th>
@@ -81,6 +82,7 @@ else
                             <td class="num">@i.CompletedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
                             <td class="num">#@i.ShiftId</td>
                             <td>@i.CashierDisplayName</td>
+                            <td>@(i.CustomerName ?? L["Walk-in customer"].Value)</td>
                             <td>@(i.SaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</td>
                             <td><partial name="_PaymentChip" model="i.PaymentMethod" /></td>
                             <td class="text-end num">@i.LineCount</td>
@@ -103,7 +105,7 @@ else
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="7">@string.Format(L["{0} invoices"].Value, Model.Invoices.Count)</th>
+                        <th colspan="8">@string.Format(L["{0} invoices"].Value, Model.Invoices.Count)</th>
                         <th class="text-end num num-total">@Model.Total.ToString("N2")</th>
                         <th></th>
                     </tr>

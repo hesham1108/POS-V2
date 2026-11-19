@@ -176,7 +176,7 @@ Each phase is built, tested, and demoed before the next starts.
 - [x] Hold / resume invoices.
 - [x] Sales invoices + items; associate shift + cashier.
 - [x] Deduct stock on completed sales.
-- [x] Keyboard shortcuts (F2/F4/F6/F7/F8/F9). F4 shows a "Phase 10" notice until customers exist.
+- [x] Keyboard shortcuts (F2/F4/F6/F7/F8/F9). F4 opens the customer picker (Phase 10).
 
 Defaults applied from Open Decisions (still to be confirmed by the client): one payment method per invoice; selling above stock blocked (no manager override yet); held invoices cancelled at shift close (warning shown); prices VAT-inclusive, no tax line until receipts.
 
@@ -202,14 +202,14 @@ Store header, receipt language/digits and VAT line come from `appsettings.json` 
 
 Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:ReturnWindowDays` = 14. No in-line manager approval yet — a manager makes the return.
 
-### Phase 10 — Customers, Dashboard & Reports ← next
+### Phase 10 — Customers, Dashboard & Reports ✅
 
-- [ ] Customer management + default Walk-in ("عميل نقدي").
-- [ ] Dashboard: today sales, cash vs non-cash, low stock, shift status, recent activity.
-- [ ] Reports: sales, purchases, inventory, shifts (filters + print).
-- [ ] Shift history: participants, sales by cashier, differences, unreconciled.
+- [x] Customer management + default Walk-in ("عميل نقدي"). (walk-in = invoice with no customer; POS F4 picker + quick add; default sale type per customer)
+- [x] Dashboard: today sales, cash vs non-cash, low stock, shift status, recent activity.
+- [x] Reports: sales, purchases, inventory, shifts (filters + print). (+ cash-outs report)
+- [x] Shift history: participants, sales by cashier, differences, unreconciled.
 
-### Phase 11 — Settings & Delivery
+### Phase 11 — Settings & Delivery ← next
 
 - [ ] Store profile, language, tax, numbering, printing.
 - [ ] Database backup / restore.

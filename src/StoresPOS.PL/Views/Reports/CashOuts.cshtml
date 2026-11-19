@@ -1,0 +1,112 @@
+@model CashOutsReportViewModel
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Cash-outs report"].Value;
+    ViewData["Subtitle"] = L["Cash taken from the drawer, by user and by reason"].Value;
+    var r = Model.Report;
+}
+
+@section PageActions {
+    <partial name="_PrintButton" />
+}
+
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+
+<div class="sp-card p-3 mb-4 report-filters">
+    <form method="get" class="sp-filter-row">
+        <partial name="_DateRange" model="Model" />
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="userId">@L["User"]</label>
+            <select class="form-select" id="userId" name="userId">
+                <option value="">@L["All"]</option>
+                @foreach (var u in Model.Users)
+                {
+                    <option value="@u.Id" selected="@(Model.UserId == u.Id)">@u.Name</option>
+                }
+            </select>
+        </div>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-primary">@L["Filter"]</button>
+            <a class="btn sp-btn-secondary" asp-action="CashOuts">@L["Reset"]</a>
+        </div>
+    </form>
+</div>
+
+@if (r.Items.Count == 0)
+{
+    var empty = (L["No cash-outs found"].Value, L["Cash taken out of the drawer appears here."].Value);
+    <partial name="_EmptyState" model="empty" />
+}
+else
+{
+    <div class="sp-kpis mb-4">
+        <div class="sp-kpi sp-kpi--primary">
+            <span class="sp-kpi__label">@L["Total cash-outs"]</span>
+            <strong class="sp-kpi__value num">@r.Total.ToString("N2")</strong>
+            <span class="sp-kpi__hint">@string.Format(L["{0} cash-outs"].Value, r.Items.Count)</span>
+        </div>
+    </div>
+
+    <div class="report-grid mb-4">
+        <section class="sp-card p-4">
+            <h2 class="shift-section-title">@L["By user"]</h2>
+            <table class="table align-middle mb-0">
+                <thead><tr><th>@L["User"]</th><th class="text-end">@L["Count"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
+                <tbody>
+                    @foreach (var u in r.ByUser)
+                    {
+                        <tr><td>@u.Name</td><td class="text-end num">@u.Count</td><td class="text-end num">@u.Amount.ToString("N2")</td></tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+        <section class="sp-card p-4">
+            <h2 class="shift-section-title">@L["By reason"]</h2>
+            <table class="table align-middle mb-0">
+                <thead><tr><th>@L["Reason"]</th><th class="text-end">@L["Count"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
+                <tbody>
+                    @foreach (var x in r.ByReason)
+                    {
+                        <tr><td>@x.Name</td><td class="text-end num">@x.Count</td><td class="text-end num">@x.Amount.ToString("N2")</td></tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <section class="sp-card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@L["Date"]</th>
+                        <th>@L["Shift"]</th>
+                        <th>@L["User"]</th>
+                        <th>@L["Reason"]</th>
+                        <th class="text-end">@L["Amount"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in r.Items)
+                    {
+                        <tr>
+                            <td class="num">@c.CreatedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                            <td><a class="num" asp-controller="Shifts" asp-action="Details" asp-route-id="@c.ShiftId">#@c.ShiftId</a></td>
+                            <td>@c.UserDisplayName</td>
+                            <td>@c.Reason</td>
+                            <td class="text-end num">@c.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="4">@string.Format(L["{0} cash-outs"].Value, r.Items.Count)</th>
+                        <th class="text-end num num-total">@r.Total.ToString("N2")</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+}
