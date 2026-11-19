@@ -190,4 +190,33 @@
   <data name="{0} held invoice(s) will be cancelled when this shift closes." xml:space="preserve"><value>سيتم إلغاء {0} فاتورة معلّقة عند إغلاق هذه الوردية.</value></data>
   <data name="{0} invoices" xml:space="preserve"><value>{0} فاتورة</value></data>
   <data name="{0} items" xml:space="preserve"><value>{0} أصناف</value></data>
+  <data name="Closed by" xml:space="preserve"><value>أغلقها</value></data>
+  <data name="Drawer" xml:space="preserve"><value>الدرج</value></data>
+  <data name="Finish and sign out" xml:space="preserve"><value>إنهاء وتسجيل الخروج</value></data>
+  <data name="Includes VAT {0}%" xml:space="preserve"><value>شامل ضريبة القيمة المضافة {0}٪</value></data>
+  <data name="Item count" xml:space="preserve"><value>عدد القطع</value></data>
+  <data name="Open a new shift" xml:space="preserve"><value>فتح وردية جديدة</value></data>
+  <data name="Opened by" xml:space="preserve"><value>فتحها</value></data>
+  <data name="Paid by InstaPay" xml:space="preserve"><value>المدفوع إنستاباي</value></data>
+  <data name="Paid by Visa / Card" xml:space="preserve"><value>المدفوع فيزا / كارت</value></data>
+  <data name="Paid by Vodafone Cash" xml:space="preserve"><value>المدفوع فودافون كاش</value></data>
+  <data name="Paid in cash" xml:space="preserve"><value>المدفوع نقدًا</value></data>
+  <data name="Pay and print · F9" xml:space="preserve"><value>دفع وطباعة · F9</value></data>
+  <data name="Payment received. Invoice {0}. Change: {1} EGP. Receipt sent to printer." xml:space="preserve"><value>تم استلام الدفع. الفاتورة {0}. الباقي: {1} ج.م. تم إرسال الإيصال للطابعة.</value></data>
+  <data name="Payment received. Invoice {0}. Receipt sent to printer." xml:space="preserve"><value>تم استلام الدفع. الفاتورة {0}. تم إرسال الإيصال للطابعة.</value></data>
+  <data name="Phone" xml:space="preserve"><value>هاتف</value></data>
+  <data name="Preview" xml:space="preserve"><value>معاينة</value></data>
+  <data name="Print" xml:space="preserve"><value>طباعة</value></data>
+  <data name="Print X report" xml:space="preserve"><value>طباعة تقرير لحظي</value></data>
+  <data name="Print report again" xml:space="preserve"><value>طباعة التقرير مرة أخرى</value></data>
+  <data name="Printed" xml:space="preserve"><value>طُبع</value></data>
+  <data name="Reprint last" xml:space="preserve"><value>إعادة طباعة آخر فاتورة</value></data>
+  <data name="Result" xml:space="preserve"><value>النتيجة</value></data>
+  <data name="Sales by payment method" xml:space="preserve"><value>المبيعات حسب طريقة الدفع</value></data>
+  <data name="Sales invoice" xml:space="preserve"><value>فاتورة بيع</value></data>
+  <data name="Shift report" xml:space="preserve"><value>تقرير الوردية</value></data>
+  <data name="Tax no." xml:space="preserve"><value>الرقم الضريبي</value></data>
+  <data name="The shift report was sent to the printer." xml:space="preserve"><value>تم إرسال تقرير الوردية للطابعة.</value></data>
+  <data name="Total before discount" xml:space="preserve"><value>الإجمالي قبل الخصم</value></data>
+  <data name="Total sales" xml:space="preserve"><value>إجمالي المبيعات</value></data>
 </root>

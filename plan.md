@@ -180,17 +180,19 @@ Each phase is built, tested, and demoed before the next starts.
 
 Defaults applied from Open Decisions (still to be confirmed by the client): one payment method per invoice; selling above stock blocked (no manager override yet); held invoices cancelled at shift close (warning shown); prices VAT-inclusive, no tax line until receipts.
 
-### Phase 8 — Payments & Printing ← next
+### Phase 8 — Payments & Printing ✅
 
 - [x] Cash payment + change calculation. (Phase 7 pay modal)
 - [x] Visa/Card, InstaPay, Vodafone Cash payment records. (Phase 7)
 - [x] Separate cash vs non-cash shift totals. (Phase 7 — shift summary + per cashier)
-- [ ] Thermal 80mm sales receipt (Arabic-capable; store language default).
-- [ ] Receipt fields: store header, invoice meta, lines at charged prices, discount, tender, change, barcode.
-- [ ] Local thermal printer workflow; reprint from sales list.
-- [ ] Shift close report printout.
+- [x] Thermal 80mm sales receipt (Arabic-capable; store language default).
+- [x] Receipt fields: store header, invoice meta, lines at charged prices, discount, tender, change, barcode.
+- [x] Local thermal printer workflow; reprint from sales list. (hidden-iframe print + Chrome `--kiosk-printing`, see `docs/printing.md`)
+- [x] Shift close report printout. (auto-prints after close; X report from the current shift)
 
-### Phase 9 — Cash-outs & Returns
+Store header, receipt language/digits and VAT line come from `appsettings.json` → `Store` until the Settings screen (Phase 11).
+
+### Phase 9 — Cash-outs & Returns ← next
 
 - [ ] Cash-out: amount + reason; tie to shift + user; reduce expected cash.
 - [ ] Returns linked to original invoice (original prices).

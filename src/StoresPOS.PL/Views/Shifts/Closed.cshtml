@@ -1,0 +1,37 @@
+@model ShiftClosedViewModel
+@{
+    ViewData["Section"] = L["Shifts"].Value;
+    ViewData["Title"] = string.Format(L["Shift #{0} closed."].Value, Model.Shift.Id);
+    var reportUrl = Url.Action("Shift", "Receipts", new { id = Model.Shift.Id });
+}
+
+@* Journey H step "print report": the report prints automatically once, then the user finishes. *@
+<div class="shift-gate" @(Model.AutoPrint ? Html.Raw($"data-print-on-load=\"{reportUrl}\"") : null)>
+    <div class="shift-gate__card shift-gate__card--wide">
+        <div class="alert alert-success" role="status">
+            @string.Format(L["Shift #{0} closed."].Value, Model.Shift.Id)
+            @if (Model.AutoPrint)
+            {
+                <text> @L["The shift report was sent to the printer."]</text>
+            }
+        </div>
+
+        <partial name="_ShiftSummary" model="Model.Shift" />
+
+        <div class="shift-gate__actions">
+            @if (Model.ReturnToGate)
+            {
+                <a class="btn sp-btn-primary shift-gate__primary" asp-action="Gate" autofocus>@L["Open a new shift"]</a>
+            }
+            else
+            {
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn sp-btn-primary shift-gate__primary" autofocus>@L["Finish and sign out"]</button>
+                </form>
+            }
+            <button type="button" class="btn sp-btn-secondary shift-gate__secondary" data-print-url="@reportUrl">@L["Print report again"]</button>
+            <a class="btn sp-btn-secondary shift-gate__secondary" asp-controller="Receipts" asp-action="Shift" asp-route-id="@Model.Shift.Id" target="_blank">@L["Preview"]</a>
+        </div>
+    </div>
+</div>

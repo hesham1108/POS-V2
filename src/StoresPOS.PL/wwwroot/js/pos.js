@@ -337,6 +337,11 @@
       const result = JSON.parse(await post("/Pos/Pay", data));
       modals.pay.hide();
       toast(result.message, "ok");
+      if (result.receiptUrl && window.StoresPrint) {
+        window.StoresPrint(result.receiptUrl);
+        const reprint = document.getElementById("pos-reprint");
+        if (reprint) { reprint.dataset.printUrl = result.receiptUrl; reprint.disabled = false; }
+      }
       renderCart(await request("/Pos/Cart"));
       loadProducts();
       focusSearch();

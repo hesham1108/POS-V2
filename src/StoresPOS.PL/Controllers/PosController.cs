@@ -51,7 +51,8 @@ public class PosController : Controller
             CanOverridePrice = User.HasPermission(AppPermissions.SalesPriceOverride),
             CanDiscount = User.HasPermission(AppPermissions.SalesDiscount),
             CanCloseShift = User.HasPermission(AppPermissions.ShiftsClose),
-            CanSeeDashboard = User.HasPermission(AppPermissions.DashboardView)
+            CanSeeDashboard = User.HasPermission(AppPermissions.DashboardView),
+            LastInvoiceId = await _sales.GetLastInvoiceIdAsync(userId, cancellationToken)
         });
     }
 
@@ -141,12 +142,13 @@ public class PosController : Controller
                 new PaymentDto { Method = method, AmountPaid = amountPaid, Reference = reference },
                 cancellationToken);
 
-            // TODO(Phase 8): send Receipts/Sale/{id} to the 80 mm printer here.
             var message = sale.PaymentMethod == PaymentMethod.Cash
-                ? string.Format(_l["Payment received. Invoice {0}. Change: {1} EGP."].Value, sale.InvoiceNumber, sale.ChangeAmount.ToString("N2"))
-                : string.Format(_l["Payment received. Invoice {0}."].Value, sale.InvoiceNumber);
+                ? string.Format(_l["Payment received. Invoice {0}. Change: {1} EGP. Receipt sent to printer."].Value, sale.InvoiceNumber, sale.ChangeAmount.ToString("N2"))
+                : string.Format(_l["Payment received. Invoice {0}. Receipt sent to printer."].Value, sale.InvoiceNumber);
 
-            return Json(new { ok = true, invoiceId = sale.InvoiceId, invoiceNumber = sale.InvoiceNumber, message });
+            // The page prints this URL in a hidden iframe (80 mm receipt, store language).
+            var receiptUrl = Url.Action("Sale", "Receipts", new { id = sale.InvoiceId });
+            return Json(new { ok = true, invoiceId = sale.InvoiceId, invoiceNumber = sale.InvoiceNumber, message, receiptUrl });
         });
 
     private Task<IActionResult> CartAction(Func<int, Task<CartDto>> action) =>

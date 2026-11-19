@@ -1,0 +1,98 @@
+@model SaleReceiptViewModel
+@{
+    Layout = "_PrintLayout";
+    var f = Model.Format;
+    f.ApplyCulture();
+    var i = Model.Invoice;
+    var lang = f.Language;
+    var isAr = lang == "ar";
+    ViewData["ReceiptFormat"] = f;
+    ViewData["AutoPrint"] = Model.AutoPrint;
+    ViewData["Title"] = i.InvoiceNumber;
+    var vat = f.Settings.IncludedVat(i.Total);
+    var method = i.PaymentMethod switch
+    {
+        PaymentMethod.Cash => L["Paid in cash"].Value,
+        PaymentMethod.Card => L["Paid by Visa / Card"].Value,
+        PaymentMethod.InstaPay => L["Paid by InstaPay"].Value,
+        _ => L["Paid by Vodafone Cash"].Value
+    };
+}
+<article class="receipt">
+    <header class="receipt__store">
+        <h1>@f.Settings.NameFor(lang)</h1>
+        @if (!string.IsNullOrWhiteSpace(f.Settings.AddressFor(lang)))
+        {
+            <p>@f.Settings.AddressFor(lang)</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(f.Settings.Phone))
+        {
+            <p>@L["Phone"] <bdi dir="ltr">@f.Digits(f.Settings.Phone)</bdi></p>
+        }
+        @if (!string.IsNullOrWhiteSpace(f.Settings.TaxNumber))
+        {
+            <p>@L["Tax no."] <bdi dir="ltr">@f.Digits(f.Settings.TaxNumber)</bdi></p>
+        }
+    </header>
+
+    <section class="receipt__meta">
+        <div class="receipt__title">
+            <strong>@L["Sales invoice"] (@(i.SaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"]))</strong>
+            <strong dir="ltr">@i.InvoiceNumber</strong>
+        </div>
+        <div><span>@L["Date"]</span><span dir="ltr">@f.DateTime(i.CompletedAtUtc)</span></div>
+        <div><span>@L["Cashier"]</span><span>@i.CashierDisplayName</span></div>
+        <div><span>@L["Customer"]</span><span>@L["Walk-in customer"]</span></div>
+    </section>
+
+    <table class="receipt__lines">
+        <thead>
+            <tr>
+                <th>@L["Item"]</th>
+                <th class="n">@L["Qty"]</th>
+                <th class="n">@L["Price"]</th>
+                <th class="n">@L["Total"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in i.Lines)
+            {
+                <tr>
+                    <td>@(isAr ? line.NameAr : line.NameEn)</td>
+                    <td class="n">@f.Qty(line.Quantity)</td>
+                    <td class="n">@f.Money(line.UnitPrice)</td>
+                    <td class="n">@f.Money(line.LineTotal)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <section class="receipt__totals">
+        <div><span>@L["Item count"]</span><span>@f.Qty(i.Lines.Sum(x => x.Quantity))</span></div>
+        <div><span>@L["Total before discount"]</span><span>@f.Money(i.Subtotal)</span></div>
+        <div><span>@L["Discount"]</span><span>@f.Money(i.DiscountAmount)</span></div>
+        <div class="receipt__grand"><span>@L["Total"]</span><span>@f.Money(i.Total) @L["EGP"]</span></div>
+        @if (vat > 0)
+        {
+            <div class="receipt__small"><span>@string.Format(L["Includes VAT {0}%"].Value, f.Digits(f.Settings.VatPercent.ToString("0.##")))</span><span>@f.Money(vat)</span></div>
+        }
+        <div><span>@method</span><span>@f.Money(i.AmountPaid)</span></div>
+        @if (i.PaymentMethod == PaymentMethod.Cash)
+        {
+            <div><span>@L["Change"]</span><span>@f.Money(i.ChangeAmount)</span></div>
+        }
+        else if (!string.IsNullOrWhiteSpace(i.PaymentReference))
+        {
+            <div class="receipt__small"><span>@L["Reference"]</span><span dir="ltr">@i.PaymentReference</span></div>
+        }
+    </section>
+
+    <footer class="receipt__footer">
+        @if (!string.IsNullOrWhiteSpace(f.Settings.FooterFor(lang)))
+        {
+            <p>@f.Settings.FooterFor(lang)</p>
+        }
+        <div class="receipt__barcode">@Html.Raw(Model.BarcodeSvg)</div>
+        <p dir="ltr" class="receipt__number">@i.InvoiceNumber</p>
+    </footer>
+</article>

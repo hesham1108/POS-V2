@@ -43,6 +43,9 @@ public interface ISalesService
     /// <summary>Pay (F9): saves on shift + cashier, deducts stock, assigns the invoice number. One method per invoice.</summary>
     Task<CompletedSaleDto> CompleteAsync(int userId, PaymentDto payment, CancellationToken cancellationToken = default);
 
+    /// <summary>The cashier's most recent completed invoice in their open shift ("reprint last").</summary>
+    Task<int?> GetLastInvoiceIdAsync(int userId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<SalesInvoiceListItemDto>> GetInvoicesAsync(SalesInvoiceFilterDto? filter = null, CancellationToken cancellationToken = default);
     Task<SalesInvoiceDetailsDto?> GetInvoiceAsync(int id, CancellationToken cancellationToken = default);
 }

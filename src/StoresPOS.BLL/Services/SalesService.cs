@@ -553,6 +553,22 @@ public class SalesService : ISalesService
 
     // ---------------------------------------------------------------- invoices
 
+    public async Task<int?> GetLastInvoiceIdAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        var shiftId = await _shifts.GetActiveShiftIdForUserAsync(userId, cancellationToken);
+        if (shiftId is null)
+        {
+            return null;
+        }
+
+        return await _db.SalesInvoices
+            .AsNoTracking()
+            .Where(x => x.ShiftId == shiftId && x.CashierUserId == userId && x.Status == SalesInvoiceStatus.Completed)
+            .OrderByDescending(x => x.InvoiceSequence)
+            .Select(x => (int?)x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<SalesInvoiceListItemDto>> GetInvoicesAsync(
         SalesInvoiceFilterDto? filter = null,
         CancellationToken cancellationToken = default)

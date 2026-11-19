@@ -8,7 +8,8 @@
 
 @section PageActions {
     <a class="btn sp-btn-secondary" asp-action="Index">@L["Back to list"]</a>
-    <span class="btn sp-btn-secondary disabled" title="@L["Coming in a later phase"]">@L["Reprint receipt"]</span>
+    <button type="button" class="btn sp-btn-primary" data-print-url="@Url.Action("Sale", "Receipts", new { id = Model.Id })">@L["Reprint receipt"]</button>
+    <a class="btn sp-btn-secondary" asp-controller="Receipts" asp-action="Sale" asp-route-id="@Model.Id" target="_blank">@L["Preview"]</a>
     <span class="btn sp-btn-secondary disabled" title="@L["Coming in a later phase"]">@L["Start return"]</span>
 }
 

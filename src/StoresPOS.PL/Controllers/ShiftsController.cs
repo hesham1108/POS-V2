@@ -134,20 +134,8 @@ public class ShiftsController : Controller
                     Notes = model.Notes
                 }, this.GetRequiredUserId(), cancellationToken);
 
-                var message = string.Format(_l["Shift #{0} closed."], closed.Id);
-
-                // Journey C: old shift closed from the gate → back to the gate to open a new one.
-                if (model.ReturnTo == ReturnToGate)
-                {
-                    TempData["Success"] = message;
-                    return RedirectToAction(nameof(Gate));
-                }
-
-                // Journey H: confirm → print report (Phase 8) → back to login.
-                // TODO(Phase 8): open Receipts/Shift/{id} for printing before signing out.
-                TempData["Success"] = message;
-                Response.Cookies.Delete(AuthConstants.AccessTokenCookieName);
-                return RedirectToAction("Login", "Account");
+                // Journey H: confirm → print report → login. Journey C: → print report → gate (open a new shift).
+                return RedirectToAction(nameof(Closed), new { id = closed.Id, returnTo = model.ReturnTo, print = true });
             }
             catch (BusinessException ex)
             {
@@ -165,6 +153,25 @@ public class ShiftsController : Controller
         model.Summary = summary;
         model.ShiftId = summary.Id;
         return View(model);
+    }
+
+    /// <summary>After close: prints the shift report and offers the next step (sign out, or open a new shift).</summary>
+    [HttpGet]
+    [Authorize(Policy = AppPermissions.ShiftsClose)]
+    public async Task<IActionResult> Closed(int id, string? returnTo, bool print, CancellationToken cancellationToken)
+    {
+        var shift = await _shifts.GetSummaryAsync(id, cancellationToken);
+        if (shift is null || shift.Status != DAL.Entities.ShiftStatus.Closed)
+        {
+            return RedirectToAction(nameof(Gate));
+        }
+
+        return View(new ShiftClosedViewModel
+        {
+            Shift = shift,
+            ReturnToGate = returnTo == ReturnToGate,
+            AutoPrint = print
+        });
     }
 
     /// <summary>
