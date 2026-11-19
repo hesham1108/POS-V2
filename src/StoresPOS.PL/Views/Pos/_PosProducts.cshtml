@@ -1,0 +1,33 @@
+@model IReadOnlyList<PosProductDto>
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+@if (Model.Count == 0)
+{
+    var empty = (L["No products match"].Value, L["Check the spelling or scan the barcode instead."].Value);
+    <partial name="_EmptyState" model="empty" />
+}
+else
+{
+    <div class="pos-grid" data-count="@Model.Count">
+        @foreach (var p in Model)
+        {
+            <button type="button" class="pos-product @(p.IsOutOfStock ? "is-out" : null)" data-product-id="@p.Id"
+                    @(p.IsOutOfStock ? "disabled" : null)>
+                <span class="pos-product__name">@(isAr ? p.NameAr : p.NameEn)</span>
+                <span class="pos-product__price num">@p.Price.ToString("N2")</span>
+                <span class="pos-product__meta">
+                    <span class="num">@p.StockQuantity.ToString("0.###")</span> @p.Unit
+                    @if (p.IsOutOfStock)
+                    {
+                        <span class="sp-status sp-status-bad">@L["Out of stock"]</span>
+                    }
+                    else if (p.IsLowStock)
+                    {
+                        <span class="sp-status sp-status-warn">@L["Low stock"]</span>
+                    }
+                </span>
+            </button>
+        }
+    </div>
+}

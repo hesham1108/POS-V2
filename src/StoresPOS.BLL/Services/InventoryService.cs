@@ -10,6 +10,7 @@ namespace StoresPOS.BLL.Services;
 public class InventoryService : IInventoryService
 {
     public const string PurchaseReferenceType = "PurchaseInvoice";
+    public const string SaleReferenceType = "SalesInvoice";
 
     private readonly ApplicationDbContext _db;
 
@@ -273,6 +274,50 @@ public class InventoryService : IInventoryService
                 product.PurchasePrice,
                 product.WholesaleMarkupPercent);
             product.UpdatedAtUtc = DateTime.UtcNow;
+        }
+    }
+
+    public async Task ApplySaleAsync(
+        int salesInvoiceId,
+        IReadOnlyList<SaleStockLineDto> lines,
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (lines.Count == 0)
+        {
+            throw new BusinessException("Sale has no stock lines.");
+        }
+
+        var grouped = lines
+            .GroupBy(x => x.ProductId)
+            .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+            .ToList();
+        var productIds = grouped.Select(x => x.ProductId).ToList();
+        var products = await _db.Products
+            .Where(x => productIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        foreach (var line in grouped)
+        {
+            if (!products.TryGetValue(line.ProductId, out var product))
+            {
+                throw new BusinessException($"Product #{line.ProductId} was not found.");
+            }
+
+            if (line.Quantity <= 0)
+            {
+                throw new BusinessException("Sale quantity must be greater than zero.");
+            }
+
+            await ApplyQuantityChangeAsync(
+                product,
+                -Math.Round(line.Quantity, 3, MidpointRounding.AwayFromZero),
+                StockMovementType.Sale,
+                SaleReferenceType,
+                salesInvoiceId,
+                reason: null,
+                userId,
+                cancellationToken);
         }
     }
 

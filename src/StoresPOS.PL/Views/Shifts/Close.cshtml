@@ -16,6 +16,36 @@
     <partial name="_ShiftSummary" model="Model.Summary" />
 
     <section class="sp-card p-4">
+        @{
+            var blocked = Model.Summary.InProgressSales.Count > 0;
+        }
+        @if (blocked)
+        {
+            <div class="alert alert-warning" role="alert">
+                <p class="mb-2"><strong>@L["Waiting for sales in progress"]</strong></p>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var sale in Model.Summary.InProgressSales)
+                    {
+                        <li class="d-flex justify-content-between align-items-center gap-2 py-1">
+                            <span>@string.Format(L["{0} has an invoice in progress. Wait until it is paid or held."].Value, sale.CashierDisplayName)
+                                <span class="num">(@sale.Total.ToString("N2"))</span></span>
+                            <form asp-action="HoldInProgress" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="invoiceId" value="@sale.InvoiceId" />
+                                <input type="hidden" name="returnTo" value="@Model.ReturnTo" />
+                                <button type="submit" class="btn btn-sm sp-btn-secondary">@L["Hold it"]</button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+        @if (Model.Summary.HeldInvoiceCount > 0)
+        {
+            <div class="alert alert-info" role="status">
+                @string.Format(L["{0} held invoice(s) will be cancelled when this shift closes."].Value, Model.Summary.HeldInvoiceCount)
+            </div>
+        }
         <form asp-action="Close" method="post" id="close-form" novalidate>
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="ShiftId" />
@@ -42,7 +72,7 @@
                 <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
             </div>
 
-            <button type="submit" class="btn sp-btn-primary shift-gate__primary"
+            <button type="submit" class="btn sp-btn-primary shift-gate__primary" @(blocked ? "disabled" : null)
                     data-confirm="@L["Close this shift now? This cannot be undone."]">
                 @L["Confirm and close shift"]
             </button>

@@ -62,6 +62,12 @@ public class ShiftSummaryDto
     public int InvoiceCount { get; set; }
     public IReadOnlyList<ShiftParticipantDto> Participants { get; set; } = [];
 
+    /// <summary>Held invoices (F8). They are cancelled when the shift closes.</summary>
+    public int HeldInvoiceCount { get; set; }
+
+    /// <summary>Non-empty live carts. Closing waits until each is paid or held.</summary>
+    public IReadOnlyList<InProgressSaleDto> InProgressSales { get; set; } = [];
+
     // Close data (null while open)
     public DateTime? ClosedAtUtc { get; set; }
     public string? ClosedByDisplayName { get; set; }

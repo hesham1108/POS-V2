@@ -149,7 +149,7 @@ Each phase is built, tested, and demoed before the next starts.
 - [x] Authorized stock adjustments.
 - [x] Track user performing adjustments.
 
-### Phase 6 — Shifts ✅ (2 items carried into Phase 7)
+### Phase 6 — Shifts ✅
 
 - [x] Permission-based authorization: `RolePermissions` table + seed from the default matrix + one policy per permission (e.g. `Shifts.Close`, `Sales.PriceOverride`, `Sales.Discount`, `Returns.Create`).
 - [x] Localization groundwork: `IStringLocalizer` + resx (ar/en) for the layout/sidebar and all new Phase 6+ screens.
@@ -159,30 +159,32 @@ Each phase is built, tested, and demoed before the next starts.
 - [x] Open shift with optional opening amount.
 - [x] Detect existing open shift.
 - [x] Resume without closing; register participants.
-- [ ] Attribute cashier activities to the shift. → hook ready (`IShiftService.GetActiveShiftIdForUserAsync`); wired when sales exist in Phase 7.
+- [x] Attribute cashier activities to the shift. (sales carry ShiftId + CashierUserId — Phase 7)
 - [x] Close with optional actual cash; compute surplus/shortage when provided.
 - [x] Support Not Reconciled status when count skipped.
 - [x] Close old open shift then open a new one.
 - [x] Prevent conflicting concurrent open/close operations.
-- [ ] If another cashier is mid-sale, wait until complete or held before close. → needs the Phase 7 `Draft` invoice; TODO marked in `ShiftService.CloseAsync`.
+- [x] If another cashier is mid-sale, wait until complete or held before close. (Phase 7: close blocked by non-empty Draft; closer can hold it)
 
-### Phase 7 — POS & Sales ← next
+### Phase 7 — POS & Sales ✅
 
-- [ ] Product search and barcode scanning.
-- [ ] Retail / wholesale mode toggle.
-- [ ] Invoice cart with quantity edit, persisted server-side as a `Draft` sales invoice per cashier (enables "wait for in-progress sale" on shift close and survives a browser close).
-- [ ] Invoice-only price overrides (permission-gated).
-- [ ] Discounts (permission-gated).
-- [ ] Hold / resume invoices.
-- [ ] Sales invoices + items; associate shift + cashier.
-- [ ] Deduct stock on completed sales.
-- [ ] Keyboard shortcuts (F2/F4/F6/F7/F8/F9).
+- [x] Product search and barcode scanning.
+- [x] Retail / wholesale mode toggle.
+- [x] Invoice cart with quantity edit, persisted server-side as a `Draft` sales invoice per cashier (enables "wait for in-progress sale" on shift close and survives a browser close).
+- [x] Invoice-only price overrides (permission-gated).
+- [x] Discounts (permission-gated).
+- [x] Hold / resume invoices.
+- [x] Sales invoices + items; associate shift + cashier.
+- [x] Deduct stock on completed sales.
+- [x] Keyboard shortcuts (F2/F4/F6/F7/F8/F9). F4 shows a "Phase 10" notice until customers exist.
 
-### Phase 8 — Payments & Printing
+Defaults applied from Open Decisions (still to be confirmed by the client): one payment method per invoice; selling above stock blocked (no manager override yet); held invoices cancelled at shift close (warning shown); prices VAT-inclusive, no tax line until receipts.
 
-- [ ] Cash payment + change calculation.
-- [ ] Visa/Card, InstaPay, Vodafone Cash payment records.
-- [ ] Separate cash vs non-cash shift totals.
+### Phase 8 — Payments & Printing ← next
+
+- [x] Cash payment + change calculation. (Phase 7 pay modal)
+- [x] Visa/Card, InstaPay, Vodafone Cash payment records. (Phase 7)
+- [x] Separate cash vs non-cash shift totals. (Phase 7 — shift summary + per cashier)
 - [ ] Thermal 80mm sales receipt (Arabic-capable; store language default).
 - [ ] Receipt fields: store header, invoice meta, lines at charged prices, discount, tender, change, barcode.
 - [ ] Local thermal printer workflow; reprint from sales list.

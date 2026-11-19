@@ -32,10 +32,14 @@
             <strong>Suppliers</strong>
             <span>Contacts and purchase totals</span>
         </a>
-        <div class="home-mod" style="opacity:.55">
-            <strong>POS</strong>
-            <span>Coming — Phase 7</span>
-        </div>
+        <a class="home-mod" asp-controller="Shifts" asp-action="Gate">
+            <strong>@L["POS"]</strong>
+            <span>@L["Sell through the open shift"]</span>
+        </a>
+        <a class="home-mod" asp-controller="Sales" asp-action="Index">
+            <strong>@L["Sales invoices"]</strong>
+            <span>@L["Search completed sales"]</span>
+        </a>
         <div class="home-mod" style="opacity:.55">
             <strong>Settings</strong>
             <span>Coming — Phase 11</span>

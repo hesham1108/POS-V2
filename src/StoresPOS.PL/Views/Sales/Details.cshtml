@@ -1,0 +1,75 @@
+@model SalesInvoiceDetailsDto
+@{
+    ViewData["Section"] = L["Sales invoices"].Value;
+    ViewData["Title"] = string.Format(L["Invoice {0}"].Value, Model.InvoiceNumber);
+    ViewData["Subtitle"] = Model.CompletedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm") + " · " + Model.CashierDisplayName;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back to list"]</a>
+    <span class="btn sp-btn-secondary disabled" title="@L["Coming in a later phase"]">@L["Reprint receipt"]</span>
+    <span class="btn sp-btn-secondary disabled" title="@L["Coming in a later phase"]">@L["Start return"]</span>
+}
+
+<partial name="_PageHeader" />
+
+<div class="shift-layout">
+    <section class="sp-card p-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@L["Item"]</th>
+                        <th class="text-end">@L["Qty"]</th>
+                        <th class="text-end">@L["Price"]</th>
+                        <th class="text-end">@L["Total"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.Lines)
+                    {
+                        <tr>
+                            <td>
+                                @(isAr ? line.NameAr : line.NameEn)
+                                @if (line.IsPriceOverridden)
+                                {
+                                    <div class="small text-muted">
+                                        <span class="sp-status sp-status-warn">@L["Price edited"]</span>
+                                        @string.Format(L["Catalog {0} · by {1}"].Value, line.CatalogUnitPrice.ToString("N2"), line.PriceOverriddenBy)
+                                    </div>
+                                }
+                            </td>
+                            <td class="text-end num">@line.Quantity.ToString("0.###") @line.Unit</td>
+                            <td class="text-end num">@line.UnitPrice.ToString("N2")</td>
+                            <td class="text-end num">@line.LineTotal.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="sp-card shift-summary">
+        <dl class="shift-summary__rows">
+            <div><dt>@L["Sale type"]</dt><dd>@(Model.SaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</dd></div>
+            <div><dt>@L["Shift"]</dt><dd class="num">#@Model.ShiftId</dd></div>
+            <div><dt>@L["Customer"]</dt><dd>@L["Walk-in customer"]</dd></div>
+            <div><dt>@L["Subtotal"]</dt><dd class="num">@Model.Subtotal.ToString("N2")</dd></div>
+            <div><dt>@L["Discount"]</dt><dd class="num">@Model.DiscountAmount.ToString("N2")@(Model.DiscountBy is null ? "" : " · " + Model.DiscountBy)</dd></div>
+        </dl>
+        <div class="shift-summary__expected">
+            <span>@L["Total"]</span>
+            <strong class="num-total">@Model.Total.ToString("N2") <small>@L["EGP"]</small></strong>
+        </div>
+        <dl class="shift-summary__rows">
+            <div><dt>@L["Payment method"]</dt><dd><partial name="_PaymentChip" model="Model.PaymentMethod" /></dd></div>
+            <div><dt>@L["Paid"]</dt><dd class="num">@Model.AmountPaid.ToString("N2")</dd></div>
+            <div><dt>@L["Change"]</dt><dd class="num">@Model.ChangeAmount.ToString("N2")</dd></div>
+            @if (!string.IsNullOrEmpty(Model.PaymentReference))
+            {
+                <div><dt>@L["Reference"]</dt><dd>@Model.PaymentReference</dd></div>
+            }
+        </dl>
+    </section>
+</div>
