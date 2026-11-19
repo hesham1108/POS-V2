@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using StoresPOS.BLL.DTOs;
 using StoresPOS.DAL.Entities;
 
 namespace StoresPOS.PL.ViewModels;
@@ -7,8 +8,10 @@ public class InventoryIndexViewModel
 {
     public string? Search { get; set; }
     public int? CategoryId { get; set; }
+    public int? WarehouseId { get; set; }
     public bool LowStockOnly { get; set; }
     public IReadOnlyList<CategoryOptionViewModel> CategoryOptions { get; set; } = [];
+    public IReadOnlyList<WarehouseListItemDto> WarehouseOptions { get; set; } = [];
     public IReadOnlyList<StockBalanceRowViewModel> Balances { get; set; } = [];
     public int LowStockCount { get; set; }
 }
@@ -21,6 +24,7 @@ public class StockBalanceRowViewModel
     public string? Barcode { get; set; }
     public string Unit { get; set; } = string.Empty;
     public string? CategoryName { get; set; }
+    public string? WarehouseName { get; set; }
     public decimal StockQuantity { get; set; }
     public decimal LowStockThreshold { get; set; }
     public bool IsLowStock { get; set; }
@@ -29,8 +33,10 @@ public class StockBalanceRowViewModel
 public class StockMovementsIndexViewModel
 {
     public int? ProductId { get; set; }
+    public int? WarehouseId { get; set; }
     public StockMovementType? MovementType { get; set; }
     public IReadOnlyList<ProductOptionViewModel> ProductOptions { get; set; } = [];
+    public IReadOnlyList<WarehouseListItemDto> WarehouseOptions { get; set; } = [];
     public IReadOnlyList<StockMovementRowViewModel> Movements { get; set; } = [];
 }
 
@@ -40,6 +46,7 @@ public class StockMovementRowViewModel
     public DateTime CreatedAtUtc { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string Unit { get; set; } = string.Empty;
+    public string? WarehouseName { get; set; }
     public StockMovementType MovementType { get; set; }
     public decimal QuantityChange { get; set; }
     public decimal QuantityBefore { get; set; }
@@ -54,6 +61,10 @@ public class StockAdjustmentFormViewModel
     [Range(1, int.MaxValue, ErrorMessage = "Product is required.")]
     [Display(Name = "Product")]
     public int ProductId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Warehouse is required.")]
+    [Display(Name = "Warehouse")]
+    public int WarehouseId { get; set; }
 
     [Display(Name = "Mode")]
     public string Mode { get; set; } = "delta";
@@ -71,4 +82,5 @@ public class StockAdjustmentFormViewModel
     public string Reason { get; set; } = string.Empty;
 
     public IReadOnlyList<ProductOptionViewModel> ProductOptions { get; set; } = [];
+    public IReadOnlyList<WarehouseListItemDto> WarehouseOptions { get; set; } = [];
 }

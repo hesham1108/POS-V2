@@ -16,17 +16,20 @@ public class PurchasesController : Controller
     private readonly ISupplierService _supplierService;
     private readonly IProductService _productService;
     private readonly ITreasuryService _treasuries;
+    private readonly IWarehouseService _warehouses;
 
     public PurchasesController(
         IPurchaseService purchaseService,
         ISupplierService supplierService,
         IProductService productService,
-        ITreasuryService treasuries)
+        ITreasuryService treasuries,
+        IWarehouseService warehouses)
     {
         _purchaseService = purchaseService;
         _supplierService = supplierService;
         _productService = productService;
         _treasuries = treasuries;
+        _warehouses = warehouses;
     }
 
     [HttpGet]
@@ -99,7 +102,7 @@ public class PurchasesController : Controller
             var dto = ToUpsert(model);
             var result = model.ConfirmOnSave
                 ? await _purchaseService.CreateAndConfirmAsync(
-                    dto, userId, model.PaidFromTreasuryId ?? 0, ToCheque(model), cancellationToken)
+                    dto, userId, model.PaidFromTreasuryId ?? 0, model.ReceivedIntoWarehouseId ?? 0, ToCheque(model), cancellationToken)
                 : await _purchaseService.CreateDraftAsync(dto, userId, cancellationToken);
 
             TempData["Success"] = model.ConfirmOnSave
@@ -156,7 +159,7 @@ public class PurchasesController : Controller
             if (model.ConfirmOnSave)
             {
                 var confirmed = await _purchaseService.ConfirmAsync(
-                    id, this.GetRequiredUserId(), model.PaidFromTreasuryId ?? 0, ToCheque(model), cancellationToken);
+                    id, this.GetRequiredUserId(), model.PaidFromTreasuryId ?? 0, model.ReceivedIntoWarehouseId ?? 0, ToCheque(model), cancellationToken);
                 TempData["Success"] = "Purchase confirmed. Stock and prices updated.";
                 return RedirectToAction(nameof(Details), new { id = confirmed.Id });
             }
@@ -177,6 +180,7 @@ public class PurchasesController : Controller
     public async Task<IActionResult> Confirm(
         int id,
         int paidFromTreasuryId,
+        int receivedIntoWarehouseId,
         bool payByCheque,
         string? chequeNumber,
         string? chequeBank,
@@ -198,7 +202,7 @@ public class PurchasesController : Controller
             }
 
             await _purchaseService.ConfirmAsync(
-                id, this.GetRequiredUserId(), paidFromTreasuryId, cheque, cancellationToken);
+                id, this.GetRequiredUserId(), paidFromTreasuryId, receivedIntoWarehouseId, cheque, cancellationToken);
             TempData["Success"] = "Purchase confirmed. Stock and prices updated.";
         }
         catch (BusinessException ex)
@@ -248,10 +252,17 @@ public class PurchasesController : Controller
         model.SupplierOptions = await LoadSupplierOptionsAsync(cancellationToken);
         model.ProductOptions = await LoadProductOptionsAsync(cancellationToken);
         model.TreasuryOptions = await _treasuries.ListAsync(includeInactive: false, cancellationToken);
+        model.WarehouseOptions = await _warehouses.ListAsync(includeInactive: false, cancellationToken);
         if (!model.PaidFromTreasuryId.HasValue)
         {
             model.PaidFromTreasuryId = model.TreasuryOptions.FirstOrDefault(x => x.IsDefault)?.Id
                 ?? model.TreasuryOptions.FirstOrDefault()?.Id;
+        }
+
+        if (!model.ReceivedIntoWarehouseId.HasValue)
+        {
+            model.ReceivedIntoWarehouseId = model.WarehouseOptions.FirstOrDefault(x => x.IsDefault)?.Id
+                ?? model.WarehouseOptions.FirstOrDefault()?.Id;
         }
     }
 
@@ -325,24 +336,32 @@ public class PurchasesController : Controller
         var treasuries = invoice.Status == PurchaseInvoiceStatus.Draft
             ? await _treasuries.ListAsync(includeInactive: false, cancellationToken)
             : Array.Empty<TreasuryListItemDto>();
+        var warehouses = invoice.Status == PurchaseInvoiceStatus.Draft
+            ? await _warehouses.ListAsync(includeInactive: false, cancellationToken)
+            : Array.Empty<WarehouseListItemDto>();
         return new PurchaseDetailsViewModel
         {
-        Id = invoice.Id,
-        InvoiceNumber = invoice.InvoiceNumber,
-        SupplierName = $"{invoice.SupplierNameEn} / {invoice.SupplierNameAr}",
-        InvoiceDate = invoice.InvoiceDate,
-        Status = invoice.Status,
-        Notes = invoice.Notes,
-        SubTotal = invoice.SubTotal,
-        CreatedByUsername = invoice.CreatedByUsername,
-        CreatedAtUtc = invoice.CreatedAtUtc,
-        ConfirmedByUsername = invoice.ConfirmedByUsername,
-        ConfirmedAtUtc = invoice.ConfirmedAtUtc,
-        PaidFromTreasuryId = invoice.PaidFromTreasuryId
-            ?? treasuries.FirstOrDefault(x => x.IsDefault)?.Id
-            ?? treasuries.FirstOrDefault()?.Id,
-        PaidFromTreasuryName = invoice.PaidFromTreasuryNameEn,
-        TreasuryOptions = treasuries,
+            Id = invoice.Id,
+            InvoiceNumber = invoice.InvoiceNumber,
+            SupplierName = $"{invoice.SupplierNameEn} / {invoice.SupplierNameAr}",
+            InvoiceDate = invoice.InvoiceDate,
+            Status = invoice.Status,
+            Notes = invoice.Notes,
+            SubTotal = invoice.SubTotal,
+            CreatedByUsername = invoice.CreatedByUsername,
+            CreatedAtUtc = invoice.CreatedAtUtc,
+            ConfirmedByUsername = invoice.ConfirmedByUsername,
+            ConfirmedAtUtc = invoice.ConfirmedAtUtc,
+            PaidFromTreasuryId = invoice.PaidFromTreasuryId
+                ?? treasuries.FirstOrDefault(x => x.IsDefault)?.Id
+                ?? treasuries.FirstOrDefault()?.Id,
+            PaidFromTreasuryName = invoice.PaidFromTreasuryNameEn,
+            ReceivedIntoWarehouseId = invoice.ReceivedIntoWarehouseId
+                ?? warehouses.FirstOrDefault(x => x.IsDefault)?.Id
+                ?? warehouses.FirstOrDefault()?.Id,
+            ReceivedIntoWarehouseName = invoice.ReceivedIntoWarehouseNameEn,
+            TreasuryOptions = treasuries,
+            WarehouseOptions = warehouses,
             Items = invoice.Items.Select(x => new PurchaseLineDetailsViewModel
             {
                 ProductNameEn = x.ProductNameEn,

@@ -37,8 +37,10 @@ public class PurchasesReportViewModel : ReportPageViewModel
 public class InventoryReportViewModel : ReportPageViewModel
 {
     public int? CategoryId { get; set; }
+    public int? WarehouseId { get; set; }
     public bool LowOnly { get; set; }
     public IReadOnlyList<ReportOption> Categories { get; set; } = [];
+    public IReadOnlyList<ReportOption> Warehouses { get; set; } = [];
     public InventoryReportDto Report { get; set; } = new();
 }
 

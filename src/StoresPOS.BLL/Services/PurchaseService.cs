@@ -11,22 +11,26 @@ public class PurchaseService : IPurchaseService
 {
     public const string MsgTreasuryRequired = "Choose a treasury to pay this purchase from.";
     public const string MsgPayMethod = "Pay from a treasury or enter an outgoing cheque.";
+    public const string MsgWarehouseRequired = "Choose a warehouse to receive this purchase into.";
 
     private readonly ApplicationDbContext _db;
     private readonly IInventoryService _inventoryService;
     private readonly ITreasuryService _treasuries;
     private readonly IChequeService _cheques;
+    private readonly IWarehouseService _warehouses;
 
     public PurchaseService(
         ApplicationDbContext db,
         IInventoryService inventoryService,
         ITreasuryService treasuries,
-        IChequeService cheques)
+        IChequeService cheques,
+        IWarehouseService warehouses)
     {
         _db = db;
         _inventoryService = inventoryService;
         _treasuries = treasuries;
         _cheques = cheques;
+        _warehouses = warehouses;
     }
 
     public async Task<IReadOnlyList<PurchaseInvoiceListItemDto>> GetListAsync(
@@ -98,6 +102,9 @@ public class PurchaseService : IPurchaseService
                 PaidFromTreasuryId = x.PaidFromTreasuryId,
                 PaidFromTreasuryNameEn = x.PaidFromTreasury != null ? x.PaidFromTreasury.NameEn : null,
                 PaidFromTreasuryNameAr = x.PaidFromTreasury != null ? x.PaidFromTreasury.NameAr : null,
+                ReceivedIntoWarehouseId = x.ReceivedIntoWarehouseId,
+                ReceivedIntoWarehouseNameEn = x.ReceivedIntoWarehouse != null ? x.ReceivedIntoWarehouse.NameEn : null,
+                ReceivedIntoWarehouseNameAr = x.ReceivedIntoWarehouse != null ? x.ReceivedIntoWarehouse.NameAr : null,
                 Items = x.Items
                     .OrderBy(i => i.Id)
                     .Select(i => new PurchaseInvoiceItemDto
@@ -169,6 +176,7 @@ public class PurchaseService : IPurchaseService
         int id,
         int userId,
         int paidFromTreasuryId,
+        int receivedIntoWarehouseId,
         ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default)
     {
@@ -189,7 +197,9 @@ public class PurchaseService : IPurchaseService
                 throw new BusinessException("Cannot confirm a purchase with no lines.");
             }
 
-            await ApplyPurchaseStockAsync(entity.Id, entity.Items, userId, cancellationToken);
+            var warehouseId = await ResolveReceiveWarehouseAsync(receivedIntoWarehouseId, cancellationToken);
+            await ApplyPurchaseStockAsync(entity.Id, warehouseId, entity.Items, userId, cancellationToken);
+            entity.ReceivedIntoWarehouseId = warehouseId;
 
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
@@ -206,6 +216,7 @@ public class PurchaseService : IPurchaseService
         PurchaseInvoiceUpsertDto dto,
         int userId,
         int paidFromTreasuryId,
+        int receivedIntoWarehouseId,
         ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default)
     {
@@ -215,7 +226,9 @@ public class PurchaseService : IPurchaseService
             _db.PurchaseInvoices.Add(entity);
             await _db.SaveChangesAsync(cancellationToken);
 
-            await ApplyPurchaseStockAsync(entity.Id, entity.Items, userId, cancellationToken);
+            var warehouseId = await ResolveReceiveWarehouseAsync(receivedIntoWarehouseId, cancellationToken);
+            await ApplyPurchaseStockAsync(entity.Id, warehouseId, entity.Items, userId, cancellationToken);
+            entity.ReceivedIntoWarehouseId = warehouseId;
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
             entity.ConfirmedByUserId = userId;
@@ -310,11 +323,13 @@ public class PurchaseService : IPurchaseService
 
     private Task ApplyPurchaseStockAsync(
         int purchaseInvoiceId,
+        int warehouseId,
         IEnumerable<PurchaseInvoiceItem> items,
         int userId,
         CancellationToken cancellationToken) =>
         _inventoryService.ApplyPurchaseReceiptAsync(
             purchaseInvoiceId,
+            warehouseId,
             items.Select(x => new PurchaseStockLineDto
             {
                 ProductId = x.ProductId,
@@ -323,6 +338,31 @@ public class PurchaseService : IPurchaseService
             }).ToList(),
             userId,
             cancellationToken);
+
+    private async Task<int> ResolveReceiveWarehouseAsync(int warehouseId, CancellationToken cancellationToken)
+    {
+        if (warehouseId <= 0)
+        {
+            throw new BusinessException(MsgWarehouseRequired);
+        }
+
+        await _warehouses.EnsureSeededAsync(cancellationToken);
+        var active = await _db.Warehouses.AsNoTracking()
+            .Where(x => x.Id == warehouseId)
+            .Select(x => (bool?)x.IsActive)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (active is null)
+        {
+            throw new BusinessException(MsgWarehouseRequired);
+        }
+
+        if (!active.Value)
+        {
+            throw new BusinessException("That warehouse is not active.");
+        }
+
+        return warehouseId;
+    }
 
     private async Task<List<PurchaseInvoiceItem>> BuildLineEntitiesAsync(
         IReadOnlyList<PurchaseInvoiceItemInputDto> items,

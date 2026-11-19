@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 13 complete** — next is **Phase 14 (Warehouses)**
-- Overall progress: Phases 1–13 verified
+- Current phase: **Phase 14 complete** — next is **Phase 15 (Settings & Delivery)**
+- Overall progress: Phases 1–14 verified
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -125,10 +125,22 @@
 - Tests: BLL 97/97, PL 12/12
 - **Re-login required** after deploy so JWT picks up cheque permissions
 
+### Phase 14 — Warehouses (المخازن)
+
+- `Warehouse` + `WarehouseStock`; seed Main warehouse; migrate `Product.StockQuantity` into Main; `Product.StockQuantity` kept as denormalized total
+- Every `StockMovement` has `WarehouseId` (before/after = warehouse qty); `StockMovementType.Transfer`
+- `StockTransfer` / `StockTransferItem` document (rule 17 / journey M) + list + print
+- Purchases: `ReceivedIntoWarehouseId` at confirm; POS/returns use `Store:SellingWarehouseId` (0 = default)
+- Inventory balances / movements / adjust + inventory report filter by warehouse
+- Permissions `Warehouses.View` / `Transfer` / `Manage` (Admin all; Manager View+Transfer; Manage optional/off)
+- Migration `Warehouses` applied
+- Tests: BLL 101/101, PL 12/12
+- **Re-login required** after deploy so JWT picks up warehouse permissions
+
 ## Pending Tasks
 - Returns: no in-line manager approval for cashiers yet (manager makes the return) — confirm with client
 - Silent printing on the real thermal printer not tested (no printer here) — follow `docs/printing.md` on the store PC
-- Apply migrations through `Cheques` on every store SQL; full POS click-through (en + ar)
+- Apply migrations through `Warehouses` on every store SQL; full POS click-through (en + ar)
 - Profit uses the purchase price saved on each sale line (last purchase price), not weighted average cost — open decision "Profit costing"
 - Customers screens use Reports.View (Admin/Manager); cashiers add customers only from the POS (F4) — confirm with client
 - Minus signs in the existing `_ShiftSummary` render after the number in Arabic (e.g. "0.00-") — cosmetic
@@ -143,13 +155,13 @@
 | Command | Result |
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 97/97 |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 101/101 |
 | `dotnet test tests/StoresPOS.PL.Tests` | Passed 12/12 |
-| `dotnet ef database update` | Applied through `Cheques` |
+| `dotnet ef database update` | Applied through `Warehouses` |
 
 ## Next Recommended Task
 
-Phase 14 — Warehouses (المخازن). Then 15 settings & delivery
+Phase 15 — Settings & Delivery
 
 ## Design System Note (2026-11-19)
 
@@ -181,6 +193,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 11 payment methods table (+ Cheque) + manage screen + A4 landscape invoices |
 | 2026-11-19 | Phase 12 treasuries ledger, shift handover, purchase pay-from, statement + dashboard |
 | 2026-11-19 | Phase 13 cheques (لينا/علينا), collect/pay → treasury, POS + purchase + reports |
+| 2026-11-19 | Phase 14 warehouses, stock transfers, per-warehouse inventory + POS selling warehouse |
 
 ## Local Dev Login
 

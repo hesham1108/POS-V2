@@ -1,0 +1,121 @@
+@model WarehouseTransferViewModel
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var options = Model.Warehouses.Select(w => new SelectListItem
+    {
+        Value = w.Id.ToString(),
+        Text = isAr ? w.NameAr : w.NameEn
+    }).ToList();
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Transfers">@L["Cancel"]</a>
+}
+
+<partial name="_PageHeader" />
+
+<div class="sp-card p-4">
+    <form asp-action="Transfer" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label asp-for="FromWarehouseId" class="form-label"></label>
+                <select asp-for="FromWarehouseId" class="form-select" asp-items="options">
+                    <option value="">@L["— select —"]</option>
+                </select>
+                <span asp-validation-for="FromWarehouseId" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ToWarehouseId" class="form-label"></label>
+                <select asp-for="ToWarehouseId" class="form-select" asp-items="options">
+                    <option value="">@L["— select —"]</option>
+                </select>
+                <span asp-validation-for="ToWarehouseId" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Notes" class="form-label"></label>
+            <input asp-for="Notes" class="form-control" />
+        </div>
+
+        <div class="table-responsive mb-3">
+            <table class="table align-middle" id="transfer-lines">
+                <thead>
+                    <tr>
+                        <th>@L["Product"]</th>
+                        <th style="width:8rem">@L["Qty"]</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for (var i = 0; i < Model.Items.Count; i++)
+                {
+                    <tr class="transfer-line">
+                        <td>
+                            <select name="Items[@i].ProductId" class="form-select" asp-items="@(new SelectList(Model.ProductOptions, "Id", "DisplayName", Model.Items[i].ProductId))">
+                                <option value="">@L["— select —"]</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input name="Items[@i].Quantity" class="form-control num" value="@Model.Items[i].Quantity" inputmode="decimal" step="0.001" min="0.001" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm sp-btn-secondary remove-line">×</button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="btn sp-btn-secondary mb-3" id="add-line">@L["Add line"]</button>
+        <div>
+            <button type="submit" class="btn sp-btn-primary">@L["Save transfer"]</button>
+        </div>
+        <p class="form-text mt-3 mb-0">@L["One transfer moves stock out of one warehouse and into another in a single transaction."]</p>
+    </form>
+</div>
+
+<template id="transfer-line-template">
+    <tr class="transfer-line">
+        <td>
+            <select name="Items[__IX__].ProductId" class="form-select">
+                <option value="">@L["— select —"]</option>
+                @foreach (var p in Model.ProductOptions)
+                {
+                    <option value="@p.Id">@p.DisplayName</option>
+                }
+            </select>
+        </td>
+        <td>
+            <input name="Items[__IX__].Quantity" class="form-control num" value="1" inputmode="decimal" step="0.001" min="0.001" />
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm sp-btn-secondary remove-line">×</button>
+        </td>
+    </tr>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const tbody = document.querySelector('#transfer-lines tbody');
+            const tpl = document.getElementById('transfer-line-template');
+            document.getElementById('add-line')?.addEventListener('click', () => {
+                const ix = tbody.querySelectorAll('.transfer-line').length;
+                const html = tpl.innerHTML.replaceAll('__IX__', String(ix));
+                tbody.insertAdjacentHTML('beforeend', html);
+            });
+            tbody?.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-line');
+                if (!btn) return;
+                const rows = tbody.querySelectorAll('.transfer-line');
+                if (rows.length <= 1) return;
+                btn.closest('tr')?.remove();
+            });
+        })();
+    </script>
+}

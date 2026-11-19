@@ -17,9 +17,13 @@ public class PurchaseInvoice
     /// <summary>Treasury the purchase was paid from at confirm (Phase 12).</summary>
     public int? PaidFromTreasuryId { get; set; }
 
+    /// <summary>Warehouse stock is received into at confirm (Phase 14).</summary>
+    public int? ReceivedIntoWarehouseId { get; set; }
+
     public Supplier Supplier { get; set; } = null!;
     public User CreatedByUser { get; set; } = null!;
     public User? ConfirmedByUser { get; set; }
     public Treasury? PaidFromTreasury { get; set; }
+    public Warehouse? ReceivedIntoWarehouse { get; set; }
     public ICollection<PurchaseInvoiceItem> Items { get; set; } = new List<PurchaseInvoiceItem>();
 }

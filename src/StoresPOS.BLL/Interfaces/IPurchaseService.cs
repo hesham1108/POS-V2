@@ -24,6 +24,7 @@ public interface IPurchaseService
         int id,
         int userId,
         int paidFromTreasuryId,
+        int receivedIntoWarehouseId,
         ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default);
 
@@ -32,6 +33,7 @@ public interface IPurchaseService
         PurchaseInvoiceUpsertDto dto,
         int userId,
         int paidFromTreasuryId,
+        int receivedIntoWarehouseId,
         ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default);
 }

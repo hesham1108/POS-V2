@@ -1,0 +1,43 @@
+@model WarehouseEditViewModel
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Cancel"]</a>
+}
+
+<partial name="_PageHeader" />
+
+<div class="sp-card p-4" style="max-width:560px">
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="NameEn" class="form-label"></label>
+            <input asp-for="NameEn" class="form-control" />
+            <span asp-validation-for="NameEn" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NameAr" class="form-label"></label>
+            <input asp-for="NameAr" class="form-control" dir="rtl" />
+            <span asp-validation-for="NameAr" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Location" class="form-label"></label>
+            <input asp-for="Location" class="form-control" />
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+        <div class="form-check mb-4">
+            <input asp-for="IsDefault" class="form-check-input" />
+            <label asp-for="IsDefault" class="form-check-label"></label>
+        </div>
+        <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

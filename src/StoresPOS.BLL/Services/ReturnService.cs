@@ -33,6 +33,7 @@ public class ReturnService : IReturnService
     private readonly IInventoryService _inventory;
     private readonly IPermissionService _permissions;
     private readonly IPaymentMethodService _paymentMethods;
+    private readonly IWarehouseService _warehouses;
     private readonly StoreSettings _store;
     private readonly TimeProvider _time;
 
@@ -41,6 +42,7 @@ public class ReturnService : IReturnService
         IInventoryService inventory,
         IPermissionService permissions,
         IPaymentMethodService paymentMethods,
+        IWarehouseService warehouses,
         IOptions<StoreSettings> store,
         TimeProvider time)
     {
@@ -48,6 +50,7 @@ public class ReturnService : IReturnService
         _inventory = inventory;
         _permissions = permissions;
         _paymentMethods = paymentMethods;
+        _warehouses = warehouses;
         _store = store.Value;
         _time = time;
     }
@@ -288,8 +291,10 @@ public class ReturnService : IReturnService
             _db.SalesReturns.Add(salesReturn);
             await _db.SaveChangesAsync(cancellationToken);
 
+            var sellingWarehouseId = await _warehouses.GetSellingWarehouseIdAsync(cancellationToken);
             await _inventory.ApplySaleReturnAsync(
                 salesReturn.Id,
+                sellingWarehouseId,
                 salesReturn.Items.Select(x => new SaleStockLineDto { ProductId = x.ProductId, Quantity = x.Quantity }).ToList(),
                 userId,
                 cancellationToken);

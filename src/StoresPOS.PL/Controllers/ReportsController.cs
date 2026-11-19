@@ -22,6 +22,7 @@ public class ReportsController : Controller
     private readonly IChequeService _cheques;
     private readonly ICategoryService _categories;
     private readonly ISupplierService _suppliers;
+    private readonly IWarehouseService _warehouses;
     private readonly TimeProvider _time;
 
     public ReportsController(
@@ -29,12 +30,14 @@ public class ReportsController : Controller
         IChequeService cheques,
         ICategoryService categories,
         ISupplierService suppliers,
+        IWarehouseService warehouses,
         TimeProvider time)
     {
         _reports = reports;
         _cheques = cheques;
         _categories = categories;
         _suppliers = suppliers;
+        _warehouses = warehouses;
         _time = time;
     }
 
@@ -101,22 +104,27 @@ public class ReportsController : Controller
         DateTime? from,
         DateTime? to,
         int? categoryId,
+        int? warehouseId,
         bool lowOnly = false,
         CancellationToken cancellationToken = default)
     {
         var (f, t) = Range(from, to);
+        var warehouses = await _warehouses.ListAsync(includeInactive: false, cancellationToken);
         return View(new InventoryReportViewModel
         {
             From = f,
             To = t,
             CategoryId = categoryId,
+            WarehouseId = warehouseId,
             LowOnly = lowOnly,
             Categories = await CategoriesAsync(cancellationToken),
+            Warehouses = warehouses.Select(w => new ReportOption { Id = w.Id, Name = $"{w.NameEn} / {w.NameAr}" }).ToList(),
             Report = await _reports.GetInventoryAsync(new InventoryReportFilterDto
             {
                 FromUtc = ToUtc(f),
                 ToUtc = ToUtc(t.AddDays(1)),
                 CategoryId = categoryId,
+                WarehouseId = warehouseId,
                 LowStockOnly = lowOnly
             }, cancellationToken)
         });

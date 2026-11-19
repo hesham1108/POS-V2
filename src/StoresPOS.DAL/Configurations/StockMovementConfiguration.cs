@@ -19,6 +19,7 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.Property(x => x.Reason).HasMaxLength(500);
 
         builder.HasIndex(x => x.ProductId);
+        builder.HasIndex(x => x.WarehouseId);
         builder.HasIndex(x => x.CreatedAtUtc);
         builder.HasIndex(x => x.MovementType);
         builder.HasIndex(x => new { x.ReferenceType, x.ReferenceId });
@@ -26,6 +27,11 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.HasOne(x => x.Product)
             .WithMany()
             .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Warehouse)
+            .WithMany(x => x.Movements)
+            .HasForeignKey(x => x.WarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.CreatedByUser)

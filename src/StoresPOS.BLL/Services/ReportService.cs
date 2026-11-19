@@ -310,27 +310,63 @@ public class ReportService : IReportService
             products = products.Where(x => x.CategoryId.HasValue && ids.Contains(x.CategoryId.Value));
         }
 
-        if (filter.LowStockOnly)
+        List<InventoryReportRowDto> rows;
+        if (filter.WarehouseId.HasValue)
         {
-            products = products.Where(x => x.StockQuantity <= x.LowStockThreshold);
-        }
+            var warehouseId = filter.WarehouseId.Value;
+            var q =
+                from p in products
+                join ws in _db.WarehouseStocks.AsNoTracking().Where(x => x.WarehouseId == warehouseId)
+                    on p.Id equals ws.ProductId into stocks
+                from ws in stocks.DefaultIfEmpty()
+                select new { Product = p, Qty = ws != null ? ws.Quantity : 0m };
 
-        var rows = await products
-            .OrderBy(x => x.NameEn)
-            .Select(x => new InventoryReportRowDto
+            if (filter.LowStockOnly)
             {
-                ProductId = x.Id,
-                NameEn = x.NameEn,
-                NameAr = x.NameAr,
-                CategoryNameEn = x.Category != null ? x.Category.NameEn : null,
-                CategoryNameAr = x.Category != null ? x.Category.NameAr : null,
-                Unit = x.Unit,
-                StockQuantity = x.StockQuantity,
-                LowStockThreshold = x.LowStockThreshold,
-                UnitCost = x.PurchasePrice,
-                RetailPrice = x.RetailPrice
-            })
-            .ToListAsync(cancellationToken);
+                q = q.Where(x => x.Qty <= x.Product.LowStockThreshold);
+            }
+
+            rows = await q
+                .OrderBy(x => x.Product.NameEn)
+                .Select(x => new InventoryReportRowDto
+                {
+                    ProductId = x.Product.Id,
+                    NameEn = x.Product.NameEn,
+                    NameAr = x.Product.NameAr,
+                    CategoryNameEn = x.Product.Category != null ? x.Product.Category.NameEn : null,
+                    CategoryNameAr = x.Product.Category != null ? x.Product.Category.NameAr : null,
+                    Unit = x.Product.Unit,
+                    StockQuantity = x.Qty,
+                    LowStockThreshold = x.Product.LowStockThreshold,
+                    UnitCost = x.Product.PurchasePrice,
+                    RetailPrice = x.Product.RetailPrice
+                })
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            if (filter.LowStockOnly)
+            {
+                products = products.Where(x => x.StockQuantity <= x.LowStockThreshold);
+            }
+
+            rows = await products
+                .OrderBy(x => x.NameEn)
+                .Select(x => new InventoryReportRowDto
+                {
+                    ProductId = x.Id,
+                    NameEn = x.NameEn,
+                    NameAr = x.NameAr,
+                    CategoryNameEn = x.Category != null ? x.Category.NameEn : null,
+                    CategoryNameAr = x.Category != null ? x.Category.NameAr : null,
+                    Unit = x.Unit,
+                    StockQuantity = x.StockQuantity,
+                    LowStockThreshold = x.LowStockThreshold,
+                    UnitCost = x.PurchasePrice,
+                    RetailPrice = x.RetailPrice
+                })
+                .ToListAsync(cancellationToken);
+        }
 
         foreach (var row in rows)
         {
@@ -341,6 +377,11 @@ public class ReportService : IReportService
         }
 
         var movements = _db.StockMovements.AsNoTracking().Where(m => products.Any(p => p.Id == m.ProductId));
+        if (filter.WarehouseId.HasValue)
+        {
+            movements = movements.Where(x => x.WarehouseId == filter.WarehouseId.Value);
+        }
+
         if (filter.FromUtc.HasValue)
         {
             movements = movements.Where(x => x.CreatedAtUtc >= filter.FromUtc.Value);

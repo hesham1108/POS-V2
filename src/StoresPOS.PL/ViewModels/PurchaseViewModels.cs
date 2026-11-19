@@ -47,6 +47,9 @@ public class PurchaseFormViewModel
     [Display(Name = "Pay from treasury")]
     public int? PaidFromTreasuryId { get; set; }
 
+    [Display(Name = "Receive into warehouse")]
+    public int? ReceivedIntoWarehouseId { get; set; }
+
     [Display(Name = "Pay by cheque")]
     public bool PayByCheque { get; set; }
 
@@ -65,6 +68,7 @@ public class PurchaseFormViewModel
     public IReadOnlyList<SupplierOptionViewModel> SupplierOptions { get; set; } = [];
     public IReadOnlyList<ProductOptionViewModel> ProductOptions { get; set; } = [];
     public IReadOnlyList<TreasuryListItemDto> TreasuryOptions { get; set; } = [];
+    public IReadOnlyList<WarehouseListItemDto> WarehouseOptions { get; set; } = [];
 }
 
 public class ProductOptionViewModel
@@ -110,7 +114,10 @@ public class PurchaseDetailsViewModel
     public DateTime? ConfirmedAtUtc { get; set; }
     public int? PaidFromTreasuryId { get; set; }
     public string? PaidFromTreasuryName { get; set; }
+    public int? ReceivedIntoWarehouseId { get; set; }
+    public string? ReceivedIntoWarehouseName { get; set; }
     public IReadOnlyList<TreasuryListItemDto> TreasuryOptions { get; set; } = [];
+    public IReadOnlyList<WarehouseListItemDto> WarehouseOptions { get; set; } = [];
     public IReadOnlyList<PurchaseLineDetailsViewModel> Items { get; set; } = [];
 }
 

@@ -43,6 +43,23 @@
                 }
             </select>
         </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="warehouseId">Warehouse</label>
+            <select class="form-select" id="warehouseId" name="warehouseId">
+                <option value="">All (total)</option>
+                @foreach (var w in Model.WarehouseOptions)
+                {
+                    if (Model.WarehouseId == w.Id)
+                    {
+                        <option value="@w.Id" selected>@w.NameEn</option>
+                    }
+                    else
+                    {
+                        <option value="@w.Id">@w.NameEn</option>
+                    }
+                }
+            </select>
+        </div>
         <label class="sp-filter-row__check form-check" for="lowStockOnly">
             <input class="form-check-input" type="checkbox" name="lowStockOnly" value="true" id="lowStockOnly"
                    @(Model.LowStockOnly ? "checked" : null) />

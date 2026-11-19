@@ -1,0 +1,50 @@
+@model WarehouseStockViewModel
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back"]</a>
+    <button type="button" class="btn sp-btn-secondary" onclick="window.print()">@L["Print"]</button>
+}
+
+<partial name="_PageHeader" />
+
+<div class="sp-card p-3 mb-4 d-print-none">
+    <form method="get" class="sp-filter-row">
+        <input type="hidden" name="id" value="@Model.WarehouseId" />
+        <input class="form-control" name="search" value="@Model.Search" placeholder="@L["Search"]" />
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
+        </div>
+    </form>
+</div>
+
+<div class="sp-card p-0 overflow-hidden">
+    <table class="table mb-0 align-middle">
+        <thead>
+            <tr>
+                <th>@L["Product"]</th>
+                <th class="col-num">@L["Qty"]</th>
+                <th>@L["Unit"]</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in Model.Rows)
+        {
+            var name = isAr ? row.NameAr : row.NameEn;
+            <tr>
+                <td>
+                    <div class="fw-semibold">@name</div>
+                    @if (!string.IsNullOrWhiteSpace(row.Barcode))
+                    {
+                        <div class="small text-muted num">@row.Barcode</div>
+                    }
+                </td>
+                <td class="col-num num fw-semibold">@row.Quantity.ToString("0.###")</td>
+                <td>@row.Unit</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

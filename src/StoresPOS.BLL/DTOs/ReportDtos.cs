@@ -122,6 +122,7 @@ public class PurchasesReportDto
 public class InventoryReportFilterDto : ReportFilterBaseDto
 {
     public int? CategoryId { get; set; }
+    public int? WarehouseId { get; set; }
     public bool LowStockOnly { get; set; }
 }
 

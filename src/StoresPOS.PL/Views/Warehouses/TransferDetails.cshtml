@@ -1,0 +1,63 @@
+@model WarehouseTransferDetailViewModel
+@{
+    var t = Model.Transfer;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Transfers">@L["Back"]</a>
+    <button type="button" class="btn sp-btn-secondary" onclick="window.print()">@L["Print"]</button>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="sp-card p-4 mb-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="text-muted small">@L["From"]</div>
+            <div class="fw-semibold">@(isAr ? t.FromWarehouseNameAr : t.FromWarehouseNameEn)</div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@L["To"]</div>
+            <div class="fw-semibold">@(isAr ? t.ToWarehouseNameAr : t.ToWarehouseNameEn)</div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@L["User"]</div>
+            <div>@t.CreatedByUsername</div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@L["Date"]</div>
+            <div class="num">@t.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(t.Notes))
+        {
+            <div class="col-12">
+                <div class="text-muted small">@L["Notes"]</div>
+                <div>@t.Notes</div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="sp-card p-0 overflow-hidden">
+    <table class="table mb-0 align-middle">
+        <thead>
+            <tr>
+                <th>@L["Product"]</th>
+                <th>@L["Unit"]</th>
+                <th class="col-num">@L["Qty"]</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var line in t.Items)
+        {
+            <tr>
+                <td>@(isAr ? line.ProductNameAr : line.ProductNameEn)</td>
+                <td>@line.Unit</td>
+                <td class="col-num num fw-semibold">@line.Quantity.ToString("0.###")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

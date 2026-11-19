@@ -35,6 +35,12 @@ public class StoreSettings
     /// <summary>Paper roll width; the printable area is ~8 mm narrower.</summary>
     public int PaperWidthMm { get; set; } = 80;
 
+    /// <summary>
+    /// Warehouse POS sells from and returns restock into (open decision: one selling warehouse).
+    /// 0 = use the warehouse marked IsDefault.
+    /// </summary>
+    public int SellingWarehouseId { get; set; }
+
     public string NameFor(string language) => language == "ar" ? NameAr : NameEn;
     public string? AddressFor(string language) => language == "ar" ? AddressAr : AddressEn;
     public string? FooterFor(string language) => language == "ar" ? ReceiptFooterAr : ReceiptFooterEn;

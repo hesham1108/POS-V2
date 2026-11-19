@@ -14,9 +14,10 @@ public class InventoryServiceTests
     {
         await using var db = CreateDb();
         var (userId, supplierId, productId) = await SeedAsync(db);
-        var inventory = new InventoryService(db);
+        var inventory = TestFactories.Inventory(db);
         var treasuryId = await SeedTreasuryAsync(db);
-        var purchases = new PurchaseService(db, inventory, new TreasuryService(db, TimeProvider.System), new ChequeService(db, new TreasuryService(db, TimeProvider.System), TimeProvider.System));
+        var purchases = TestFactories.Purchases(db);
+        var warehouseId = await TestFactories.DefaultWarehouseIdAsync(db);
 
         await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
         {
@@ -26,7 +27,7 @@ public class InventoryServiceTests
             [
                 new PurchaseInvoiceItemInputDto { ProductId = productId, Quantity = 8, UnitCost = 65m }
             ]
-        }, userId, treasuryId);
+        }, userId, treasuryId, warehouseId);
 
         var balances = await inventory.GetBalancesAsync();
         Assert.Equal(8m, balances.Single().StockQuantity);

@@ -266,14 +266,14 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 
 ### Phase 14 — Warehouses (المخازن)
 
-- [ ] `Warehouse` (name ar/en, location, active, is-default) + `WarehouseStock` (warehouse × product quantity); migrate current `Product.StockQuantity` into a default "Main warehouse".
-- [ ] Every `StockMovement` carries `WarehouseId`; product total stock = sum across warehouses.
-- [ ] Warehouses screen: create / edit / deactivate (no delete with stock or movements).
-- [ ] Purchases receive into a chosen warehouse; returns restock into the selling warehouse.
-- [ ] POS sells from the store's selling warehouse (setting); zero-stock rule checked per warehouse.
-- [ ] Stock transfer document between warehouses (rule 17) + transfer list + print.
-- [ ] Adjustments and stock counts per warehouse; inventory balances / low-stock / reports filter by warehouse.
-- [ ] Permissions `Warehouses.View`, `Warehouses.Transfer`, `Warehouses.Manage`.
+- [x] `Warehouse` (name ar/en, location, active, is-default) + `WarehouseStock` (warehouse × product quantity); migrate current `Product.StockQuantity` into a default "Main warehouse".
+- [x] Every `StockMovement` carries `WarehouseId`; product total stock = sum across warehouses.
+- [x] Warehouses screen: create / edit / deactivate (no delete with stock or movements).
+- [x] Purchases receive into a chosen warehouse; returns restock into the selling warehouse.
+- [x] POS sells from the store's selling warehouse (setting); zero-stock rule checked per warehouse.
+- [x] Stock transfer document between warehouses (rule 17) + transfer list + print.
+- [x] Adjustments and stock counts per warehouse; inventory balances / low-stock / reports filter by warehouse.
+- [x] Permissions `Warehouses.View`, `Warehouses.Transfer`, `Warehouses.Manage`.
 
 ### Phase 15 — Settings & Delivery
 

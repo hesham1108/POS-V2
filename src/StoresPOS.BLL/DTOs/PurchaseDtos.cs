@@ -47,6 +47,9 @@ public class PurchaseInvoiceDetailDto
     public int? PaidFromTreasuryId { get; set; }
     public string? PaidFromTreasuryNameEn { get; set; }
     public string? PaidFromTreasuryNameAr { get; set; }
+    public int? ReceivedIntoWarehouseId { get; set; }
+    public string? ReceivedIntoWarehouseNameEn { get; set; }
+    public string? ReceivedIntoWarehouseNameAr { get; set; }
     public IReadOnlyList<PurchaseInvoiceItemDto> Items { get; set; } = [];
 }
 

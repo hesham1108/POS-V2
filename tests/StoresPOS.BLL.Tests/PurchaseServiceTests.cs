@@ -33,7 +33,8 @@ public class PurchaseServiceTests
 
         Assert.Equal(PurchaseInvoiceStatus.Draft, draft.Status);
 
-        var confirmed = await purchases.ConfirmAsync(draft.Id, userId, treasuryId);
+        var confirmed = await purchases.ConfirmAsync(
+            draft.Id, userId, treasuryId, await TestFactories.DefaultWarehouseIdAsync(db));
         Assert.Equal(PurchaseInvoiceStatus.Confirmed, confirmed.Status);
         Assert.Equal(650m, confirmed.SubTotal);
         Assert.Equal(treasuryId, confirmed.PaidFromTreasuryId);
@@ -70,7 +71,7 @@ public class PurchaseServiceTests
                     UnitCost = 40m
                 }
             ]
-        }, userId, treasuryId);
+        }, userId, treasuryId, await TestFactories.DefaultWarehouseIdAsync(db));
 
         Assert.Single(invoice.Items);
         Assert.Equal("Oil", invoice.Items[0].ProductNameEn);
@@ -101,7 +102,7 @@ public class PurchaseServiceTests
             [
                 new PurchaseInvoiceItemInputDto { ProductId = productId, Quantity = 1, UnitCost = 10m }
             ]
-        }, userId, treasuryId);
+        }, userId, treasuryId, await TestFactories.DefaultWarehouseIdAsync(db));
 
         await Assert.ThrowsAsync<BusinessException>(() => purchases.UpdateDraftAsync(invoice.Id, new PurchaseInvoiceUpsertDto
         {
@@ -132,11 +133,8 @@ public class PurchaseServiceTests
         }, userId));
     }
 
-    private static PurchaseService CreatePurchases(ApplicationDbContext db)
-    {
-        var treasuries = new TreasuryService(db, TimeProvider.System);
-        return new PurchaseService(db, new InventoryService(db), treasuries, new ChequeService(db, treasuries, TimeProvider.System));
-    }
+    private static PurchaseService CreatePurchases(ApplicationDbContext db) =>
+        TestFactories.Purchases(db);
 
     private static async Task<(int UserId, int SupplierId, int ProductId, int TreasuryId)> SeedAsync(ApplicationDbContext db)
     {

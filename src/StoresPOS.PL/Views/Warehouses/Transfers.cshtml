@@ -1,0 +1,73 @@
+@model WarehouseTransferListViewModel
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var warehouseItems = Model.Warehouses.Select(w => new SelectListItem
+    {
+        Value = w.Id.ToString(),
+        Text = isAr ? w.NameAr : w.NameEn,
+        Selected = w.Id == Model.WarehouseId
+    }).ToList();
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back"]</a>
+    @if (Model.CanTransfer)
+    {
+        <a class="btn sp-btn-primary" asp-action="Transfer">@L["New transfer"]</a>
+    }
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="sp-card p-3 mb-4">
+    <form method="get" class="sp-filter-row">
+        <select name="warehouseId" class="form-select" asp-items="warehouseItems">
+            <option value="">@L["All warehouses"]</option>
+        </select>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
+        </div>
+    </form>
+</div>
+
+<div class="sp-card p-0 overflow-hidden">
+    <table class="table table-hover mb-0 align-middle">
+        <thead>
+            <tr>
+                <th>@L["Number"]</th>
+                <th>@L["From"]</th>
+                <th>@L["To"]</th>
+                <th class="col-num">@L["Lines"]</th>
+                <th class="col-num">@L["Qty"]</th>
+                <th>@L["User"]</th>
+                <th>@L["Date"]</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.Transfers.Count == 0)
+        {
+            <tr>
+                <td colspan="7">
+                    <partial name="_EmptyState" model='(@L["No transfers yet"].Value, @L["Create a transfer to move stock between warehouses."].Value)' />
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var t in Model.Transfers)
+            {
+                <tr>
+                    <td><a asp-action="TransferDetails" asp-route-id="@t.Id">@t.TransferNumber</a></td>
+                    <td>@(isAr ? t.FromWarehouseNameAr : t.FromWarehouseNameEn)</td>
+                    <td>@(isAr ? t.ToWarehouseNameAr : t.ToWarehouseNameEn)</td>
+                    <td class="col-num num">@t.LineCount</td>
+                    <td class="col-num num">@t.TotalQuantity.ToString("0.###")</td>
+                    <td>@t.CreatedByUsername</td>
+                    <td class="num">@t.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>

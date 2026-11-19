@@ -38,6 +38,23 @@
             </select>
         </div>
         <div class="sp-filter-row__field">
+            <label class="form-label" for="warehouseId">Warehouse</label>
+            <select class="form-select" id="warehouseId" name="warehouseId">
+                <option value="">All</option>
+                @foreach (var w in Model.WarehouseOptions)
+                {
+                    if (Model.WarehouseId == w.Id)
+                    {
+                        <option value="@w.Id" selected>@w.NameEn</option>
+                    }
+                    else
+                    {
+                        <option value="@w.Id">@w.NameEn</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="sp-filter-row__field">
             <label class="form-label" for="movementType">Type</label>
             <select class="form-select" id="movementType" name="movementType">
                 <option value="">All</option>
@@ -67,6 +84,7 @@
                 <tr>
                     <th>When (UTC)</th>
                     <th>Product</th>
+                    <th>Warehouse</th>
                     <th>Type</th>
                     <th class="col-num">Change</th>
                     <th class="col-num">Before</th>
@@ -79,7 +97,7 @@
             @if (Model.Movements.Count == 0)
             {
                 <tr>
-                    <td colspan="8">
+                    <td colspan="9">
                         <partial name="_EmptyState" model='("No movements yet", "Purchases and stock adjustments will appear here.")' />
                     </td>
                 </tr>
@@ -94,6 +112,7 @@
                             <div>@item.ProductName</div>
                             <div class="small text-muted">@item.Unit</div>
                         </td>
+                        <td>@(item.WarehouseName ?? "—")</td>
                         <td><span class="sp-status sp-status-neutral">@item.MovementType</span></td>
                         <td class="col-num font-monospace @(item.QuantityChange < 0 ? "text-danger" : null)" style="@(item.QuantityChange >= 0 ? "color:var(--sp-primary)" : null)">
                             @(item.QuantityChange > 0 ? "+" : "")@item.QuantityChange.ToString("0.###")

@@ -7,6 +7,13 @@
             Value = t.Id.ToString()
         })
         .ToList();
+    var warehouseItems = Model.WarehouseOptions
+        .Select(w => new SelectListItem
+        {
+            Text = w.NameEn,
+            Value = w.Id.ToString()
+        })
+        .ToList();
 }
 
 <div class="sp-card p-4">
@@ -110,6 +117,12 @@
             </table>
         </div>
 
+        <div class="mb-3">
+            <label asp-for="ReceivedIntoWarehouseId" class="form-label"></label>
+            <select asp-for="ReceivedIntoWarehouseId" class="form-select" asp-items="warehouseItems">
+                <option value="">— select warehouse —</option>
+            </select>
+        </div>
         <div class="mb-3">
             <label asp-for="PaidFromTreasuryId" class="form-label"></label>
             <select asp-for="PaidFromTreasuryId" class="form-select" asp-items="treasuryItems" id="pay-treasury">

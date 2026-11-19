@@ -29,6 +29,9 @@ public static class AppPermissions
     public const string ChequesView = "Cheques.View";
     public const string ChequesManage = "Cheques.Manage";
     public const string ChequesChangeStatus = "Cheques.ChangeStatus";
+    public const string WarehousesView = "Warehouses.View";
+    public const string WarehousesTransfer = "Warehouses.Transfer";
+    public const string WarehousesManage = "Warehouses.Manage";
 
     public static readonly string[] All =
     [
@@ -36,7 +39,8 @@ public static class AppPermissions
         CashOutsCreate, ReturnsCreate, CatalogManage, PurchasesManage, InventoryAdjust,
         DashboardView, ReportsView, UsersManage, SettingsManage, PaymentMethodsManage,
         TreasuriesView, TreasuriesMove, TreasuriesManage,
-        ChequesView, ChequesManage, ChequesChangeStatus
+        ChequesView, ChequesManage, ChequesChangeStatus,
+        WarehousesView, WarehousesTransfer, WarehousesManage
     ];
 
     private static readonly string[] ManagerDefaults =
@@ -44,8 +48,9 @@ public static class AppPermissions
         PosUse, ShiftsOpenResume, ShiftsClose, SalesPriceOverride, SalesDiscount,
         CashOutsCreate, ReturnsCreate, CatalogManage, PurchasesManage, InventoryAdjust,
         DashboardView, ReportsView, TreasuriesView, TreasuriesMove,
-        ChequesView, ChequesManage, ChequesChangeStatus
-        // PaymentMethods.Manage / Treasuries.Manage are Optional for Manager — start OFF
+        ChequesView, ChequesManage, ChequesChangeStatus,
+        WarehousesView, WarehousesTransfer
+        // PaymentMethods.Manage / Treasuries.Manage / Warehouses.Manage are Optional for Manager — start OFF
     ];
 
     /// <summary>Cashier "Optional" cells (close, price, discount, returns) start OFF.</summary>

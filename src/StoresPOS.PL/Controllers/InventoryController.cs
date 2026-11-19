@@ -15,21 +15,25 @@ public class InventoryController : Controller
     private readonly IInventoryService _inventoryService;
     private readonly ICategoryService _categoryService;
     private readonly IProductService _productService;
+    private readonly IWarehouseService _warehouses;
 
     public InventoryController(
         IInventoryService inventoryService,
         ICategoryService categoryService,
-        IProductService productService)
+        IProductService productService,
+        IWarehouseService warehouses)
     {
         _inventoryService = inventoryService;
         _categoryService = categoryService;
         _productService = productService;
+        _warehouses = warehouses;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index(
         string? search,
         int? categoryId,
+        int? warehouseId,
         bool lowStockOnly = false,
         CancellationToken cancellationToken = default)
     {
@@ -38,17 +42,20 @@ public class InventoryController : Controller
             {
                 Search = search,
                 CategoryId = categoryId,
+                WarehouseId = warehouseId,
                 LowStockOnly = lowStockOnly
             },
             cancellationToken);
 
         var lowStock = await _inventoryService.GetLowStockAsync(cancellationToken);
         var categories = await _categoryService.GetAllAsync(includeInactive: false, cancellationToken);
+        var warehouses = await _warehouses.ListAsync(includeInactive: false, cancellationToken);
 
         return View(new InventoryIndexViewModel
         {
             Search = search,
             CategoryId = categoryId,
+            WarehouseId = warehouseId,
             LowStockOnly = lowStockOnly,
             LowStockCount = lowStock.Count,
             CategoryOptions = categories
@@ -58,6 +65,7 @@ public class InventoryController : Controller
                     DisplayName = $"{x.NameEn} / {x.NameAr}"
                 })
                 .ToList(),
+            WarehouseOptions = warehouses,
             Balances = balances.Select(x => new StockBalanceRowViewModel
             {
                 ProductId = x.ProductId,
@@ -68,7 +76,8 @@ public class InventoryController : Controller
                 CategoryName = x.CategoryNameEn,
                 StockQuantity = x.StockQuantity,
                 LowStockThreshold = x.LowStockThreshold,
-                IsLowStock = x.IsLowStock
+                IsLowStock = x.IsLowStock,
+                WarehouseName = x.WarehouseNameEn
             }).ToList()
         });
     }
@@ -76,6 +85,7 @@ public class InventoryController : Controller
     [HttpGet]
     public async Task<IActionResult> Movements(
         int? productId,
+        int? warehouseId,
         StockMovementType? movementType,
         CancellationToken cancellationToken = default)
     {
@@ -83,6 +93,7 @@ public class InventoryController : Controller
             new StockMovementFilterDto
             {
                 ProductId = productId,
+                WarehouseId = warehouseId,
                 MovementType = movementType,
                 Take = 200
             },
@@ -91,14 +102,17 @@ public class InventoryController : Controller
         return View(new StockMovementsIndexViewModel
         {
             ProductId = productId,
+            WarehouseId = warehouseId,
             MovementType = movementType,
             ProductOptions = await LoadProductOptionsAsync(cancellationToken),
+            WarehouseOptions = await _warehouses.ListAsync(includeInactive: true, cancellationToken),
             Movements = movements.Select(x => new StockMovementRowViewModel
             {
                 Id = x.Id,
                 CreatedAtUtc = x.CreatedAtUtc,
                 ProductName = x.ProductNameEn,
                 Unit = x.Unit,
+                WarehouseName = x.WarehouseNameEn,
                 MovementType = x.MovementType,
                 QuantityChange = x.QuantityChange,
                 QuantityBefore = x.QuantityBefore,
@@ -114,12 +128,18 @@ public class InventoryController : Controller
 
     [HttpGet]
     [Authorize(Policy = AppPermissions.InventoryAdjust)]
-    public async Task<IActionResult> Adjust(int? productId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Adjust(int? productId, int? warehouseId, CancellationToken cancellationToken = default)
     {
+        var warehouses = await _warehouses.ListAsync(includeInactive: false, cancellationToken);
         return View(new StockAdjustmentFormViewModel
         {
             ProductId = productId ?? 0,
-            ProductOptions = await LoadProductOptionsAsync(cancellationToken)
+            WarehouseId = warehouseId
+                ?? warehouses.FirstOrDefault(x => x.IsDefault)?.Id
+                ?? warehouses.FirstOrDefault()?.Id
+                ?? 0,
+            ProductOptions = await LoadProductOptionsAsync(cancellationToken),
+            WarehouseOptions = warehouses
         });
     }
 
@@ -131,6 +151,7 @@ public class InventoryController : Controller
         if (!ModelState.IsValid)
         {
             model.ProductOptions = await LoadProductOptionsAsync(cancellationToken);
+            model.WarehouseOptions = await _warehouses.ListAsync(includeInactive: false, cancellationToken);
             return View(model);
         }
 
@@ -139,6 +160,7 @@ public class InventoryController : Controller
             var dto = new StockAdjustmentDto
             {
                 ProductId = model.ProductId,
+                WarehouseId = model.WarehouseId,
                 Reason = model.Reason
             };
 
@@ -158,12 +180,13 @@ public class InventoryController : Controller
 
             TempData["Success"] =
                 $"Stock adjusted for {movement.ProductNameEn}: {movement.QuantityBefore:0.###} → {movement.QuantityAfter:0.###}";
-            return RedirectToAction(nameof(Movements), new { productId = movement.ProductId });
+            return RedirectToAction(nameof(Movements), new { productId = movement.ProductId, warehouseId = movement.WarehouseId });
         }
         catch (BusinessException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Message);
             model.ProductOptions = await LoadProductOptionsAsync(cancellationToken);
+            model.WarehouseOptions = await _warehouses.ListAsync(includeInactive: false, cancellationToken);
             return View(model);
         }
     }

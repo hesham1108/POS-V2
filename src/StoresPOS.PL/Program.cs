@@ -44,6 +44,9 @@ using (var scope = app.Services.CreateScope())
 
     var treasuries = scope.ServiceProvider.GetRequiredService<ITreasuryService>();
     await treasuries.EnsureSeededAsync();
+
+    var warehouses = scope.ServiceProvider.GetRequiredService<IWarehouseService>();
+    await warehouses.EnsureSeededAsync();
 }
 
 if (!app.Environment.IsDevelopment())

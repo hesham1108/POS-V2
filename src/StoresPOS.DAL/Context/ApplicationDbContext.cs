@@ -32,6 +32,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<TreasuryTransaction> TreasuryTransactions => Set<TreasuryTransaction>();
     public DbSet<Cheque> Cheques => Set<Cheque>();
     public DbSet<ChequeStatusHistory> ChequeStatusHistory => Set<ChequeStatusHistory>();
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    public DbSet<WarehouseStock> WarehouseStocks => Set<WarehouseStock>();
+    public DbSet<StockTransfer> StockTransfers => Set<StockTransfer>();
+    public DbSet<StockTransferItem> StockTransferItems => Set<StockTransferItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

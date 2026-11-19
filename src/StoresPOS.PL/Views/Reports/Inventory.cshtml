@@ -10,6 +10,7 @@
         StockMovementType.Purchase => L["Purchases"].Value,
         StockMovementType.Sale => L["Sales"].Value,
         StockMovementType.SaleReturn => L["Returns"].Value,
+        StockMovementType.Transfer => L["Transfers"].Value,
         _ => L["Adjustments"].Value
     };
 }
@@ -32,6 +33,16 @@
                 @foreach (var c in Model.Categories)
                 {
                     <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.Name</option>
+                }
+            </select>
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="warehouseId">@L["Warehouse"]</label>
+            <select class="form-select" id="warehouseId" name="warehouseId">
+                <option value="">@L["All"]</option>
+                @foreach (var w in Model.Warehouses)
+                {
+                    <option value="@w.Id" selected="@(Model.WarehouseId == w.Id)">@w.Name</option>
                 }
             </select>
         </div>

@@ -39,7 +39,7 @@ public class SupplierServiceTests
         });
         await db.SaveChangesAsync();
         var treasuryId = db.Treasuries.Single().Id;
-        var purchases = new PurchaseService(db, new InventoryService(db), new TreasuryService(db, TimeProvider.System), new ChequeService(db, new TreasuryService(db, TimeProvider.System), TimeProvider.System));
+        var purchases = TestFactories.Purchases(db);
         var suppliers = new SupplierService(db);
 
         await purchases.CreateDraftAsync(new PurchaseInvoiceUpsertDto
@@ -60,7 +60,7 @@ public class SupplierServiceTests
             [
                 new PurchaseInvoiceItemInputDto { ProductId = productId, Quantity = 3, UnitCost = 20m }
             ]
-        }, userId, treasuryId);
+        }, userId, treasuryId, await TestFactories.DefaultWarehouseIdAsync(db));
 
         var supplier = await suppliers.GetByIdAsync(supplierId);
         Assert.NotNull(supplier);

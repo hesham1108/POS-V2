@@ -14,12 +14,16 @@ public class StockBalanceDto
     public decimal LowStockThreshold { get; set; }
     public bool IsLowStock { get; set; }
     public bool IsActive { get; set; }
+    public int? WarehouseId { get; set; }
+    public string? WarehouseNameEn { get; set; }
+    public string? WarehouseNameAr { get; set; }
 }
 
 public class StockBalanceFilterDto
 {
     public string? Search { get; set; }
     public int? CategoryId { get; set; }
+    public int? WarehouseId { get; set; }
     public bool LowStockOnly { get; set; }
     public bool IncludeInactive { get; set; }
 }
@@ -31,6 +35,9 @@ public class StockMovementDto
     public string ProductNameEn { get; set; } = string.Empty;
     public string ProductNameAr { get; set; } = string.Empty;
     public string Unit { get; set; } = "pcs";
+    public int WarehouseId { get; set; }
+    public string WarehouseNameEn { get; set; } = string.Empty;
+    public string WarehouseNameAr { get; set; } = string.Empty;
     public StockMovementType MovementType { get; set; }
     public decimal QuantityChange { get; set; }
     public decimal QuantityBefore { get; set; }
@@ -45,6 +52,7 @@ public class StockMovementDto
 public class StockMovementFilterDto
 {
     public int? ProductId { get; set; }
+    public int? WarehouseId { get; set; }
     public StockMovementType? MovementType { get; set; }
     public DateTime? FromUtc { get; set; }
     public DateTime? ToUtc { get; set; }
@@ -55,10 +63,13 @@ public class StockAdjustmentDto
 {
     public int ProductId { get; set; }
 
+    /// <summary>Warehouse to adjust. 0 = default warehouse.</summary>
+    public int WarehouseId { get; set; }
+
     /// <summary>Signed delta to apply. Ignored when <see cref="SetQuantityTo"/> is set.</summary>
     public decimal? QuantityChange { get; set; }
 
-    /// <summary>Optional absolute counted quantity; delta is derived.</summary>
+    /// <summary>Optional absolute counted quantity in this warehouse; delta is derived.</summary>
     public decimal? SetQuantityTo { get; set; }
 
     public string Reason { get; set; } = string.Empty;
@@ -72,6 +83,12 @@ public class PurchaseStockLineDto
 }
 
 public class SaleStockLineDto
+{
+    public int ProductId { get; set; }
+    public decimal Quantity { get; set; }
+}
+
+public class TransferStockLineDto
 {
     public int ProductId { get; set; }
     public decimal Quantity { get; set; }

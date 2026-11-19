@@ -319,7 +319,10 @@ public class SalesServiceTests
         var treasuries = new TreasuryService(db, time);
         await treasuries.EnsureSeededAsync();
         var shifts = new ShiftService(db, treasuries, time);
-        var sales = new SalesService(db, shifts, new InventoryService(db), new PermissionService(db), paymentMethods, treasuries, new ChequeService(db, treasuries, time), time);
+        var inventory = TestFactories.Inventory(db);
+        var warehouses = TestFactories.Warehouses(db, time);
+        await warehouses.EnsureSeededAsync();
+        var sales = new SalesService(db, shifts, inventory, new PermissionService(db), paymentMethods, treasuries, new ChequeService(db, treasuries, time), warehouses, time);
 
         if (openShift)
         {

@@ -575,4 +575,40 @@
   <data name="Total" xml:space="preserve"><value>الإجمالي</value></data>
   <data name="Notes" xml:space="preserve"><value>ملاحظات</value></data>
   <data name="Treasury" xml:space="preserve"><value>الخزنة</value></data>
+  <data name="Warehouses" xml:space="preserve"><value>المخازن</value></data>
+  <data name="Warehouse" xml:space="preserve"><value>المخزن</value></data>
+  <data name="Add warehouse" xml:space="preserve"><value>إضافة مخزن</value></data>
+  <data name="Edit warehouse" xml:space="preserve"><value>تعديل مخزن</value></data>
+  <data name="Stock locations and transfers between them." xml:space="preserve"><value>مواقع المخزون والتحويل بينها.</value></data>
+  <data name="No warehouses yet" xml:space="preserve"><value>لا توجد مخازن بعد</value></data>
+  <data name="Add a warehouse to hold stock." xml:space="preserve"><value>أضف مخزنًا لحفظ المخزون.</value></data>
+  <data name="Warehouse updated." xml:space="preserve"><value>تم تحديث المخزن.</value></data>
+  <data name="Warehouse created." xml:space="preserve"><value>تم إنشاء المخزن.</value></data>
+  <data name="Warehouse deactivated." xml:space="preserve"><value>تم تعطيل المخزن.</value></data>
+  <data name="Warehouse activated." xml:space="preserve"><value>تم تفعيل المخزن.</value></data>
+  <data name="Deactivate this warehouse?" xml:space="preserve"><value>تعطيل هذا المخزن؟</value></data>
+  <data name="Stock in this warehouse" xml:space="preserve"><value>رصيد هذا المخزن</value></data>
+  <data name="Stock transfers" xml:space="preserve"><value>تحويلات المخزون</value></data>
+  <data name="Transfer list between warehouses." xml:space="preserve"><value>قائمة التحويلات بين المخازن.</value></data>
+  <data name="Stock transfer" xml:space="preserve"><value>تحويل مخزون</value></data>
+  <data name="New transfer" xml:space="preserve"><value>تحويل جديد</value></data>
+  <data name="Transfers" xml:space="preserve"><value>التحويلات</value></data>
+  <data name="All warehouses" xml:space="preserve"><value>كل المخازن</value></data>
+  <data name="No transfers yet" xml:space="preserve"><value>لا توجد تحويلات بعد</value></data>
+  <data name="Create a transfer to move stock between warehouses." xml:space="preserve"><value>أنشئ تحويلًا لنقل المخزون بين المخازن.</value></data>
+  <data name="Add at least one product line to transfer." xml:space="preserve"><value>أضف صنفًا واحدًا على الأقل للتحويل.</value></data>
+  <data name="Transfer {0} saved." xml:space="preserve"><value>تم حفظ التحويل {0}.</value></data>
+  <data name="Save transfer" xml:space="preserve"><value>حفظ التحويل</value></data>
+  <data name="One transfer moves stock out of one warehouse and into another in a single transaction." xml:space="preserve"><value>التحويل الواحد يخرج من مخزن ويدخل إلى آخر في نفس العملية.</value></data>
+  <data name="From warehouse" xml:space="preserve"><value>من مخزن</value></data>
+  <data name="To warehouse" xml:space="preserve"><value>إلى مخزن</value></data>
+  <data name="Default warehouse" xml:space="preserve"><value>المخزن الافتراضي</value></data>
+  <data name="Location" xml:space="preserve"><value>الموقع</value></data>
+  <data name="Products" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="Qty" xml:space="preserve"><value>الكمية</value></data>
+  <data name="Stock" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="Lines" xml:space="preserve"><value>البنود</value></data>
+  <data name="Add line" xml:space="preserve"><value>إضافة بند</value></data>
+  <data name="Receive into warehouse" xml:space="preserve"><value>الاستلام في المخزن</value></data>
+  <data name="— select —" xml:space="preserve"><value>— اختر —</value></data>
 </root>

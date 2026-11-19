@@ -48,6 +48,7 @@ public class SalesService : ISalesService
     private readonly IPaymentMethodService _paymentMethods;
     private readonly ITreasuryService _treasuries;
     private readonly IChequeService _cheques;
+    private readonly IWarehouseService _warehouses;
     private readonly TimeProvider _time;
 
     public SalesService(
@@ -58,6 +59,7 @@ public class SalesService : ISalesService
         IPaymentMethodService paymentMethods,
         ITreasuryService treasuries,
         IChequeService cheques,
+        IWarehouseService warehouses,
         TimeProvider time)
     {
         _db = db;
@@ -67,6 +69,7 @@ public class SalesService : ISalesService
         _paymentMethods = paymentMethods;
         _treasuries = treasuries;
         _cheques = cheques;
+        _warehouses = warehouses;
         _time = time;
     }
 
@@ -106,22 +109,38 @@ public class SalesService : ISalesService
 
         var wholesale = search.SaleType == SaleType.Wholesale;
         var take = search.Take <= 0 ? 60 : Math.Min(search.Take, 200);
+        var sellingWarehouseId = await _warehouses.GetSellingWarehouseIdAsync(cancellationToken);
 
-        return await query
+        var rows = await query
             .OrderBy(x => x.NameEn)
             .Take(take)
-            .Select(x => new PosProductDto
+            .Select(x => new
             {
-                Id = x.Id,
-                NameAr = x.NameAr,
-                NameEn = x.NameEn,
-                Barcode = x.Barcode,
-                Unit = x.Unit,
+                x.Id,
+                x.NameAr,
+                x.NameEn,
+                x.Barcode,
+                x.Unit,
                 Price = wholesale ? x.WholesalePrice : x.RetailPrice,
-                StockQuantity = x.StockQuantity,
-                LowStockThreshold = x.LowStockThreshold
+                x.LowStockThreshold,
+                WarehouseQty = _db.WarehouseStocks
+                    .Where(ws => ws.WarehouseId == sellingWarehouseId && ws.ProductId == x.Id)
+                    .Select(ws => (decimal?)ws.Quantity)
+                    .FirstOrDefault() ?? 0m
             })
             .ToListAsync(cancellationToken);
+
+        return rows.Select(x => new PosProductDto
+        {
+            Id = x.Id,
+            NameAr = x.NameAr,
+            NameEn = x.NameEn,
+            Barcode = x.Barcode,
+            Unit = x.Unit,
+            Price = x.Price,
+            StockQuantity = x.WarehouseQty,
+            LowStockThreshold = x.LowStockThreshold
+        }).ToList();
     }
 
     // ---------------------------------------------------------------- cart
@@ -163,7 +182,7 @@ public class SalesService : ISalesService
 
         var line = draft.Items.FirstOrDefault(x => x.ProductId == productId);
         var newQty = (line?.Quantity ?? 0m) + qty;
-        EnsureStock(product, newQty);
+        await EnsureSellingStockAsync(product, newQty, cancellationToken);
 
         if (line is null)
         {
@@ -208,7 +227,7 @@ public class SalesService : ISalesService
 
         var qty = ValidateQuantity(quantity);
         var product = await _db.Products.AsNoTracking().FirstAsync(x => x.Id == line.ProductId, cancellationToken);
-        EnsureStock(product, qty);
+        await EnsureSellingStockAsync(product, qty, cancellationToken);
         line.Quantity = qty;
         return await SaveCartAsync(draft, cancellationToken);
     }
@@ -536,6 +555,7 @@ public class SalesService : ISalesService
             }
 
             // Friendly stock check first (the inventory ledger re-checks and never goes below zero).
+            var sellingWarehouseId = await _warehouses.GetSellingWarehouseIdAsync(cancellationToken);
             var needed = draft.Items
                 .GroupBy(x => x.ProductId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
@@ -545,11 +565,12 @@ public class SalesService : ISalesService
                 .ToDictionaryAsync(x => x.Id, cancellationToken);
             foreach (var (productId, qty) in needed)
             {
-                EnsureStock(products[productId], qty);
+                await EnsureSellingStockAsync(products[productId], qty, cancellationToken, sellingWarehouseId);
             }
 
             await _inventory.ApplySaleAsync(
                 draft.Id,
+                sellingWarehouseId,
                 needed.Select(x => new SaleStockLineDto { ProductId = x.Key, Quantity = x.Value }).ToList(),
                 userId,
                 cancellationToken);
@@ -917,17 +938,24 @@ public class SalesService : ISalesService
         return qty;
     }
 
-    /// <summary>Selling below zero stock is blocked (open decision: default block; manager override later).</summary>
-    private static void EnsureStock(Product product, decimal quantity)
+    /// <summary>Zero-stock rule checked per selling warehouse (open decision: default block).</summary>
+    private async Task EnsureSellingStockAsync(
+        Product product,
+        decimal quantity,
+        CancellationToken cancellationToken,
+        int? sellingWarehouseId = null)
     {
-        if (product.StockQuantity <= 0)
+        var warehouseId = sellingWarehouseId
+            ?? await _warehouses.GetSellingWarehouseIdAsync(cancellationToken);
+        var available = await _inventory.GetWarehouseQuantityAsync(warehouseId, product.Id, cancellationToken);
+        if (available <= 0)
         {
             throw new BusinessException(MsgOutOfStock, product.NameEn);
         }
 
-        if (quantity > product.StockQuantity)
+        if (quantity > available)
         {
-            throw new BusinessException(MsgNotEnoughStock, Qty(product.StockQuantity), product.NameEn);
+            throw new BusinessException(MsgNotEnoughStock, Qty(available), product.NameEn);
         }
     }
 

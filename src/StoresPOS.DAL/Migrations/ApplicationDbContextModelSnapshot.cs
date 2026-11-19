@@ -481,6 +481,9 @@ namespace StoresPOS.DAL.Migrations
                     b.Property<int?>("PaidFromTreasuryId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ReceivedIntoWarehouseId")
+                        .HasColumnType("int");
+
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint");
 
@@ -503,6 +506,8 @@ namespace StoresPOS.DAL.Migrations
                         .IsUnique();
 
                     b.HasIndex("PaidFromTreasuryId");
+
+                    b.HasIndex("ReceivedIntoWarehouseId");
 
                     b.HasIndex("Status");
 
@@ -1036,6 +1041,9 @@ namespace StoresPOS.DAL.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAtUtc");
@@ -1046,9 +1054,83 @@ namespace StoresPOS.DAL.Migrations
 
                     b.HasIndex("ProductId");
 
+                    b.HasIndex("WarehouseId");
+
                     b.HasIndex("ReferenceType", "ReferenceId");
 
                     b.ToTable("StockMovements", (string)null);
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.StockTransfer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FromWarehouseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ToWarehouseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransferNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("FromWarehouseId");
+
+                    b.HasIndex("ToWarehouseId");
+
+                    b.HasIndex("TransferNumber")
+                        .IsUnique();
+
+                    b.ToTable("StockTransfers", (string)null);
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.StockTransferItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<int>("StockTransferId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StockTransferId");
+
+                    b.ToTable("StockTransferItems", (string)null);
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.Supplier", b =>
@@ -1275,6 +1357,88 @@ namespace StoresPOS.DAL.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Warehouse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.ToTable("Warehouses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAtUtc = new DateTime(2026, 11, 19, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsDefault = true,
+                            NameAr = "المخزن الرئيسي",
+                            NameEn = "Main warehouse"
+                        });
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.WarehouseStock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("WarehouseId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("WarehouseStocks", (string)null);
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.CashOut", b =>
                 {
                     b.HasOne("StoresPOS.DAL.Entities.Shift", "Shift")
@@ -1414,6 +1578,11 @@ namespace StoresPOS.DAL.Migrations
                         .HasForeignKey("PaidFromTreasuryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("StoresPOS.DAL.Entities.Warehouse", "ReceivedIntoWarehouse")
+                        .WithMany()
+                        .HasForeignKey("ReceivedIntoWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StoresPOS.DAL.Entities.Supplier", "Supplier")
                         .WithMany("PurchaseInvoices")
                         .HasForeignKey("SupplierId")
@@ -1425,6 +1594,8 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("PaidFromTreasury");
+
+                    b.Navigation("ReceivedIntoWarehouse");
 
                     b.Navigation("Supplier");
                 });
@@ -1629,9 +1800,63 @@ namespace StoresPOS.DAL.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("StoresPOS.DAL.Entities.Warehouse", "Warehouse")
+                        .WithMany("Movements")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.StockTransfer", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.Warehouse", "FromWarehouse")
+                        .WithMany()
+                        .HasForeignKey("FromWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.Warehouse", "ToWarehouse")
+                        .WithMany()
+                        .HasForeignKey("ToWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("FromWarehouse");
+
+                    b.Navigation("ToWarehouse");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.StockTransferItem", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.StockTransfer", "StockTransfer")
+                        .WithMany("Items")
+                        .HasForeignKey("StockTransferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("StockTransfer");
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.TreasuryTransaction", b =>
@@ -1662,6 +1887,25 @@ namespace StoresPOS.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.WarehouseStock", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.Warehouse", "Warehouse")
+                        .WithMany("Stocks")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.Category", b =>
@@ -1703,6 +1947,11 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("Participants");
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.StockTransfer", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.Supplier", b =>
                 {
                     b.Navigation("PurchaseInvoices");
@@ -1711,6 +1960,13 @@ namespace StoresPOS.DAL.Migrations
             modelBuilder.Entity("StoresPOS.DAL.Entities.Treasury", b =>
                 {
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Warehouse", b =>
+                {
+                    b.Navigation("Movements");
+
+                    b.Navigation("Stocks");
                 });
 #pragma warning restore 612, 618
         }
