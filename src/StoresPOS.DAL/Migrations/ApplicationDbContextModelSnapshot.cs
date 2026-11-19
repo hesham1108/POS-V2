@@ -105,6 +105,54 @@ namespace StoresPOS.DAL.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Customer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("DefaultSaleType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Phone");
+
+                    b.ToTable("Customers", (string)null);
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -423,6 +471,8 @@ namespace StoresPOS.DAL.Migrations
                         .HasFilter("[Status] = 1");
 
                     b.HasIndex("CompletedAtUtc");
+
+                    b.HasIndex("CustomerId");
 
                     b.HasIndex("DiscountByUserId");
 
@@ -985,6 +1035,11 @@ namespace StoresPOS.DAL.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("StoresPOS.DAL.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StoresPOS.DAL.Entities.User", "DiscountByUser")
                         .WithMany()
                         .HasForeignKey("DiscountByUserId")
@@ -997,6 +1052,8 @@ namespace StoresPOS.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("CashierUser");
+
+                    b.Navigation("Customer");
 
                     b.Navigation("DiscountByUser");
 

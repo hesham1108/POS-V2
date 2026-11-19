@@ -295,4 +295,152 @@
   <data name="{0} after discount" xml:space="preserve"><value>{0} بعد الخصم</value></data>
   <data name="{0} cash-outs" xml:space="preserve"><value>{0} مصروف</value></data>
   <data name="{0} returns" xml:space="preserve"><value>{0} مرتجع</value></data>
+  <data name="Add customer" xml:space="preserve"><value>إضافة عميل</value></data>
+  <data name="Name is required; mobile helps find the customer at the till" xml:space="preserve"><value>الاسم مطلوب؛ رقم الموبايل يسهّل إيجاد العميل عند الكاشير</value></data>
+  <data name="No mobile number" xml:space="preserve"><value>لا يوجد رقم موبايل</value></data>
+  <data name="Back" xml:space="preserve"><value>رجوع</value></data>
+  <data name="Edit" xml:space="preserve"><value>تعديل</value></data>
+  <data name="Purchases" xml:space="preserve"><value>المشتريات</value></data>
+  <data name="Net total" xml:space="preserve"><value>الصافي</value></data>
+  <data name="Details" xml:space="preserve"><value>البيانات</value></data>
+  <data name="Mobile" xml:space="preserve"><value>الموبايل</value></data>
+  <data name="Address" xml:space="preserve"><value>العنوان</value></data>
+  <data name="Default sale type" xml:space="preserve"><value>نوع البيع الافتراضي</value></data>
+  <data name="Notes" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="Active" xml:space="preserve"><value>نشط</value></data>
+  <data name="Inactive" xml:space="preserve"><value>غير نشط</value></data>
+  <data name="Customer since" xml:space="preserve"><value>عميل منذ</value></data>
+  <data name="Purchase history" xml:space="preserve"><value>سجل المشتريات</value></data>
+  <data name="No purchases yet" xml:space="preserve"><value>لا توجد مشتريات بعد</value></data>
+  <data name="Invoices appear here once this customer is picked in the POS (F4)." xml:space="preserve"><value>تظهر الفواتير هنا عند اختيار هذا العميل في نقطة البيع (F4).</value></data>
+  <data name="Edit customer" xml:space="preserve"><value>تعديل العميل</value></data>
+  <data name="Sales without a customer go to the walk-in customer" xml:space="preserve"><value>المبيعات بدون عميل تُسجَّل على العميل النقدي</value></data>
+  <data name="Search" xml:space="preserve"><value>بحث</value></data>
+  <data name="Name or mobile" xml:space="preserve"><value>الاسم أو الموبايل</value></data>
+  <data name="Include inactive" xml:space="preserve"><value>إظهار غير النشطين</value></data>
+  <data name="No customers yet" xml:space="preserve"><value>لا يوجد عملاء بعد</value></data>
+  <data name="Add customers here or from the POS with F4. Sales without one use the walk-in customer." xml:space="preserve"><value>أضف العملاء من هنا أو من نقطة البيع بزر F4. المبيعات بدون عميل تُسجَّل على العميل النقدي.</value></data>
+  <data name="No customers found" xml:space="preserve"><value>لا يوجد عملاء مطابقون</value></data>
+  <data name="Try another name or mobile number." xml:space="preserve"><value>جرّب اسمًا أو رقم موبايل آخر.</value></data>
+  <data name="Net purchases" xml:space="preserve"><value>صافي المشتريات</value></data>
+  <data name="Last purchase" xml:space="preserve"><value>آخر شراء</value></data>
+  <data name="Actions" xml:space="preserve"><value>إجراءات</value></data>
+  <data name="View" xml:space="preserve"><value>عرض</value></data>
+  <data name="Deactivate this customer? Past invoices keep the name." xml:space="preserve"><value>تعطيل هذا العميل؟ الفواتير السابقة تحتفظ باسمه.</value></data>
+  <data name="Deactivate" xml:space="preserve"><value>تعطيل</value></data>
+  <data name="Picking this customer in the POS switches the invoice to this price list." xml:space="preserve"><value>اختيار هذا العميل في نقطة البيع يحوّل الفاتورة إلى قائمة الأسعار هذه.</value></data>
+  <data name="Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Cash-outs report" xml:space="preserve"><value>تقرير المصروفات</value></data>
+  <data name="Cash taken from the drawer, by user and by reason" xml:space="preserve"><value>النقدية المسحوبة من الدرج حسب المستخدم والسبب</value></data>
+  <data name="Total cash-outs" xml:space="preserve"><value>إجمالي المصروفات</value></data>
+  <data name="By user" xml:space="preserve"><value>حسب المستخدم</value></data>
+  <data name="Count" xml:space="preserve"><value>العدد</value></data>
+  <data name="By reason" xml:space="preserve"><value>حسب السبب</value></data>
+  <data name="Inventory report" xml:space="preserve"><value>تقرير المخزون</value></data>
+  <data name="Current balances valued at purchase price · movements in the chosen dates" xml:space="preserve"><value>الأرصدة الحالية بسعر الشراء · الحركات في الفترة المختارة</value></data>
+  <data name="Sales" xml:space="preserve"><value>المبيعات</value></data>
+  <data name="Adjustments" xml:space="preserve"><value>التسويات</value></data>
+  <data name="Category" xml:space="preserve"><value>التصنيف</value></data>
+  <data name="Low stock only" xml:space="preserve"><value>المخزون المنخفض فقط</value></data>
+  <data name="Stock value at cost" xml:space="preserve"><value>قيمة المخزون بالتكلفة</value></data>
+  <data name="{0} products" xml:space="preserve"><value>{0} منتج</value></data>
+  <data name="Value at retail price" xml:space="preserve"><value>القيمة بسعر القطاعي</value></data>
+  <data name="Stock movements" xml:space="preserve"><value>حركات المخزون</value></data>
+  <data name="No stock movements in this period." xml:space="preserve"><value>لا توجد حركات مخزون في هذه الفترة.</value></data>
+  <data name="Type" xml:space="preserve"><value>النوع</value></data>
+  <data name="Movements" xml:space="preserve"><value>الحركات</value></data>
+  <data name="Qty in" xml:space="preserve"><value>كمية واردة</value></data>
+  <data name="Qty out" xml:space="preserve"><value>كمية صادرة</value></data>
+  <data name="Change the category or turn off &quot;Low stock only&quot;." xml:space="preserve"><value>غيّر التصنيف أو ألغِ «المخزون المنخفض فقط».</value></data>
+  <data name="Product" xml:space="preserve"><value>المنتج</value></data>
+  <data name="Stock" xml:space="preserve"><value>المخزون</value></data>
+  <data name="Cost" xml:space="preserve"><value>التكلفة</value></data>
+  <data name="Value at cost" xml:space="preserve"><value>القيمة بالتكلفة</value></data>
+  <data name="Value at retail" xml:space="preserve"><value>القيمة بالقطاعي</value></data>
+  <data name="Purchases report" xml:space="preserve"><value>تقرير المشتريات</value></data>
+  <data name="Confirmed purchase invoices by invoice date" xml:space="preserve"><value>فواتير الشراء المؤكدة حسب تاريخ الفاتورة</value></data>
+  <data name="Supplier" xml:space="preserve"><value>المورد</value></data>
+  <data name="No purchases in this period" xml:space="preserve"><value>لا توجد مشتريات في هذه الفترة</value></data>
+  <data name="Only confirmed purchase invoices are counted." xml:space="preserve"><value>تُحتسب فواتير الشراء المؤكدة فقط.</value></data>
+  <data name="Total purchases" xml:space="preserve"><value>إجمالي المشتريات</value></data>
+  <data name="By supplier" xml:space="preserve"><value>حسب المورد</value></data>
+  <data name="By product" xml:space="preserve"><value>حسب المنتج</value></data>
+  <data name="Avg cost" xml:space="preserve"><value>متوسط التكلفة</value></data>
+  <data name="Sales report" xml:space="preserve"><value>تقرير المبيعات</value></data>
+  <data name="Net of discounts · returns counted on the day they were refunded" xml:space="preserve"><value>بعد الخصومات · المرتجعات تُحتسب في يوم ردّ المبلغ</value></data>
+  <data name="No sales in this period" xml:space="preserve"><value>لا توجد مبيعات في هذه الفترة</value></data>
+  <data name="Change the dates or filters to see sales." xml:space="preserve"><value>غيّر التواريخ أو الفلاتر لعرض المبيعات.</value></data>
+  <data name="Net sales" xml:space="preserve"><value>صافي المبيعات</value></data>
+  <data name="{0} invoices · average {1}" xml:space="preserve"><value>{0} فاتورة · المتوسط {1}</value></data>
+  <data name="Discounts" xml:space="preserve"><value>الخصومات</value></data>
+  <data name="Before discounts {0}" xml:space="preserve"><value>قبل الخصم {0}</value></data>
+  <data name="After returns" xml:space="preserve"><value>بعد المرتجعات</value></data>
+  <data name="Cost {0}" xml:space="preserve"><value>التكلفة {0}</value></data>
+  <data name="Gross profit" xml:space="preserve"><value>مجمل الربح</value></data>
+  <data name="Margin {0}%" xml:space="preserve"><value>هامش {0}%</value></data>
+  <data name="By payment method" xml:space="preserve"><value>حسب طريقة الدفع</value></data>
+  <data name="Method" xml:space="preserve"><value>الطريقة</value></data>
+  <data name="By cashier" xml:space="preserve"><value>حسب الكاشير</value></data>
+  <data name="By sale type" xml:space="preserve"><value>حسب نوع البيع</value></data>
+  <data name="Top products" xml:space="preserve"><value>الأكثر مبيعًا</value></data>
+  <data name="No products sold." xml:space="preserve"><value>لم تُبع منتجات.</value></data>
+  <data name="Profit" xml:space="preserve"><value>الربح</value></data>
+  <data name="By day" xml:space="preserve"><value>حسب اليوم</value></data>
+  <data name="Profit uses the purchase price saved on each line when it was sold." xml:space="preserve"><value>الربح محسوب بسعر الشراء المحفوظ في كل سطر وقت البيع.</value></data>
+  <data name="Shifts report" xml:space="preserve"><value>تقرير الورديات</value></data>
+  <data name="Cash differences, unreconciled shifts and sales per cashier" xml:space="preserve"><value>فروقات النقدية والورديات غير المُسوّاة والمبيعات لكل كاشير</value></data>
+  <data name="No shifts in this period" xml:space="preserve"><value>لا توجد ورديات في هذه الفترة</value></data>
+  <data name="Shifts are listed by the day they were opened." xml:space="preserve"><value>تُعرض الورديات حسب يوم فتحها.</value></data>
+  <data name="{0} matched" xml:space="preserve"><value>{0} مطابقة</value></data>
+  <data name="Shortages" xml:space="preserve"><value>العجز</value></data>
+  <data name="Surpluses" xml:space="preserve"><value>الزيادة</value></data>
+  <data name="Closed without counting the cash" xml:space="preserve"><value>أُغلقت بدون عدّ النقدية</value></data>
+  <data name="Inventory" xml:space="preserve"><value>المخزون</value></data>
+  <data name="Today · {0}" xml:space="preserve"><value>اليوم · {0}</value></data>
+  <data name="Sell" xml:space="preserve"><value>بيع</value></data>
+  <data name="Today's sales" xml:space="preserve"><value>مبيعات اليوم</value></data>
+  <data name="Enters the drawer" xml:space="preserve"><value>يدخل الدرج</value></data>
+  <data name="Visa / InstaPay / wallet" xml:space="preserve"><value>فيزا / إنستاباي / محفظة</value></data>
+  <data name="Shift status" xml:space="preserve"><value>حالة الوردية</value></data>
+  <data name="Open a shift from the POS gate to start selling." xml:space="preserve"><value>افتح وردية من بوابة نقطة البيع لبدء البيع.</value></data>
+  <data name="Open shift" xml:space="preserve"><value>فتح وردية</value></data>
+  <data name="Opened before today" xml:space="preserve"><value>مفتوحة من قبل اليوم</value></data>
+  <data name="Stock alerts" xml:space="preserve"><value>تنبيهات المخزون</value></data>
+  <data name="{0} low" xml:space="preserve"><value>{0} منخفض</value></data>
+  <data name="Stock looks fine" xml:space="preserve"><value>المخزون سليم</value></data>
+  <data name="No active product is at or below its low-stock level." xml:space="preserve"><value>لا يوجد منتج نشط عند حد المخزون المنخفض أو أقل.</value></data>
+  <data name="Low-stock level {0}" xml:space="preserve"><value>حد المخزون المنخفض {0}</value></data>
+  <data name="See all low stock" xml:space="preserve"><value>كل المخزون المنخفض</value></data>
+  <data name="Recent activity" xml:space="preserve"><value>آخر النشاط</value></data>
+  <data name="Latest sales" xml:space="preserve"><value>آخر المبيعات</value></data>
+  <data name="No sales yet." xml:space="preserve"><value>لا توجد مبيعات بعد.</value></data>
+  <data name="Latest cash-outs" xml:space="preserve"><value>آخر المصروفات</value></data>
+  <data name="No cash-outs yet." xml:space="preserve"><value>لا توجد مصروفات بعد.</value></data>
+  <data name="Latest confirmed purchases" xml:space="preserve"><value>آخر المشتريات المؤكدة</value></data>
+  <data name="No confirmed purchases yet." xml:space="preserve"><value>لا توجد مشتريات مؤكدة بعد.</value></data>
+  <data name="Shift history" xml:space="preserve"><value>سجل الورديات</value></data>
+  <data name="Every shift with its drawer result · open one to see sales, cash-outs and returns" xml:space="preserve"><value>كل وردية ونتيجة الدرج · افتح أي وردية لعرض المبيعات والمصروفات والمرتجعات</value></data>
+  <data name="No shifts found" xml:space="preserve"><value>لا توجد ورديات</value></data>
+  <data name="Shifts appear here once they are opened from the POS gate." xml:space="preserve"><value>تظهر الورديات هنا بعد فتحها من بوابة نقطة البيع.</value></data>
+  <data name="Closed {0} by {1}" xml:space="preserve"><value>أُغلقت {0} بواسطة {1}</value></data>
+  <data name="Still open" xml:space="preserve"><value>ما زالت مفتوحة</value></data>
+  <data name="Back to history" xml:space="preserve"><value>العودة للسجل</value></data>
+  <data name="Reprint shift report" xml:space="preserve"><value>إعادة طباعة تقرير الوردية</value></data>
+  <data name="No cash-outs in this shift." xml:space="preserve"><value>لا توجد مصروفات في هذه الوردية.</value></data>
+  <data name="Open in sales list" xml:space="preserve"><value>فتح في قائمة المبيعات</value></data>
+  <data name="No sales in this shift." xml:space="preserve"><value>لا توجد مبيعات في هذه الوردية.</value></data>
+  <data name="Expected" xml:space="preserve"><value>المتوقع</value></data>
+  <data name="Actual" xml:space="preserve"><value>الفعلي</value></data>
+  <data name="Add new customer" xml:space="preserve"><value>إضافة عميل جديد</value></data>
+  <data name="Name" xml:space="preserve"><value>الاسم</value></data>
+  <data name="Add and use for this invoice" xml:space="preserve"><value>أضف واستخدمه لهذه الفاتورة</value></data>
+  <data name="No customers match. Add one below." xml:space="preserve"><value>لا يوجد عميل مطابق. أضف عميلًا بالأسفل.</value></data>
+  <data name="Customer {0} added." xml:space="preserve"><value>تمت إضافة العميل {0}.</value></data>
+  <data name="Customer updated." xml:space="preserve"><value>تم تحديث بيانات العميل.</value></data>
+  <data name="Customer deactivated. Past invoices keep the name." xml:space="preserve"><value>تم تعطيل العميل. الفواتير السابقة تحتفظ باسمه.</value></data>
+  <data name="Customer name is required." xml:space="preserve"><value>اسم العميل مطلوب.</value></data>
+  <data name="Customer not found." xml:space="preserve"><value>العميل غير موجود.</value></data>
+  <data name="Another customer already uses the phone {0}." xml:space="preserve"><value>يوجد عميل آخر يستخدم الرقم {0}.</value></data>
+  <data name="That customer is not available. Pick another one." xml:space="preserve"><value>هذا العميل غير متاح. اختر عميلًا آخر.</value></data>
 </root>

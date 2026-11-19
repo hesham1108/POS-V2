@@ -10,7 +10,6 @@
 
 <div id="pos-root" class="pos-layout"
      data-msg-confirm-clear="@L["Clear all items from this invoice?"]"
-     data-msg-customer="@L["Customer records arrive in Phase 10. Sales use the walk-in customer for now."]"
      data-msg-need-amount="@L["Enter a valid amount paid."]"
      data-msg-error="@L["Something went wrong. Try again."]"
      data-flash="@(TempData["Success"] as string)"
@@ -128,6 +127,38 @@
                 <button type="submit" class="btn sp-btn-primary">@L["Apply"]</button>
             </div>
         </form>
+    </div>
+</div>
+
+@* ---- Customer (F4) ---- *@
+<div class="modal fade" id="customer-modal" tabindex="-1" aria-labelledby="customer-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="customer-title">@L["Customer"]</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
+            </div>
+            <div class="modal-body">
+                <input id="customer-search" class="form-control form-control-lg mb-2" type="search" autocomplete="off"
+                       placeholder="@L["Name or mobile"]" aria-label="@L["Name or mobile"]" />
+                <button type="button" class="btn sp-btn-secondary w-100 mb-2" data-walk-in>@L["Walk-in customer"]</button>
+                <div id="customer-list" class="pos-customers"></div>
+
+                <form id="customer-quick" class="pos-customer-quick" novalidate>
+                    <h3 class="h6 mb-2">@L["Add new customer"]</h3>
+                    <div class="row g-2">
+                        <div class="col-7">
+                            <input id="quick-name" class="form-control" maxlength="200" autocomplete="off" placeholder="@L["Name"]" aria-label="@L["Name"]" />
+                        </div>
+                        <div class="col-5">
+                            <input id="quick-phone" class="form-control num" maxlength="40" inputmode="tel" dir="ltr" autocomplete="off" placeholder="@L["Mobile"]" aria-label="@L["Mobile"]" />
+                        </div>
+                    </div>
+                    <div class="text-danger small mt-1" id="customer-error" role="alert"></div>
+                    <button type="submit" class="btn sp-btn-primary w-100 mt-2">@L["Add and use for this invoice"]</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 

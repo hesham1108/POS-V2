@@ -19,18 +19,76 @@ public class ShiftsController : Controller
     private readonly IShiftService _shifts;
     private readonly ISalesService _sales;
     private readonly ICashOutService _cashOuts;
+    private readonly IReturnService _returns;
+    private readonly IReportService _reports;
     private readonly IStringLocalizer<SharedResource> _l;
 
     public ShiftsController(
         IShiftService shifts,
         ISalesService sales,
         ICashOutService cashOuts,
+        IReturnService returns,
+        IReportService reports,
         IStringLocalizer<SharedResource> localizer)
     {
         _shifts = shifts;
         _sales = sales;
         _cashOuts = cashOuts;
+        _returns = returns;
+        _reports = reports;
         _l = localizer;
+    }
+
+    /// <summary>Shift history (docs/page-composition.md §6.2). Dates are store-local; the end date is inclusive.</summary>
+    [HttpGet]
+    [Authorize(Policy = AppPermissions.ReportsView)]
+    public async Task<IActionResult> Index(
+        DateTime? from,
+        DateTime? to,
+        int? userId,
+        ShiftResultFilter? result,
+        CancellationToken cancellationToken)
+    {
+        var shifts = await _shifts.GetHistoryAsync(new ShiftHistoryFilterDto
+        {
+            FromUtc = from?.Date.ToUniversalTime(),
+            ToUtc = to?.Date.AddDays(1).ToUniversalTime(),
+            UserId = userId,
+            Result = result,
+            Take = 500
+        }, cancellationToken);
+
+        return View(new ShiftHistoryViewModel
+        {
+            From = from,
+            To = to,
+            UserId = userId,
+            Result = result,
+            Shifts = shifts,
+            Users = (await _reports.GetUserOptionsAsync(cancellationToken))
+                .Select(x => new ReportOption { Id = x.Id ?? 0, Name = x.Name })
+                .ToList()
+        });
+    }
+
+    /// <summary>Read-only shift (docs/page-composition.md §6.3): drawer, sales by method and cashier, cash-outs, returns, invoices.</summary>
+    [HttpGet]
+    [Authorize(Policy = AppPermissions.ReportsView)]
+    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
+    {
+        var summary = await _shifts.GetSummaryAsync(id, cancellationToken);
+        if (summary is null)
+        {
+            return NotFound();
+        }
+
+        return View(new ShiftDetailsViewModel
+        {
+            Summary = summary,
+            Invoices = await _sales.GetInvoicesAsync(new SalesInvoiceFilterDto { ShiftId = id, Take = 1000 }, cancellationToken),
+            CashOuts = await _cashOuts.GetListAsync(new CashOutFilterDto { ShiftId = id }, cancellationToken),
+            Returns = await _returns.GetListAsync(new SalesReturnFilterDto { ShiftId = id }, cancellationToken)
+        });
     }
 
     [HttpGet]

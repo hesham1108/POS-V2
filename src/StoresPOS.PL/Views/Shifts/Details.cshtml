@@ -1,0 +1,126 @@
+@model ShiftDetailsViewModel
+@{
+    var s = Model.Summary;
+    ViewData["Section"] = L["Shifts"].Value;
+    ViewData["Title"] = string.Format(L["Shift #{0}"].Value, s.Id);
+    ViewData["Subtitle"] = s.ClosedAtUtc.HasValue
+        ? string.Format(L["Closed {0} by {1}"].Value, s.ClosedAtUtc.Value.ToLocalTime().ToString("yyyy/MM/dd HH:mm"), s.ClosedByDisplayName)
+        : L["Still open"].Value;
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back to history"]</a>
+    <button type="button" class="btn sp-btn-primary" data-print-url="@Url.Action("Shift", "Receipts", new { id = s.Id })">@L["Reprint shift report"]</button>
+    <a class="btn sp-btn-secondary" asp-controller="Receipts" asp-action="Shift" asp-route-id="@s.Id" target="_blank">@L["Preview"]</a>
+}
+
+<partial name="_PageHeader" />
+
+<div class="shift-layout mb-4">
+    <partial name="_ShiftSummary" model="s" />
+
+    <div class="d-flex flex-column gap-4">
+        <section class="sp-card p-4">
+            <h2 class="shift-section-title">@L["Sales by cashier"]</h2>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>@L["Cashier"]</th>
+                            <th class="text-end">@L["Invoices"]</th>
+                            <th class="text-end">@L["Cash"]</th>
+                            <th class="text-end">@L["Non-cash"]</th>
+                            <th class="text-end">@L["Cash-outs"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in s.Participants)
+                        {
+                            <tr>
+                                <td>@p.DisplayName</td>
+                                <td class="text-end num">@p.InvoiceCount</td>
+                                <td class="text-end num">@p.CashSales.ToString("N2")</td>
+                                <td class="text-end num">@p.NonCashSales.ToString("N2")</td>
+                                <td class="text-end num">@p.CashOuts.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="sp-card p-4">
+            <h2 class="shift-section-title">@L["Cash-outs"]</h2>
+            @if (Model.CashOuts.Count == 0)
+            {
+                <p class="text-muted mb-0">@L["No cash-outs in this shift."]</p>
+            }
+            else
+            {
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>@L["Time"]</th><th>@L["User"]</th><th>@L["Reason"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in Model.CashOuts)
+                        {
+                            <tr>
+                                <td class="num">@c.CreatedAtUtc.ToLocalTime().ToString("HH:mm")</td>
+                                <td>@c.UserDisplayName</td>
+                                <td>@c.Reason</td>
+                                <td class="text-end num">@c.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    </div>
+</div>
+
+@if (Model.Returns.Count > 0)
+{
+    <section class="sp-card p-4 mb-4">
+        <h2 class="shift-section-title">@L["Returns"]</h2>
+        <partial name="_ReturnsTable" model="Model.Returns" />
+    </section>
+}
+
+<section class="sp-card p-4">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+        <h2 class="shift-section-title">@L["Invoices"]</h2>
+        <a class="btn btn-sm sp-btn-secondary" asp-controller="Sales" asp-action="Index" asp-route-shiftId="@s.Id">@L["Open in sales list"]</a>
+    </div>
+    @if (Model.Invoices.Count == 0)
+    {
+        <p class="text-muted mb-0">@L["No sales in this shift."]</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@L["Invoice"]</th>
+                        <th>@L["Time"]</th>
+                        <th>@L["Cashier"]</th>
+                        <th>@L["Customer"]</th>
+                        <th>@L["Payment method"]</th>
+                        <th class="text-end">@L["Total"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model.Invoices)
+                    {
+                        <tr>
+                            <td><a class="num" asp-controller="Sales" asp-action="Details" asp-route-id="@i.Id">@i.InvoiceNumber</a></td>
+                            <td class="num">@i.CompletedAtUtc.ToLocalTime().ToString("HH:mm")</td>
+                            <td>@i.CashierDisplayName</td>
+                            <td>@(i.CustomerName ?? L["Walk-in customer"].Value)</td>
+                            <td><partial name="_PaymentChip" model="i.PaymentMethod" /></td>
+                            <td class="text-end num">@i.Total.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

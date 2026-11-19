@@ -1,0 +1,49 @@
+@model CustomerFormViewModel
+
+<div class="sp-card p-4" style="max-width: 720px;">
+    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" autofocus />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Phone" class="form-label"></label>
+                <input asp-for="Phone" class="form-control num" inputmode="tel" dir="ltr" />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Address" class="form-label"></label>
+                <input asp-for="Address" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="DefaultSaleType" class="form-label"></label>
+                <select asp-for="DefaultSaleType" class="form-select">
+                    <option value="@((int)SaleType.Retail)">@L["Retail"]</option>
+                    <option value="@((int)SaleType.Wholesale)">@L["Wholesale"]</option>
+                </select>
+                <div class="form-text">@L["Picking this customer in the POS switches the invoice to this price list."]</div>
+            </div>
+            <div class="col-12">
+                <label asp-for="Notes" class="form-label"></label>
+                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
+            <a class="btn sp-btn-secondary" asp-action="@(Model.Id.HasValue ? "Details" : "Index")" asp-route-id="@Model.Id">@L["Cancel"]</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,107 @@
+@model CustomerDetailsViewModel
+@{
+    var c = Model.Customer;
+    ViewData["Section"] = L["Customers"].Value;
+    ViewData["Title"] = c.Name;
+    ViewData["Subtitle"] = c.Phone ?? L["No mobile number"].Value;
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back"]</a>
+    <a class="btn sp-btn-primary" asp-action="Edit" asp-route-id="@c.Id">@L["Edit"]</a>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi">
+        <span class="sp-kpi__label">@L["Invoices"]</span>
+        <strong class="sp-kpi__value num">@c.InvoiceCount</strong>
+    </div>
+    <div class="sp-kpi">
+        <span class="sp-kpi__label">@L["Purchases"]</span>
+        <strong class="sp-kpi__value num">@c.SalesTotal.ToString("N2")</strong>
+    </div>
+    <div class="sp-kpi">
+        <span class="sp-kpi__label">@L["Returns"]</span>
+        <strong class="sp-kpi__value num">@c.ReturnedTotal.ToString("N2")</strong>
+    </div>
+    <div class="sp-kpi sp-kpi--primary">
+        <span class="sp-kpi__label">@L["Net total"]</span>
+        <strong class="sp-kpi__value num">@c.NetTotal.ToString("N2")</strong>
+    </div>
+</div>
+
+<div class="report-grid">
+    <section class="sp-card p-4">
+        <h2 class="shift-section-title">@L["Details"]</h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-5">@L["Mobile"]</dt>
+            <dd class="col-sm-7 num" dir="ltr">@(c.Phone ?? "—")</dd>
+            <dt class="col-sm-5">@L["Address"]</dt>
+            <dd class="col-sm-7">@(c.Address ?? "—")</dd>
+            <dt class="col-sm-5">@L["Default sale type"]</dt>
+            <dd class="col-sm-7">@(c.DefaultSaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</dd>
+            <dt class="col-sm-5">@L["Notes"]</dt>
+            <dd class="col-sm-7">@(c.Notes ?? "—")</dd>
+            <dt class="col-sm-5">@L["Status"]</dt>
+            <dd class="col-sm-7">@(c.IsActive ? L["Active"] : L["Inactive"])</dd>
+            <dt class="col-sm-5">@L["Customer since"]</dt>
+            <dd class="col-sm-7 num">@c.CreatedAtUtc.ToLocalTime().ToString("yyyy/MM/dd")</dd>
+        </dl>
+    </section>
+
+    <section class="sp-card p-4">
+        <h2 class="shift-section-title">@L["Purchase history"]</h2>
+        @if (Model.Invoices.Count == 0)
+        {
+            var empty = (L["No purchases yet"].Value, L["Invoices appear here once this customer is picked in the POS (F4)."].Value);
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>@L["Invoice"]</th>
+                            <th>@L["Date"]</th>
+                            <th>@L["Payment"]</th>
+                            <th class="text-end">@L["Total"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var i in Model.Invoices)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="num" asp-controller="Sales" asp-action="Details" asp-route-id="@i.Id">@i.InvoiceNumber</a>
+                                    @if (i.IsFullyReturned)
+                                    {
+                                        <span class="sp-status sp-status-warn ms-1">@L["Fully returned"]</span>
+                                    }
+                                    else if (i.IsPartlyReturned)
+                                    {
+                                        <span class="sp-status sp-status-info ms-1">@L["Partly returned"]</span>
+                                    }
+                                </td>
+                                <td class="num">@i.CompletedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                                <td><partial name="_PaymentChip" model="i.PaymentMethod" /></td>
+                                <td class="text-end num">@i.Total.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+
+@if (Model.Returns.Count > 0)
+{
+    <section class="sp-card p-4 mt-4">
+        <h2 class="shift-section-title">@L["Returns"]</h2>
+        <partial name="_ReturnsTable" model="Model.Returns" />
+    </section>
+}

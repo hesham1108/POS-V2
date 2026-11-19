@@ -56,6 +56,19 @@
 
     <section class="sp-card shift-summary">
         <dl class="shift-summary__rows">
+            <div>
+                <dt>@L["Customer"]</dt>
+                <dd>
+                    @if (Model.CustomerId.HasValue)
+                    {
+                        <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId">@Model.CustomerName</a>
+                    }
+                    else
+                    {
+                        @L["Walk-in customer"]
+                    }
+                </dd>
+            </div>
             <div><dt>@L["Sale type"]</dt><dd>@(Model.SaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</dd></div>
             <div><dt>@L["Shift"]</dt><dd class="num">#@Model.ShiftId</dd></div>
             <div><dt>@L["Customer"]</dt><dd>@L["Walk-in customer"]</dd></div>

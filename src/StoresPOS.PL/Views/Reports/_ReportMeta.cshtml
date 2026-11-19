@@ -1,0 +1,7 @@
+@model ReportPageViewModel
+@* Printed only: what the report covers and when it was printed. *@
+<div class="report-meta">
+    <strong>@ViewData["Title"]</strong> ·
+    <span class="num">@Model.From.ToString("yyyy/MM/dd") – @Model.To.ToString("yyyy/MM/dd")</span> ·
+    @L["Printed"] <span class="num">@DateTime.Now.ToString("yyyy/MM/dd HH:mm")</span> · @User.Identity?.Name
+</div>

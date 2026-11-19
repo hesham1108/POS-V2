@@ -23,6 +23,9 @@ public interface IShiftService
     /// </summary>
     Task<int?> GetActiveShiftIdForUserAsync(int userId, CancellationToken cancellationToken = default);
 
+    /// <summary>Shift history (newest first) with drawer results — Admin/Manager.</summary>
+    Task<IReadOnlyList<ShiftHistoryItemDto>> GetHistoryAsync(ShiftHistoryFilterDto? filter = null, CancellationToken cancellationToken = default);
+
     /// <summary>Journey H. Optional cash count; blank = Not Reconciled.</summary>
     Task<ShiftSummaryDto> CloseAsync(CloseShiftDto dto, int userId, CancellationToken cancellationToken = default);
 }

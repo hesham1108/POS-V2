@@ -34,6 +34,7 @@ public class SalesService : ISalesService
     public const string MsgHeldNotFound = "That held invoice is no longer available.";
     public const string MsgNoClosePermission = "You do not have permission to close the shift.";
     public const string MsgSaveFailed = "The invoice could not be saved. Try again.";
+    public const string MsgCustomerNotFound = "That customer is not available. Pick another one.";
 
     private readonly ApplicationDbContext _db;
     private readonly IShiftService _shifts;
@@ -214,12 +215,36 @@ public class SalesService : ISalesService
 
     public async Task<CartDto> SetSaleTypeAsync(int userId, SaleType saleType, CancellationToken cancellationToken = default)
     {
+        var draft = await GetOrCreateDraftAsync(userId, cancellationToken);
+        await ApplySaleTypeAsync(draft, saleType, cancellationToken);
+        return await SaveCartAsync(draft, cancellationToken);
+    }
+
+    public async Task<CartDto> SetCustomerAsync(int userId, int? customerId, CancellationToken cancellationToken = default)
+    {
+        var draft = await GetOrCreateDraftAsync(userId, cancellationToken);
+        if (customerId is null or <= 0)
+        {
+            draft.CustomerId = null;
+            return await SaveCartAsync(draft, cancellationToken);
+        }
+
+        var customer = await _db.Customers.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == customerId.Value && x.IsActive, cancellationToken)
+            ?? throw new BusinessException(MsgCustomerNotFound);
+
+        draft.CustomerId = customer.Id;
+        await ApplySaleTypeAsync(draft, customer.DefaultSaleType, cancellationToken);
+        return await SaveCartAsync(draft, cancellationToken);
+    }
+
+    private async Task ApplySaleTypeAsync(SalesInvoice draft, SaleType saleType, CancellationToken cancellationToken)
+    {
         if (!Enum.IsDefined(saleType))
         {
             saleType = SaleType.Retail;
         }
 
-        var draft = await GetOrCreateDraftAsync(userId, cancellationToken);
         if (draft.SaleType != saleType)
         {
             draft.SaleType = saleType;
@@ -240,8 +265,6 @@ public class SalesService : ISalesService
                 }
             }
         }
-
-        return await SaveCartAsync(draft, cancellationToken);
     }
 
     public async Task<CartDto> OverridePriceAsync(
@@ -325,6 +348,7 @@ public class SalesService : ISalesService
         draft.Items.Clear();
         draft.DiscountAmount = 0;
         draft.DiscountByUserId = null;
+        draft.CustomerId = null;
         return await SaveCartAsync(draft, cancellationToken);
     }
 
@@ -360,7 +384,8 @@ public class SalesService : ISalesService
                 HeldAtUtc = x.HeldAtUtc ?? x.UpdatedAtUtc,
                 LineCount = x.Items.Count,
                 Total = x.Total,
-                SaleType = x.SaleType
+                SaleType = x.SaleType,
+                CustomerName = x.Customer != null ? x.Customer.Name : null
             })
             .ToListAsync(cancellationToken);
     }
@@ -607,6 +632,11 @@ public class SalesService : ISalesService
             query = query.Where(x => x.ShiftId == filter.ShiftId.Value);
         }
 
+        if (filter.CustomerId.HasValue)
+        {
+            query = query.Where(x => x.CustomerId == filter.CustomerId.Value);
+        }
+
         var take = filter.Take <= 0 ? 200 : Math.Min(filter.Take, 1000);
         return await query
             .OrderByDescending(x => x.InvoiceSequence)
@@ -618,6 +648,8 @@ public class SalesService : ISalesService
                 CompletedAtUtc = x.CompletedAtUtc!.Value,
                 ShiftId = x.ShiftId,
                 CashierDisplayName = x.CashierUser.DisplayName,
+                CustomerId = x.CustomerId,
+                CustomerName = x.Customer != null ? x.Customer.Name : null,
                 SaleType = x.SaleType,
                 PaymentMethod = x.PaymentMethod!.Value,
                 LineCount = x.Items.Count,
@@ -640,6 +672,9 @@ public class SalesService : ISalesService
                 CompletedAtUtc = x.CompletedAtUtc!.Value,
                 ShiftId = x.ShiftId,
                 CashierDisplayName = x.CashierUser.DisplayName,
+                CustomerId = x.CustomerId,
+                CustomerName = x.Customer != null ? x.Customer.Name : null,
+                CustomerPhone = x.Customer != null ? x.Customer.Phone : null,
                 SaleType = x.SaleType,
                 Subtotal = x.Subtotal,
                 DiscountAmount = x.DiscountAmount,
@@ -759,12 +794,22 @@ public class SalesService : ISalesService
         var heldCount = await _db.SalesInvoices
             .CountAsync(x => x.ShiftId == draft.ShiftId && x.Status == SalesInvoiceStatus.Held, cancellationToken);
 
+        var customer = draft.CustomerId is null
+            ? null
+            : await _db.Customers.AsNoTracking()
+                .Where(x => x.Id == draft.CustomerId.Value)
+                .Select(x => new { x.Name, x.Phone })
+                .FirstOrDefaultAsync(cancellationToken);
+
         Recalculate(draft);
         return new CartDto
         {
             InvoiceId = draft.Id,
             ShiftId = draft.ShiftId,
             SaleType = draft.SaleType,
+            CustomerId = customer is null ? null : draft.CustomerId,
+            CustomerName = customer?.Name,
+            CustomerPhone = customer?.Phone,
             Lines = draft.Items
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new CartLineDto

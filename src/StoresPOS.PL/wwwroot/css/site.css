@@ -596,3 +596,168 @@ html[dir="rtl"] body {
   margin-block-end: 1.25rem;
   min-height: 2.5rem;
 }
+
+/* ─── Phase 10: KPI tiles, dashboard, reports ─── */
+.sp-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--sp-space-4, 1rem);
+}
+
+.sp-kpi {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem 1.15rem;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg);
+  box-shadow: var(--sp-shadow-sm);
+  color: inherit;
+  text-decoration: none;
+}
+
+.sp-kpi__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sp-text-muted);
+}
+
+.sp-kpi__value {
+  font-family: var(--sp-font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--sp-text-strong);
+  line-height: 1.15;
+}
+
+.sp-kpi__hint {
+  font-size: 0.8125rem;
+  color: var(--sp-text-muted);
+}
+
+.sp-kpi--primary {
+  background: var(--sp-primary-soft);
+  border-color: var(--sp-primary-border);
+}
+
+.sp-kpi--primary .sp-kpi__value { color: var(--sp-primary); }
+.sp-kpi--warn .sp-kpi__value { color: var(--sp-warning); }
+.sp-kpi--bad .sp-kpi__value { color: var(--sp-danger); }
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: var(--sp-space-5, 1.25rem);
+  align-items: start;
+}
+
+.report-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.report-tabs a {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.report-tabs a.is-active {
+  background: var(--sp-primary);
+  border-color: var(--sp-primary);
+  color: #fff;
+}
+
+.report-bar {
+  position: relative;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--sp-neutral-soft);
+  overflow: hidden;
+  min-width: 80px;
+}
+
+.report-bar > span {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: inherit;
+  background: var(--sp-primary);
+}
+
+.report-meta {
+  display: none;
+}
+
+.dash-shift {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dash-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.55rem;
+  border-block-end: 1px solid var(--sp-border);
+}
+
+.dash-list li:last-child { border-block-end: 0; }
+
+.dash-list small {
+  display: block;
+  color: var(--sp-text-muted);
+}
+
+/* Reports print on A4 from the browser: hide the shell and the filters. */
+@media print {
+  .app-sidebar,
+  .app-topbar,
+  .app-footer,
+  .report-tabs,
+  .report-filters,
+  .no-print {
+    display: none !important;
+  }
+
+  .app-shell,
+  .app-main,
+  .app-content {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .report-meta {
+    display: block;
+    margin-block-end: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .sp-card,
+  .sp-kpi {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  body {
+    background: #fff !important;
+  }
+}

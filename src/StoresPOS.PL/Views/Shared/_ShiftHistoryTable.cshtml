@@ -1,0 +1,38 @@
+@model IReadOnlyList<ShiftHistoryItemDto>
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>@L["Opened"]</th>
+                <th>@L["Closed"]</th>
+                <th>@L["Opened by"]</th>
+                <th>@L["Closed by"]</th>
+                <th class="text-end">@L["Sales"]</th>
+                <th class="text-end">@L["Expected"]</th>
+                <th class="text-end">@L["Actual"]</th>
+                <th class="text-end">@L["Difference"]</th>
+                <th>@L["Result"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td><a class="num" asp-controller="Shifts" asp-action="Details" asp-route-id="@s.Id">#@s.Id</a></td>
+                    <td class="num">@s.OpenedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                    <td class="num">@(s.ClosedAtUtc?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                    <td>@s.OpenedByDisplayName</td>
+                    <td>@(s.ClosedByDisplayName ?? "—")</td>
+                    <td class="text-end num">@s.SalesTotal.ToString("N2")</td>
+                    <td class="text-end num">@s.ExpectedCash.ToString("N2")</td>
+                    <td class="text-end num">@(s.ActualCash?.ToString("N2") ?? "—")</td>
+                    <td class="text-end num @(s.CashDifference < 0 ? "text-danger" : s.CashDifference > 0 ? "text-warning" : null)">
+                        <span dir="ltr">@(s.CashDifference.HasValue ? (s.CashDifference > 0 ? "+" : "") + s.CashDifference.Value.ToString("N2") : "—")</span>
+                    </td>
+                    <td><partial name="_ShiftStatusChip" model="s.ToChip()" /></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

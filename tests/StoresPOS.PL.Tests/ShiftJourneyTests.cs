@@ -213,6 +213,7 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
 
             db.SalesInvoiceItems.RemoveRange(db.SalesInvoiceItems);
             db.SalesInvoices.RemoveRange(db.SalesInvoices);
+            db.Customers.RemoveRange(db.Customers);
             db.StockMovements.RemoveRange(db.StockMovements);
 
             var oil = await db.Products.FirstOrDefaultAsync(x => x.Barcode == "622100");

@@ -14,7 +14,7 @@ public class SalesInvoice
     public int ShiftId { get; set; }
     public int CashierUserId { get; set; }
 
-    /// <summary>Null = walk-in customer ("عميل نقدي"). Customer records arrive in Phase 10.</summary>
+    /// <summary>Null = walk-in customer ("عميل نقدي").</summary>
     public int? CustomerId { get; set; }
 
     public decimal Subtotal { get; set; }
@@ -37,5 +37,6 @@ public class SalesInvoice
     public Shift Shift { get; set; } = null!;
     public User CashierUser { get; set; } = null!;
     public User? DiscountByUser { get; set; }
+    public Customer? Customer { get; set; }
     public ICollection<SalesInvoiceItem> Items { get; set; } = new List<SalesInvoiceItem>();
 }

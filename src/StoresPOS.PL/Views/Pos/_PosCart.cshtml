@@ -12,9 +12,10 @@
             <button type="button" class="@(wholesale ? null : "is-active")" data-action="sale-type" data-value="1">@L["Retail"]</button>
             <button type="button" class="@(wholesale ? "is-active" : null)" data-action="sale-type" data-value="2">@L["Wholesale"]</button>
         </div>
-        <button type="button" class="pos-cart__customer" data-action="customer">
+        <button type="button" class="pos-cart__customer @(cart.CustomerId.HasValue ? "has-customer" : null)" data-action="customer"
+                data-customer-id="@cart.CustomerId">
             <span>@L["Customer"] · F4</span>
-            <strong>@L["Walk-in customer"]</strong>
+            <strong>@(cart.CustomerName ?? L["Walk-in customer"].Value)</strong>
         </button>
     </div>
 

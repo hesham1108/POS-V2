@@ -1,0 +1,95 @@
+@model CustomerIndexViewModel
+@{
+    ViewData["Section"] = L["Customers"].Value;
+    ViewData["Title"] = L["Customers"].Value;
+    ViewData["Subtitle"] = L["Sales without a customer go to the walk-in customer"].Value;
+}
+
+@section PageActions {
+    <a class="btn sp-btn-primary" asp-action="Create">@L["Add customer"]</a>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="sp-card p-3 mb-4">
+    <form method="get" class="sp-filter-row">
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="search">@L["Search"]</label>
+            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="@L["Name or mobile"]" />
+        </div>
+        <label class="sp-filter-row__check form-check" for="includeInactive">
+            <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
+                   @(Model.IncludeInactive ? "checked" : null) />
+            <span class="form-check-label">@L["Include inactive"]</span>
+        </label>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-primary">@L["Filter"]</button>
+            <a class="btn sp-btn-secondary" asp-action="Index">@L["Reset"]</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.Customers.Count == 0)
+{
+    var empty = string.IsNullOrWhiteSpace(Model.Search)
+        ? (L["No customers yet"].Value, L["Add customers here or from the POS with F4. Sales without one use the walk-in customer."].Value)
+        : (L["No customers found"].Value, L["Try another name or mobile number."].Value);
+    <partial name="_EmptyState" model="empty" />
+}
+else
+{
+    <div class="sp-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@L["Customer"]</th>
+                        <th>@L["Mobile"]</th>
+                        <th>@L["Default sale type"]</th>
+                        <th class="text-end">@L["Invoices"]</th>
+                        <th class="text-end">@L["Net purchases"]</th>
+                        <th>@L["Last purchase"]</th>
+                        <th>@L["Status"]</th>
+                        <th class="text-end">@L["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Customers)
+                    {
+                        <tr>
+                            <td><a class="fw-semibold" asp-action="Details" asp-route-id="@c.Id">@c.Name</a></td>
+                            <td class="num">@(c.Phone ?? "—")</td>
+                            <td>@(c.DefaultSaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</td>
+                            <td class="text-end num">@c.InvoiceCount</td>
+                            <td class="text-end num">@c.NetTotal.ToString("N2")</td>
+                            <td class="num">@(c.LastPurchaseAtUtc?.ToLocalTime().ToString("yyyy/MM/dd") ?? "—")</td>
+                            <td>
+                                @if (c.IsActive)
+                                {
+                                    <span class="sp-status sp-status-ok">@L["Active"]</span>
+                                }
+                                else
+                                {
+                                    <span class="sp-status sp-status-neutral">@L["Inactive"]</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@c.Id">@L["View"]</a>
+                                <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@c.Id">@L["Edit"]</a>
+                                @if (c.IsActive)
+                                {
+                                    <form asp-action="Deactivate" asp-route-id="@c.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('@L["Deactivate this customer? Past invoices keep the name."]');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">@L["Deactivate"]</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

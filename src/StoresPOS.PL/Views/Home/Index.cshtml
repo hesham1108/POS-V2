@@ -1,55 +1,208 @@
-﻿@{
-    ViewData["Section"] = "Dashboard";
-    ViewData["Title"] = "Dashboard";
-    ViewData["Subtitle"] = "Store overview — modules follow Hesham’s navigation plan";
-    var canManage = User.HasClaim(AppPermissions.ClaimType, AppPermissions.CatalogManage);
+﻿@model DashboardDto
+@{
+    ViewData["Section"] = L["Dashboard"].Value;
+    ViewData["Title"] = L["Dashboard"].Value;
+    ViewData["Subtitle"] = string.Format(L["Today · {0}"].Value, Model.TodayLocal.ToString("yyyy/MM/dd"));
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    bool Can(string permission) => User.HasClaim(AppPermissions.ClaimType, permission);
+    var shift = Model.OpenShift;
 }
 
+@section PageActions {
+    @if (Can(AppPermissions.PosUse))
+    {
+        <a class="btn sp-btn-primary" asp-controller="Shifts" asp-action="Gate">@L["Sell"]</a>
+    }
+    @if (Can(AppPermissions.ReportsView))
+    {
+        <a class="btn sp-btn-secondary" asp-controller="Reports" asp-action="Sales">@L["Reports"]</a>
+    }
+}
+
+<partial name="_PageHeader" />
 <partial name="_Flash" />
 
-<section class="home-hero">
-    <div class="sp-eyebrow" style="color:#7fd6b8">StoresPOS</div>
-    <h1>Fast offline cashier &amp; store ops</h1>
-    <p>Sidebar tabs match the approved mockups. Ready modules are clickable; the rest stay disabled until their phase.</p>
-</section>
+<div class="sp-kpis mb-4">
+    <a class="sp-kpi sp-kpi--primary" asp-controller="Reports" asp-action="Sales">
+        <span class="sp-kpi__label">@L["Today's sales"]</span>
+        <strong class="sp-kpi__value num">@Model.TodaySales.ToString("N2")</strong>
+        <span class="sp-kpi__hint">@string.Format(L["{0} invoices"].Value, Model.TodayInvoiceCount)</span>
+    </a>
+    <div class="sp-kpi">
+        <span class="sp-kpi__label">@L["Cash"]</span>
+        <strong class="sp-kpi__value num">@Model.TodayCash.ToString("N2")</strong>
+        <span class="sp-kpi__hint">@L["Enters the drawer"]</span>
+    </div>
+    <div class="sp-kpi">
+        <span class="sp-kpi__label">@L["Non-cash"]</span>
+        <strong class="sp-kpi__value num">@Model.TodayNonCash.ToString("N2")</strong>
+        <span class="sp-kpi__hint">@L["Visa / InstaPay / wallet"]</span>
+    </div>
+    <a class="sp-kpi @(Model.TodayReturnsCount > 0 ? "sp-kpi--warn" : null)" asp-controller="Returns" asp-action="Index">
+        <span class="sp-kpi__label">@L["Returns"]</span>
+        <strong class="sp-kpi__value num">@Model.TodayReturnsAmount.ToString("N2")</strong>
+        <span class="sp-kpi__hint">@string.Format(L["{0} returns"].Value, Model.TodayReturnsCount)</span>
+    </a>
+</div>
 
-@if (canManage)
-{
-    <div class="home-modules">
-        <a class="home-mod" asp-controller="Shifts" asp-action="Gate">
-            <strong>@L["Shifts"]</strong>
-            <span>@L["Open, resume or close the store shift"]</span>
-        </a>
-        <a class="home-mod" asp-controller="Products" asp-action="Index">
-            <strong>Products and categories</strong>
-            <span>Catalog, categories tree, inventory</span>
-        </a>
-        <a class="home-mod" asp-controller="Purchases" asp-action="Index">
-            <strong>Purchase invoices</strong>
-            <span>Confirm to raise stock and refresh prices</span>
-        </a>
-        <a class="home-mod" asp-controller="Suppliers" asp-action="Index">
-            <strong>Suppliers</strong>
-            <span>Contacts and purchase totals</span>
-        </a>
-        <a class="home-mod" asp-controller="Shifts" asp-action="Gate">
-            <strong>@L["POS"]</strong>
-            <span>@L["Sell through the open shift"]</span>
-        </a>
-        <a class="home-mod" asp-controller="Sales" asp-action="Index">
-            <strong>@L["Sales invoices"]</strong>
-            <span>@L["Search completed sales"]</span>
-        </a>
-        <div class="home-mod" style="opacity:.55">
-            <strong>Settings</strong>
-            <span>Coming — Phase 11</span>
+<div class="report-grid mb-4">
+    @* Shift status *@
+    <section class="sp-card p-4">
+        <h2 class="shift-section-title">@L["Shift status"]</h2>
+        @if (shift is null)
+        {
+            <div class="dash-shift">
+                <div>
+                    <span class="sp-status sp-status-neutral">@L["No open shift"]</span>
+                    <p class="text-muted mb-0 mt-2">@L["Open a shift from the POS gate to start selling."]</p>
+                </div>
+                @if (Can(AppPermissions.ShiftsOpenResume))
+                {
+                    <a class="btn sp-btn-primary" asp-controller="Shifts" asp-action="Gate">@L["Open shift"]</a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="dash-shift mb-3">
+                <div>
+                    <strong>@string.Format(L["Shift #{0}"].Value, shift.Id)</strong>
+                    <partial name="_ShiftStatusChip" model="shift" />
+                    @if (shift.IsOld)
+                    {
+                        <span class="sp-status sp-status-warn">@L["Opened before today"]</span>
+                    }
+                    <div class="text-muted small mt-1">
+                        @L["Opened"] <span class="num">@shift.OpenedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span> · @shift.OpenedByDisplayName
+                    </div>
+                </div>
+                <a class="btn sp-btn-secondary" asp-controller="Shifts" asp-action="Current">@L["Current shift"]</a>
+            </div>
+            <dl class="shift-summary__rows">
+                <div><dt>@L["Expected in drawer"]</dt><dd class="num">@shift.ExpectedCash.ToString("N2")</dd></div>
+                <div><dt>@L["Invoices"]</dt><dd class="num">@shift.InvoiceCount</dd></div>
+                <div><dt>@L["Participants"]</dt><dd>@string.Join(L[", "].Value, shift.Participants.Select(p => p.DisplayName))</dd></div>
+                @if (shift.HeldInvoiceCount > 0)
+                {
+                    <div><dt>@L["Held invoices"]</dt><dd class="num">@shift.HeldInvoiceCount</dd></div>
+                }
+            </dl>
+        }
+    </section>
+
+    @* Low stock *@
+    <section class="sp-card p-4">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <h2 class="shift-section-title">@L["Stock alerts"]</h2>
+            @if (Model.LowStockCount > 0)
+            {
+                <span class="sp-status sp-status-warn">@string.Format(L["{0} low"].Value, Model.LowStockCount)</span>
+            }
         </div>
-    </div>
-}
-else
-{
-    <div class="sp-card p-4">
-        <h2 class="h5 mb-2">Cashier workspace</h2>
-        <p class="text-muted mb-0">POS and shifts arrive in later delivery phases.</p>
-    </div>
-}
+        @if (Model.LowStockCount == 0)
+        {
+            var empty = (L["Stock looks fine"].Value, L["No active product is at or below its low-stock level."].Value);
+            <partial name="_EmptyState" model="empty" />
+        }
+        else
+        {
+            <ul class="dash-list">
+                @foreach (var p in Model.LowStockTop)
+                {
+                    <li>
+                        <span>
+                            @(isAr ? p.NameAr : p.NameEn)
+                            <small>@string.Format(L["Low-stock level {0}"].Value, p.LowStockThreshold.ToString("0.###"))</small>
+                        </span>
+                        <span class="sp-status @(p.StockQuantity <= 0 ? "sp-status-bad" : "sp-status-warn") num">
+                            @p.StockQuantity.ToString("0.###") @p.Unit
+                        </span>
+                    </li>
+                }
+            </ul>
+            @if (Can(AppPermissions.CatalogManage))
+            {
+                <a class="btn btn-sm sp-btn-secondary mt-3" asp-controller="Inventory" asp-action="Index" asp-route-lowStockOnly="true">@L["See all low stock"]</a>
+            }
+        }
+    </section>
+</div>
+
+<h2 class="shift-section-title">@L["Recent activity"]</h2>
+<div class="report-grid">
+    <section class="sp-card p-4">
+        <h3 class="h6 mb-3">@L["Latest sales"]</h3>
+        @if (Model.RecentSales.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No sales yet."]</p>
+        }
+        else
+        {
+            <ul class="dash-list">
+                @foreach (var s in Model.RecentSales)
+                {
+                    <li>
+                        <span>
+                            <a class="num" asp-controller="Sales" asp-action="Details" asp-route-id="@s.Id">@s.InvoiceNumber</a>
+                            <small>@s.CompletedAtUtc.ToLocalTime().ToString("MM/dd HH:mm") · @s.CashierDisplayName · @(s.CustomerName ?? L["Walk-in customer"].Value)</small>
+                        </span>
+                        <strong class="num">@s.Total.ToString("N2")</strong>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="sp-card p-4">
+        <h3 class="h6 mb-3">@L["Latest cash-outs"]</h3>
+        @if (Model.RecentCashOuts.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No cash-outs yet."]</p>
+        }
+        else
+        {
+            <ul class="dash-list">
+                @foreach (var c in Model.RecentCashOuts)
+                {
+                    <li>
+                        <span>
+                            @c.Reason
+                            <small>@c.CreatedAtUtc.ToLocalTime().ToString("MM/dd HH:mm") · @c.UserDisplayName · #@c.ShiftId</small>
+                        </span>
+                        <strong class="num">@c.Amount.ToString("N2")</strong>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="sp-card p-4">
+        <h3 class="h6 mb-3">@L["Latest confirmed purchases"]</h3>
+        @if (Model.RecentPurchases.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No confirmed purchases yet."]</p>
+        }
+        else
+        {
+            <ul class="dash-list">
+                @foreach (var p in Model.RecentPurchases)
+                {
+                    <li>
+                        <span>
+                            @if (Can(AppPermissions.PurchasesManage))
+                            {
+                                <a asp-controller="Purchases" asp-action="Details" asp-route-id="@p.Id">@p.InvoiceNumber</a>
+                            }
+                            else
+                            {
+                                @p.InvoiceNumber
+                            }
+                            <small>@p.InvoiceDate.ToString("yyyy/MM/dd") · @p.SupplierName</small>
+                        </span>
+                        <strong class="num">@p.Total.ToString("N2")</strong>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>

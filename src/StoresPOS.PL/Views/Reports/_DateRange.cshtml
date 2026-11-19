@@ -1,0 +1,9 @@
+@model ReportPageViewModel
+<div class="sp-filter-row__field">
+    <label class="form-label" for="from">@L["From"]</label>
+    <input class="form-control" type="date" id="from" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />
+</div>
+<div class="sp-filter-row__field">
+    <label class="form-label" for="to">@L["To"]</label>
+    <input class="form-control" type="date" id="to" name="to" value="@Model.To.ToString("yyyy-MM-dd")" />
+</div>

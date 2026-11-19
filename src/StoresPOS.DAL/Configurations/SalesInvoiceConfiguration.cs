@@ -45,6 +45,13 @@ public class SalesInvoiceConfiguration : IEntityTypeConfiguration<SalesInvoice>
             .HasForeignKey(x => x.CashierUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasIndex(x => x.CustomerId);
+
+        builder.HasOne(x => x.Customer)
+            .WithMany()
+            .HasForeignKey(x => x.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.DiscountByUser)
             .WithMany()
             .HasForeignKey(x => x.DiscountByUserId)

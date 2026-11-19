@@ -1,0 +1,147 @@
+@model InventoryReportViewModel
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Inventory report"].Value;
+    ViewData["Subtitle"] = L["Current balances valued at purchase price · movements in the chosen dates"].Value;
+    var r = Model.Report;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    string TypeLabel(StockMovementType t) => t switch
+    {
+        StockMovementType.Purchase => L["Purchases"].Value,
+        StockMovementType.Sale => L["Sales"].Value,
+        StockMovementType.SaleReturn => L["Returns"].Value,
+        _ => L["Adjustments"].Value
+    };
+}
+
+@section PageActions {
+    <partial name="_PrintButton" />
+}
+
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+
+<div class="sp-card p-3 mb-4 report-filters">
+    <form method="get" class="sp-filter-row">
+        <partial name="_DateRange" model="Model" />
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="categoryId">@L["Category"]</label>
+            <select class="form-select" id="categoryId" name="categoryId">
+                <option value="">@L["All"]</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.Name</option>
+                }
+            </select>
+        </div>
+        <label class="sp-filter-row__check form-check" for="lowOnly">
+            <input class="form-check-input" type="checkbox" name="lowOnly" value="true" id="lowOnly" @(Model.LowOnly ? "checked" : null) />
+            <span class="form-check-label">@L["Low stock only"]</span>
+        </label>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-primary">@L["Filter"]</button>
+            <a class="btn sp-btn-secondary" asp-action="Inventory">@L["Reset"]</a>
+        </div>
+    </form>
+</div>
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi sp-kpi--primary">
+        <span class="sp-kpi__label">@L["Stock value at cost"]</span>
+        <strong class="sp-kpi__value num">@r.TotalCostValue.ToString("N2")</strong>
+        <span class="sp-kpi__hint">@string.Format(L["{0} products"].Value, r.ProductCount)</span>
+    </div>
+    <div class="sp-kpi">
+        <span class="sp-kpi__label">@L["Value at retail price"]</span>
+        <strong class="sp-kpi__value num">@r.TotalRetailValue.ToString("N2")</strong>
+    </div>
+    <div class="sp-kpi @(r.LowStockCount > 0 ? "sp-kpi--warn" : null)">
+        <span class="sp-kpi__label">@L["Low stock"]</span>
+        <strong class="sp-kpi__value num">@r.LowStockCount</strong>
+    </div>
+    <div class="sp-kpi @(r.OutOfStockCount > 0 ? "sp-kpi--bad" : null)">
+        <span class="sp-kpi__label">@L["Out of stock"]</span>
+        <strong class="sp-kpi__value num">@r.OutOfStockCount</strong>
+    </div>
+</div>
+
+<section class="sp-card p-4 mb-4">
+    <h2 class="shift-section-title">@L["Stock movements"]</h2>
+    @if (r.Movements.Count == 0)
+    {
+        <p class="text-muted mb-0">@L["No stock movements in this period."]</p>
+    }
+    else
+    {
+        <table class="table align-middle mb-0">
+            <thead><tr><th>@L["Type"]</th><th class="text-end">@L["Movements"]</th><th class="text-end">@L["Qty in"]</th><th class="text-end">@L["Qty out"]</th></tr></thead>
+            <tbody>
+                @foreach (var m in r.Movements)
+                {
+                    <tr>
+                        <td>@TypeLabel(m.Type)</td>
+                        <td class="text-end num">@m.Count</td>
+                        <td class="text-end num">@m.QuantityIn.ToString("0.###")</td>
+                        <td class="text-end num">@m.QuantityOut.ToString("0.###")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@if (r.Rows.Count == 0)
+{
+    var empty = (L["No products match"].Value, L["Change the category or turn off \"Low stock only\"."].Value);
+    <partial name="_EmptyState" model="empty" />
+}
+else
+{
+    <section class="sp-card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@L["Product"]</th>
+                        <th>@L["Category"]</th>
+                        <th class="text-end">@L["Stock"]</th>
+                        <th class="text-end">@L["Cost"]</th>
+                        <th class="text-end">@L["Value at cost"]</th>
+                        <th class="text-end">@L["Value at retail"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in r.Rows)
+                    {
+                        <tr>
+                            <td>
+                                @(isAr ? p.NameAr : p.NameEn)
+                                @if (p.IsOutOfStock)
+                                {
+                                    <span class="sp-status sp-status-bad ms-1">@L["Out of stock"]</span>
+                                }
+                                else if (p.IsLowStock)
+                                {
+                                    <span class="sp-status sp-status-warn ms-1">@L["Low stock"]</span>
+                                }
+                            </td>
+                            <td>@((isAr ? p.CategoryNameAr : p.CategoryNameEn) ?? "—")</td>
+                            <td class="text-end num">@p.StockQuantity.ToString("0.###") @p.Unit</td>
+                            <td class="text-end num">@p.UnitCost.ToString("N2")</td>
+                            <td class="text-end num">@p.CostValue.ToString("N2")</td>
+                            <td class="text-end num">@p.RetailValue.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="4">@string.Format(L["{0} products"].Value, r.ProductCount)</th>
+                        <th class="text-end num num-total">@r.TotalCostValue.ToString("N2")</th>
+                        <th class="text-end num">@r.TotalRetailValue.ToString("N2")</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+}

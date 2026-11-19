@@ -1,0 +1,13 @@
+@model CustomerFormViewModel
+@{
+    ViewData["Section"] = L["Customers"].Value;
+    ViewData["Title"] = L["Edit customer"].Value;
+    ViewData["Subtitle"] = Model.Name;
+}
+
+<partial name="_PageHeader" />
+<partial name="_CustomerForm" model="Model" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

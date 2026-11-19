@@ -1,0 +1,7 @@
+@model ShiftResultFilter?
+<option value="">@L["All"]</option>
+<option value="@((int)ShiftResultFilter.Open)" selected="@(Model == ShiftResultFilter.Open)">@L["Shift open"]</option>
+<option value="@((int)ShiftResultFilter.Matched)" selected="@(Model == ShiftResultFilter.Matched)">@L["Matched"]</option>
+<option value="@((int)ShiftResultFilter.Surplus)" selected="@(Model == ShiftResultFilter.Surplus)">@L["Surplus"]</option>
+<option value="@((int)ShiftResultFilter.Shortage)" selected="@(Model == ShiftResultFilter.Shortage)">@L["Shortage"]</option>
+<option value="@((int)ShiftResultFilter.NotReconciled)" selected="@(Model == ShiftResultFilter.NotReconciled)">@L["Not reconciled"]</option>

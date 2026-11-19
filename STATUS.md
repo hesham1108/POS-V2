@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 9 complete** — next is **Phase 10 (customers, dashboard & reports)**
-- Overall progress: Phases 1–9 verified (unit + HTTP tests; receipts checked visually; not yet on SQL Server)
+- Current phase: **Phase 10 complete** — next is **Phase 11 (settings & delivery)**
+- Overall progress: Phases 1–10 verified (unit + HTTP tests; Phase 10 pages checked in a browser on the Mac dev SQL)
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -73,12 +73,27 @@
 - Migration `CashOutsAndReturns`
 - Tests: BLL 73/73, PL 10/10
 
-## Pending Tasks
+### Phase 10 — Customers, dashboard, reports, shift history
 
-- Phase 10: customers, dashboard, reports, shift history
+- `Customer` (name, mobile, address, notes, default sale type, active). Walk-in ("عميل نقدي") = invoice with no customer, so it can never be edited or deleted
+- `ICustomerService`: list/search (name or mobile), create/update/deactivate; a mobile number belongs to one active customer; totals = completed sales − returns
+- POS F4: picker modal (search, ↑/↓/Enter, walk-in button, quick add name + mobile). Picking a customer switches the invoice to their default sale type (edited prices kept); Clear and a new invoice go back to walk-in; held invoices keep their customer
+- Customer shown on the 80 mm receipt, Sales list/details, held list, shift details; `Customers/*` screens with purchase history + returns
+- Dashboard (`Home/Index`): today's sales / cash / non-cash / returns (store-local day), shift status + expected drawer, low-stock top 5, latest sales / cash-outs / confirmed purchases
+- `Reports/*` (Reports.View): Sales (net of discount — each line carries its share; returns dated by refund day; cost = purchase price saved on the line; by method / cashier / sale type / day / top products; filters cashier, method, sale type, category incl. sub-categories), Purchases (confirmed, by invoice date; by supplier / product), Inventory (value at cost + retail, low/out, movements in range), Shifts (shortage / surplus / unreconciled, sales by cashier), Cash-outs (by user, by reason). Default range = this month; browser print hides the shell
+- `Shifts/Index` history (filters dates / result / cashier) + `Shifts/Details/{id}` (drawer summary, by cashier, cash-outs, returns, invoices, reprint report); links from Current shift and the gate
+- Sidebar: Customers + Reports enabled for Reports.View
+- Arabic strings for all Phase 10 screens and messages
+- Migration `Customers` (applied to the Mac dev SQL — Azure SQL Edge)
+- Tests: BLL 86/86, PL 12/12
+
+## Pending Tasks
 - Returns: no in-line manager approval for cashiers yet (manager makes the return) — confirm with client
 - Silent printing on the real thermal printer not tested (no printer here) — follow `docs/printing.md` on the store PC
-- Apply migrations `ShiftsAndPermissions` + `SalesInvoices` + `CashOutsAndReturns` on SQL Server; click through POS in a browser (en + ar) — not possible on the dev Mac (no SQL Server)
+- Apply migrations up to `Customers` on the store's SQL Server (Windows); full POS click-through on the store PC (en + ar)
+- Profit uses the purchase price saved on each sale line (last purchase price), not weighted average cost — open decision "Profit costing"
+- Customers screens use Reports.View (Admin/Manager); cashiers add customers only from the POS (F4) — confirm with client
+- Minus signs in the existing `_ShiftSummary` render after the number in Arabic (e.g. "0.00-") — cosmetic
 - Client to confirm the POS open decisions applied as defaults (split tender, zero stock, held at close, tax)
 - Error messages that name a product use the English name even in Arabic UI
 
@@ -87,13 +102,13 @@
 | Command | Result |
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 73/73 |
-| `dotnet test tests/StoresPOS.PL.Tests` | Passed 10/10 |
-| `dotnet ef database update` | `ShiftsAndPermissions`, `SalesInvoices`, `CashOutsAndReturns` not yet applied to SQL Server |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 86/86 |
+| `dotnet test tests/StoresPOS.PL.Tests` | Passed 12/12 |
+| `dotnet ef database update` | All migrations through `Customers` applied on the Mac dev SQL (Docker); store SQL Server not yet |
 
 ## Next Recommended Task
 
-Phase 10 — customers (+ walk-in), dashboard, reports, shift history
+Phase 11 — settings (store profile, tax, numbering, printing, language), backup/restore, offline license, installer
 
 ## Design System Note (2026-11-19)
 
@@ -114,6 +129,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 4 suppliers & purchases implemented and verified                 |
 | 2026-11-19 | Phase 5 inventory (movements, adjust, low-stock) implemented           |
 | 2026-11-19 | `docs/page-composition.md` from flows A–H                              |
+| 2026-11-19 | Phase 10 customers (POS F4), dashboard, reports, shift history |
 | 2026-11-19 | Phase 9 cash-outs, returns, return slip, lists |
 | 2026-11-19 | Phase 8 receipts, shift report, printing workflow |
 | 2026-11-19 | Phase 7 POS, sales invoices, shift totals + close guard |

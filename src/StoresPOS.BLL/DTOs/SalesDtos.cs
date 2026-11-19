@@ -50,6 +50,11 @@ public class CartDto
     public int InvoiceId { get; set; }
     public int ShiftId { get; set; }
     public SaleType SaleType { get; set; }
+
+    /// <summary>Null = walk-in customer.</summary>
+    public int? CustomerId { get; set; }
+    public string? CustomerName { get; set; }
+    public string? CustomerPhone { get; set; }
     public IReadOnlyList<CartLineDto> Lines { get; set; } = [];
     public decimal ItemCount { get; set; }
     public decimal Subtotal { get; set; }
@@ -67,6 +72,7 @@ public class HeldInvoiceDto
     public int LineCount { get; set; }
     public decimal Total { get; set; }
     public SaleType SaleType { get; set; }
+    public string? CustomerName { get; set; }
 }
 
 public class DiscountDto
@@ -113,6 +119,7 @@ public class SalesInvoiceFilterDto
     public int? CashierUserId { get; set; }
     public PaymentMethod? PaymentMethod { get; set; }
     public int? ShiftId { get; set; }
+    public int? CustomerId { get; set; }
     public int Take { get; set; } = 200;
 }
 
@@ -123,6 +130,8 @@ public class SalesInvoiceListItemDto
     public DateTime CompletedAtUtc { get; set; }
     public int ShiftId { get; set; }
     public string CashierDisplayName { get; set; } = string.Empty;
+    public int? CustomerId { get; set; }
+    public string? CustomerName { get; set; }
     public SaleType SaleType { get; set; }
     public PaymentMethod PaymentMethod { get; set; }
     public int LineCount { get; set; }
@@ -155,6 +164,9 @@ public class SalesInvoiceDetailsDto
     public DateTime CompletedAtUtc { get; set; }
     public int ShiftId { get; set; }
     public string CashierDisplayName { get; set; } = string.Empty;
+    public int? CustomerId { get; set; }
+    public string? CustomerName { get; set; }
+    public string? CustomerPhone { get; set; }
     public SaleType SaleType { get; set; }
     public decimal Subtotal { get; set; }
     public decimal DiscountAmount { get; set; }

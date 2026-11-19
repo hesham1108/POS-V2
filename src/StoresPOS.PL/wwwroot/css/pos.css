@@ -498,3 +498,63 @@ button.pos-line__price:hover {
   background: var(--sp-danger);
   color: var(--sp-text-inverse);
 }
+
+/* ─── Customer (F4) ─── */
+.pos-cart__customer.has-customer {
+  border-color: var(--sp-primary-border);
+  background: var(--sp-primary-soft);
+}
+
+.pos-cart__customer.has-customer strong {
+  color: var(--sp-primary);
+}
+
+.pos-customers {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.pos-customers ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pos-customers button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: start;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  background: var(--sp-surface);
+  margin-block-end: 0.35rem;
+}
+
+.pos-customers button:hover,
+.pos-customers button:focus-visible,
+.pos-customers button.is-active {
+  border-color: var(--sp-primary);
+  background: var(--sp-primary-soft);
+  outline: none;
+}
+
+.pos-customers small {
+  display: block;
+  color: var(--sp-text-muted);
+}
+
+.pos-customers__empty {
+  color: var(--sp-text-muted);
+  margin: 0.5rem 0;
+}
+
+.pos-customer-quick {
+  margin-block-start: 1rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--sp-border);
+}
