@@ -1,12 +1,17 @@
 @model ProductFormViewModel
 @{
+    ViewData["Section"] = "Products and categories";
     ViewData["Title"] = "Add product";
+    ViewData["Subtitle"] = "Edit sell price or markup % — the other updates automatically";
 }
 
-<div class="mb-4">
-    <h1 class="h3 mb-1">Add product</h1>
-    <p class="text-muted mb-0">Edit sell price or markup % — the other updates automatically</p>
-</div>
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">Cancel</a>
+    <button type="submit" form="product-form" class="btn sp-btn-primary">Save product</button>
+}
+
+<partial name="_PageHeader" />
+<partial name="_CatalogTabs" />
 
 <partial name="_ProductForm" model="Model" />
 

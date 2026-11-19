@@ -1,101 +1,365 @@
-/* StoresPOS design tokens — extracted from UI mockups */
+/* StoresPOS design system — tokens + shared components (offline fonts) */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/inter/inter-latin-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/inter/inter-latin-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/inter/inter-latin-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/inter/inter-latin-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/manrope/manrope-latin-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/manrope/manrope-latin-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../fonts/manrope/manrope-latin-800.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/ibm-plex-sans-arabic/ibm-plex-arabic-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/ibm-plex-sans-arabic/ibm-plex-arabic-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/ibm-plex-sans-arabic/ibm-plex-arabic-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/ibm-plex-sans-arabic/ibm-plex-arabic-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/jetbrains-mono/jetbrains-mono-latin-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/jetbrains-mono/jetbrains-mono-latin-500.woff2") format("woff2");
+}
+
+/* ─── STEP 1: Design tokens (single source) ─── */
 :root {
-  /* Brand / actions */
   --sp-primary: #0f6751;
   --sp-primary-hover: #0c5543;
   --sp-primary-soft: #e7f4ef;
   --sp-primary-border: #b7ddd1;
 
-  /* Surfaces */
   --sp-sidebar: #1a1d26;
   --sp-sidebar-text: #e8eaed;
   --sp-sidebar-muted: #9aa0a6;
+  --sp-sidebar-hover: rgba(255, 255, 255, 0.06);
+
   --sp-bg: #f5f7fa;
   --sp-surface: #ffffff;
   --sp-surface-muted: #f8f9fa;
 
-  /* Text */
   --sp-text: #1f2937;
   --sp-text-strong: #111827;
   --sp-text-muted: #6b7280;
   --sp-text-inverse: #ffffff;
 
-  /* Borders / focus */
   --sp-border: #e5e7eb;
   --sp-border-strong: #d1d5db;
   --sp-focus: var(--sp-primary);
 
-  /* Status */
-  --sp-success: #0f6751;
   --sp-warning: #d97706;
+  --sp-warning-soft: #fdf3e2;
   --sp-danger: #dc2626;
+  --sp-danger-soft: #fdecec;
   --sp-info: #2563eb;
+  --sp-info-soft: #e8effd;
+  --sp-neutral-soft: #eef0f3;
+  --sp-success: #0f6751;
 
-  /* Shape */
   --sp-radius-sm: 8px;
+  --sp-radius-field: 8px;
   --sp-radius: 12px;
   --sp-radius-lg: 16px;
+  --sp-radius-xl: 18px;
   --sp-radius-pill: 999px;
 
-  /* Elevation */
   --sp-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
-  --sp-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+  --sp-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 12px 32px -8px rgba(17, 24, 39, 0.10);
   --sp-shadow-lg: 0 18px 40px rgba(17, 24, 39, 0.08);
 
-  /* Type */
-  --sp-font: "Segoe UI", Tahoma, "Noto Sans Arabic", Arial, sans-serif;
+  --sp-font: "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
+  --sp-font-display: "Manrope", "Inter", "Segoe UI", sans-serif;
+  --sp-font-ar: "IBM Plex Sans Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  --sp-font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
   --sp-font-size: 15px;
-  --sp-line-height: 1.45;
+  --sp-line-height: 1.55;
 
-  /* Layout */
-  --sp-sidebar-width: 260px;
-  --sp-header-height: 64px;
+  --sp-control-height: 40px;
+  --sp-table-row-height: 52px;
+  --sp-sidebar-width: 248px;
+  --sp-header-height: 56px;
+
   --sp-space-1: 0.25rem;
   --sp-space-2: 0.5rem;
   --sp-space-3: 0.75rem;
   --sp-space-4: 1rem;
   --sp-space-5: 1.5rem;
   --sp-space-6: 2rem;
+
+  --sp-transition: 160ms ease;
 }
 
-/* Shared utilities driven by tokens */
+[lang="ar"],
+.ar,
+html[dir="rtl"] body {
+  font-family: var(--sp-font-ar);
+}
+
+h1, h2, h3, h4,
+.sp-page-title,
+.app-page-header__title,
+.num-total {
+  font-family: var(--sp-font-display);
+  font-weight: 700;
+}
+
+.num,
+.font-monospace {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--sp-font-mono);
+}
+
+/* ─── Cards / panels ─── */
 .sp-card {
   background: var(--sp-surface);
   border: 1px solid var(--sp-border);
-  border-radius: var(--sp-radius);
-  box-shadow: var(--sp-shadow-sm);
+  border-radius: var(--sp-radius-lg);
+  box-shadow: var(--sp-shadow);
 }
 
-.sp-btn-primary {
+.sp-panel {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-xl);
+  box-shadow: var(--sp-shadow);
+  padding: var(--sp-space-5);
+}
+
+.sp-page-title {
+  letter-spacing: -0.03em;
+  color: var(--sp-text-strong);
+  line-height: 1.15;
+  margin: 0;
+}
+
+.sp-page-lead {
+  color: var(--sp-text-muted);
+  margin: 0;
+}
+
+.sp-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--sp-primary);
+}
+
+/* ─── STEP 3: Shared controls (40px) ─── */
+.sp-btn-primary,
+.btn.sp-btn-primary,
+.sp-btn-secondary,
+.btn.sp-btn-secondary,
+.form-control,
+.form-select,
+.sp-input {
+  min-height: var(--sp-control-height);
+  height: var(--sp-control-height);
+  border-radius: var(--sp-radius-field);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.sp-btn-primary,
+.btn.sp-btn-primary {
   background: var(--sp-primary);
-  border-color: var(--sp-primary);
+  border: 1px solid var(--sp-primary);
   color: var(--sp-text-inverse);
-  border-radius: var(--sp-radius-sm);
   font-weight: 600;
+  padding-inline: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--sp-transition), border-color var(--sp-transition);
 }
 
 .sp-btn-primary:hover,
-.sp-btn-primary:focus {
+.sp-btn-primary:focus,
+.btn.sp-btn-primary:hover,
+.btn.sp-btn-primary:focus {
   background: var(--sp-primary-hover);
   border-color: var(--sp-primary-hover);
   color: var(--sp-text-inverse);
 }
 
-.sp-btn-secondary {
+.sp-btn-secondary,
+.btn.sp-btn-secondary {
   background: var(--sp-surface);
   border: 1px solid var(--sp-border-strong);
-  color: var(--sp-text);
-  border-radius: var(--sp-radius-sm);
-  font-weight: 500;
+  color: var(--sp-text-strong);
+  font-weight: 600;
+  padding-inline: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--sp-transition), border-color var(--sp-transition);
 }
 
 .sp-btn-secondary:hover,
-.sp-btn-secondary:focus {
+.sp-btn-secondary:focus,
+.btn.sp-btn-secondary:hover,
+.btn.sp-btn-secondary:focus {
   background: var(--sp-surface-muted);
   border-color: var(--sp-border-strong);
   color: var(--sp-text-strong);
 }
 
+.btn-sm.sp-btn-primary,
+.btn-sm.sp-btn-secondary {
+  min-height: 32px;
+  height: 32px;
+  padding-inline: 0.7rem;
+  font-size: 0.8125rem;
+}
+
+.form-control,
+.form-select,
+.sp-input {
+  border: 1px solid var(--sp-border-strong);
+  background: var(--sp-surface);
+  color: var(--sp-text-strong);
+  padding-block: 0;
+  padding-inline: 0.85rem;
+}
+
+.form-control:focus,
+.form-select:focus,
+.sp-input:focus {
+  border-color: var(--sp-primary);
+  box-shadow: 0 0 0 3px var(--sp-primary-soft);
+  outline: 0;
+}
+
+.form-label,
+.sp-label {
+  color: var(--sp-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+/* Filter row: bottom-align fields; checkbox + filter btn match control height */
+.sp-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-space-3);
+  align-items: flex-end;
+}
+
+.sp-filter-row__field {
+  flex: 1 1 180px;
+  min-width: 140px;
+  max-width: 280px;
+}
+
+.sp-filter-row__check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--sp-control-height);
+  height: var(--sp-control-height);
+  padding-bottom: 0;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.sp-filter-row__check .form-check-input {
+  margin: 0;
+  float: none;
+}
+
+.sp-filter-row__check .form-check-label {
+  margin: 0;
+  color: var(--sp-text);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.sp-filter-row__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sp-filter-row__actions .btn {
+  min-width: 5.5rem;
+}
+
+/* Badges */
 .sp-badge {
   display: inline-flex;
   align-items: center;
@@ -104,35 +368,146 @@
   border-radius: var(--sp-radius-pill);
   background: var(--sp-primary-soft);
   color: var(--sp-primary);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 650;
 }
 
 .sp-badge-dot {
-  width: 0.45rem;
-  height: 0.45rem;
+  width: 0.4rem;
+  height: 0.4rem;
   border-radius: 50%;
-  background: var(--sp-primary);
+  background: currentColor;
+  flex-shrink: 0;
 }
 
-.sp-input {
-  border: 1px solid var(--sp-border);
+.sp-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--sp-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.sp-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.sp-status-ok { background: var(--sp-primary-soft); color: var(--sp-primary); }
+.sp-status-warn { background: var(--sp-warning-soft); color: var(--sp-warning); }
+.sp-status-bad { background: var(--sp-danger-soft); color: var(--sp-danger); }
+.sp-status-info { background: var(--sp-info-soft); color: var(--sp-info); }
+.sp-status-neutral { background: var(--sp-neutral-soft); color: var(--sp-text-muted); }
+
+/* Brand mark — text perfectly centered in square */
+.sp-brand-mark {
+  width: 34px;
+  height: 34px;
   border-radius: var(--sp-radius-sm);
-  background: var(--sp-surface);
-  color: var(--sp-text);
-  min-height: 2.75rem;
-  padding: 0.65rem 0.85rem;
+  background: var(--sp-primary);
+  color: var(--sp-text-inverse);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sp-font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  flex-shrink: 0;
+  text-align: center;
 }
 
-.sp-input:focus {
-  border-color: var(--sp-focus);
-  box-shadow: 0 0 0 0.2rem rgba(15, 103, 81, 0.15);
-  outline: 0;
-}
-
-.sp-label {
+/* Empty state */
+.sp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
   color: var(--sp-text-muted);
+}
+
+.sp-empty__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--sp-radius);
+  background: var(--sp-surface-muted);
+  border: 1px solid var(--sp-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--sp-space-3);
+  color: var(--sp-text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.sp-empty__title {
+  font-family: var(--sp-font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--sp-text-strong);
+  margin: 0 0 0.35rem;
+}
+
+.sp-empty__help {
+  margin: 0;
   font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
+  max-width: 36ch;
+}
+
+/* Page header (H1 once, in content — not duplicated in topbar) */
+.app-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-space-3);
+  margin-bottom: var(--sp-space-4);
+}
+
+.app-page-header__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--sp-text-strong);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.app-page-header__subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--sp-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Numeric / end-aligned columns (mirrors in RTL) */
+.col-num,
+.text-end {
+  text-align: end;
+}
+
+/* Add-product pricing panels (mockup Retail / Wholesale blocks) */
+.sp-pricing-panel {
+  background: var(--sp-surface-muted);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  padding: var(--sp-space-4);
+  height: 100%;
+}
+
+.sp-pricing-panel__title {
+  font-family: var(--sp-font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sp-text-strong);
+  margin: 0 0 var(--sp-space-3);
 }

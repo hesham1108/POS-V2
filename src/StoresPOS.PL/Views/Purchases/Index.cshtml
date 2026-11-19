@@ -1,15 +1,15 @@
 @model PurchaseIndexViewModel
 @{
-    ViewData["Title"] = "Purchases";
+    ViewData["Section"] = "Purchase invoices";
+    ViewData["Title"] = "Purchase invoices";
+    ViewData["Subtitle"] = "Supplier invoices · stock & price updates on confirm";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h1 class="h3 mb-1">Purchases</h1>
-        <p class="text-muted mb-0">Supplier invoices · stock &amp; price updates on confirm</p>
-    </div>
+@section PageActions {
     <a class="btn sp-btn-primary" asp-action="Create">New purchase</a>
-</div>
+}
+
+<partial name="_PageHeader" />
 
 @if (TempData["Success"] is string success)
 {
@@ -21,12 +21,12 @@
 }
 
 <div class="sp-card p-3 mb-4">
-    <form method="get" class="row g-2 align-items-end">
-        <div class="col-md-4">
+    <form method="get" class="sp-filter-row">
+        <div class="sp-filter-row__field">
             <label class="form-label" for="search">Search</label>
             <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Invoice # or supplier" />
         </div>
-        <div class="col-md-3">
+        <div class="sp-filter-row__field">
             <label class="form-label" for="supplierId">Supplier</label>
             <select class="form-select" id="supplierId" name="supplierId">
                 <option value="">All</option>
@@ -43,7 +43,7 @@
                 }
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="sp-filter-row__field">
             <label class="form-label" for="status">Status</label>
             <select class="form-select" id="status" name="status">
                 <option value="">All</option>
@@ -65,8 +65,8 @@
                 }
             </select>
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn sp-btn-secondary w-100">Filter</button>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-secondary">Filter</button>
         </div>
     </form>
 </div>
@@ -74,22 +74,24 @@
 <div class="sp-card p-0 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th>Invoice</th>
                     <th>Supplier</th>
                     <th>Date</th>
-                    <th>Lines</th>
-                    <th class="text-end">Total</th>
+                    <th class="col-num">Lines</th>
+                    <th class="col-num">Total</th>
                     <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th class="col-num">Actions</th>
                 </tr>
             </thead>
             <tbody>
             @if (Model.Invoices.Count == 0)
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-5">No purchase invoices found.</td>
+                    <td colspan="7">
+                        <partial name="_EmptyState" model='("No purchase invoices", "Create a draft purchase to receive stock from a supplier.")' />
+                    </td>
                 </tr>
             }
             else
@@ -100,19 +102,19 @@
                         <td class="font-monospace">@item.InvoiceNumber</td>
                         <td>@item.SupplierName</td>
                         <td>@item.InvoiceDate.ToString("yyyy-MM-dd")</td>
-                        <td>@item.LineCount</td>
-                        <td class="text-end font-monospace">@item.SubTotal.ToString("N2")</td>
+                        <td class="col-num">@item.LineCount</td>
+                        <td class="col-num font-monospace">@item.SubTotal.ToString("N2")</td>
                         <td>
                             @if (item.Status == PurchaseInvoiceStatus.Confirmed)
                             {
-                                <span class="sp-badge"><span class="sp-badge-dot"></span> Confirmed</span>
+                                <span class="sp-status sp-status-ok">Confirmed</span>
                             }
                             else
                             {
-                                <span class="badge text-bg-secondary">Draft</span>
+                                <span class="sp-status sp-status-neutral">Draft</span>
                             }
                         </td>
-                        <td class="text-end text-nowrap">
+                        <td class="col-num text-nowrap">
                             <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
                             @if (item.Status == PurchaseInvoiceStatus.Draft)
                             {

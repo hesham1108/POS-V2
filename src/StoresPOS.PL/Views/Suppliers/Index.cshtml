@@ -1,15 +1,15 @@
 @model SupplierIndexViewModel
 @{
+    ViewData["Section"] = "Suppliers";
     ViewData["Title"] = "Suppliers";
+    ViewData["Subtitle"] = "Contacts and purchase totals";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h1 class="h3 mb-1">Suppliers</h1>
-        <p class="text-muted mb-0">Contacts and purchase totals</p>
-    </div>
+@section PageActions {
     <a class="btn sp-btn-primary" asp-action="Create">Add supplier</a>
-</div>
+}
+
+<partial name="_PageHeader" />
 
 @if (TempData["Success"] is string success)
 {
@@ -21,20 +21,18 @@
 }
 
 <div class="sp-card p-3 mb-4">
-    <form method="get" class="row g-2 align-items-end">
-        <div class="col-md-6">
+    <form method="get" class="sp-filter-row">
+        <div class="sp-filter-row__field">
             <label class="form-label" for="search">Search</label>
             <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Name, phone, email" />
         </div>
-        <div class="col-md-3">
-            <div class="form-check mt-4">
-                <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
-                       @(Model.IncludeInactive ? "checked" : null) />
-                <label class="form-check-label" for="includeInactive">Include inactive</label>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn sp-btn-secondary w-100">Filter</button>
+        <label class="sp-filter-row__check form-check" for="includeInactive">
+            <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
+                   @(Model.IncludeInactive ? "checked" : null) />
+            <span class="form-check-label">Include inactive</span>
+        </label>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-secondary">Filter</button>
         </div>
     </form>
 </div>
@@ -42,22 +40,24 @@
 <div class="sp-card p-0 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th>Supplier</th>
                     <th>Phone</th>
                     <th>Email</th>
-                    <th class="text-end">Purchases</th>
-                    <th class="text-end">Total</th>
+                    <th class="col-num">Purchases</th>
+                    <th class="col-num">Total</th>
                     <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th class="col-num">Actions</th>
                 </tr>
             </thead>
             <tbody>
             @if (Model.Suppliers.Count == 0)
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-5">No suppliers yet.</td>
+                    <td colspan="7">
+                        <partial name="_EmptyState" model='("No suppliers yet", "Add a supplier before recording purchase invoices.")' />
+                    </td>
                 </tr>
             }
             else
@@ -71,19 +71,19 @@
                         </td>
                         <td>@(item.Phone ?? "—")</td>
                         <td>@(item.Email ?? "—")</td>
-                        <td class="text-end font-monospace">@item.ConfirmedPurchaseCount</td>
-                        <td class="text-end font-monospace">@item.TotalPurchasesAmount.ToString("N2")</td>
+                        <td class="col-num font-monospace">@item.ConfirmedPurchaseCount</td>
+                        <td class="col-num font-monospace">@item.TotalPurchasesAmount.ToString("N2")</td>
                         <td>
                             @if (item.IsActive)
                             {
-                                <span class="sp-badge"><span class="sp-badge-dot"></span> Active</span>
+                                <span class="sp-status sp-status-ok">Active</span>
                             }
                             else
                             {
-                                <span class="text-muted">Inactive</span>
+                                <span class="sp-status sp-status-neutral">Inactive</span>
                             }
                         </td>
-                        <td class="text-end text-nowrap">
+                        <td class="col-num text-nowrap">
                             <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
                             <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                             @if (item.IsActive)

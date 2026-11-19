@@ -1,5 +1,15 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    bool IsCtrl(params string[] names) =>
+        names.Any(n => string.Equals(controller, n, StringComparison.OrdinalIgnoreCase));
+    string NavClass(bool active) => active ? "app-sidebar__link is-active" : "app-sidebar__link";
+    var canManage = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Manager);
+    var sectionLabel = ViewData["Section"] as string
+        ?? ViewData["Breadcrumb"] as string
+        ?? "StoresPOS";
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,77 +18,117 @@
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="d-flex flex-column">
-    <header class="app-shell-header">
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm">
-            <div class="container-fluid px-4">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">StoresPOS</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
-                            </li>
-                            @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Manager))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Categories" asp-action="Index">Categories</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Suppliers" asp-action="Index">Suppliers</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Purchases" asp-action="Index">Purchases</a>
-                                </li>
-                            }
-                        }
-                    </ul>
-                    <ul class="navbar-nav align-items-center gap-2">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <span class="sp-badge">
-                                    <span class="sp-badge-dot"></span>
-                                    @User.Identity?.Name
-                                </span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn sp-btn-secondary btn-sm">Logout</button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container app-shell-main flex-grow-1">
-        <main role="main">
-            @RenderBody()
-        </main>
-    </div>
+<body>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="app-shell">
+        @* Sidebar order matches Hesham mockups *@
+        <aside class="app-sidebar" aria-label="Main navigation">
+            <a class="app-sidebar__brand" asp-controller="Home" asp-action="Index">
+                <span class="sp-brand-mark" aria-hidden="true">SP</span>
+                <span>
+                    <strong>[STORE NAME]</strong>
+                    <span>StoresPOS</span>
+                </span>
+            </a>
 
-    <footer class="app-shell-footer">
-        <div class="container">
-            &copy; 2026 - StoresPOS
+            <nav class="app-sidebar__nav">
+                <a class="@NavClass(IsCtrl("Home"))" asp-controller="Home" asp-action="Index">Dashboard</a>
+
+                <span class="app-sidebar__link is-disabled" title="Coming in a later phase">POS</span>
+
+                @if (canManage)
+                {
+                    <a class="@NavClass(IsCtrl("Products", "Categories", "Inventory"))"
+                       asp-controller="Products" asp-action="Index">Products and categories</a>
+
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Sales invoices</span>
+
+                    <a class="@NavClass(IsCtrl("Purchases"))"
+                       asp-controller="Purchases" asp-action="Index">Purchase invoices</a>
+
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Returns</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Customers</span>
+
+                    <a class="@NavClass(IsCtrl("Suppliers"))"
+                       asp-controller="Suppliers" asp-action="Index">Suppliers</a>
+
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Reports</span>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="No access">Products and categories</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Sales invoices</span>
+                    <span class="app-sidebar__link is-disabled" title="No access">Purchase invoices</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Returns</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Customers</span>
+                    <span class="app-sidebar__link is-disabled" title="No access">Suppliers</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Reports</span>
+                }
+
+                @if (User.IsInRole(AppRoles.Admin))
+                {
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Users and roles</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Configuration</span>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="No access">Users and roles</span>
+                    <span class="app-sidebar__link is-disabled" title="No access">Configuration</span>
+                }
+            </nav>
+
+            <div class="app-sidebar__footer">
+                <div class="app-sidebar__user">
+                    <span class="sp-badge app-sidebar__user-badge">
+                        <span class="sp-badge-dot"></span>
+                        @User.Identity?.Name
+                    </span>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="app-sidebar__logout">Logout</button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="app-topbar">
+                <div class="app-topbar__lead">
+                    @{
+                        var pageTitle = ViewData["Title"] as string;
+                        var showSection = !string.IsNullOrWhiteSpace(sectionLabel)
+                            && !string.Equals(sectionLabel, pageTitle, StringComparison.OrdinalIgnoreCase);
+                    }
+                    @if (ViewData["Breadcrumb"] is string crumb)
+                    {
+                        <div class="app-breadcrumb">@crumb</div>
+                    }
+                    else if (showSection)
+                    {
+                        <p class="app-topbar__section">@sectionLabel</p>
+                    }
+                </div>
+                <div class="app-topbar__actions">
+                    @await RenderSectionAsync("PageActions", required: false)
+                </div>
+            </header>
+            <main class="app-content" role="main">
+                @RenderBody()
+            </main>
+            <footer class="app-footer">
+                StoresPOS · Local offline installation
+            </footer>
         </div>
-    </footer>
+    </div>
+}
+else
+{
+    <div class="container py-4">
+        @RenderBody()
+    </div>
+}
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

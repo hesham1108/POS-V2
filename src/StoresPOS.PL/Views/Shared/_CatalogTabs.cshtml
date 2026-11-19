@@ -1,0 +1,14 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string Pill(string name) =>
+        string.Equals(controller, name, StringComparison.OrdinalIgnoreCase)
+            ? "sp-pill is-active"
+            : "sp-pill";
+}
+
+@* Inner tabs under "Products and categories" (mockup combines them; Inventory is proposal module) *@
+<nav class="sp-pills" aria-label="Catalog sections">
+    <a class="@Pill("Products")" asp-controller="Products" asp-action="Index">Products</a>
+    <a class="@Pill("Categories")" asp-controller="Categories" asp-action="Index">Categories</a>
+    <a class="@Pill("Inventory")" asp-controller="Inventory" asp-action="Index">Inventory</a>
+</nav>

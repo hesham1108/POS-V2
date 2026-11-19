@@ -1,0 +1,10 @@
+@model (string Title, string Help)
+@{
+    var title = Model.Title;
+    var help = Model.Help;
+}
+<div class="sp-empty">
+    <div class="sp-empty__icon" aria-hidden="true">∅</div>
+    <h2 class="sp-empty__title">@title</h2>
+    <p class="sp-empty__help">@help</p>
+</div>

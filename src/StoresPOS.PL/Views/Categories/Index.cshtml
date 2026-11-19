@@ -1,15 +1,16 @@
 @model IReadOnlyList<CategoryListItemViewModel>
 @{
+    ViewData["Section"] = "Products and categories";
     ViewData["Title"] = "Categories";
+    ViewData["Subtitle"] = "Hierarchical catalog structure";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h3 mb-1">Categories</h1>
-        <p class="text-muted mb-0">Hierarchical catalog structure</p>
-    </div>
+@section PageActions {
     <a class="btn sp-btn-primary" asp-action="Create">Add category</a>
-</div>
+}
+
+<partial name="_PageHeader" />
+<partial name="_CatalogTabs" />
 
 @if (TempData["Success"] is string success)
 {
@@ -23,23 +24,25 @@
 <div class="sp-card p-0 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
-                    <th>Sort</th>
+                    <th class="col-num">Sort</th>
                     <th>English</th>
                     <th>Arabic</th>
                     <th>Parent</th>
-                    <th>Children</th>
-                    <th>Products</th>
+                    <th class="col-num">Children</th>
+                    <th class="col-num">Products</th>
                     <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th class="col-num">Actions</th>
                 </tr>
             </thead>
             <tbody>
             @if (Model.Count == 0)
             {
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-5">No categories yet. Create the first one.</td>
+                    <td colspan="8">
+                        <partial name="_EmptyState" model='("No categories yet", "Create the first category to organize the catalog.")' />
+                    </td>
                 </tr>
             }
             else
@@ -47,23 +50,23 @@
                 @foreach (var item in Model)
                 {
                     <tr class="@(!item.IsActive ? "table-secondary" : null)">
-                        <td><span class="font-monospace">@item.SortOrder</span></td>
+                        <td class="col-num"><span class="font-monospace">@item.SortOrder</span></td>
                         <td>@item.NameEn</td>
                         <td dir="rtl">@item.NameAr</td>
                         <td>@(item.ParentName ?? "—")</td>
-                        <td>@item.ChildCount</td>
-                        <td>@item.ProductCount</td>
+                        <td class="col-num">@item.ChildCount</td>
+                        <td class="col-num">@item.ProductCount</td>
                         <td>
                             @if (item.IsActive)
                             {
-                                <span class="sp-badge"><span class="sp-badge-dot"></span> Active</span>
+                                <span class="sp-status sp-status-ok">Active</span>
                             }
                             else
                             {
-                                <span class="text-muted">Inactive</span>
+                                <span class="sp-status sp-status-neutral">Inactive</span>
                             }
                         </td>
-                        <td class="text-end">
+                        <td class="col-num text-nowrap">
                             <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                             @if (item.IsActive)
                             {

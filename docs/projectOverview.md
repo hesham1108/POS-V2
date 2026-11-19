@@ -49,7 +49,9 @@ StoresPOS/
 ├── plan.md                 # Master roadmap (phases & tasks)
 ├── STATUS.md               # Actual verified progress
 ├── docs/
-│   └── projectOverview.md  # This file
+│   ├── projectOverview.md      # This file
+│   ├── page-composition.md     # Per-page UI composition (sidebar tabs)
+│   └── client-proposal-ar.html # Product/design proposal
 ├── src/
 │   ├── StoresPOS.PL/       # Presentation Layer (MVC UI)
 │   ├── StoresPOS.BLL/      # Business Logic Layer
@@ -250,7 +252,7 @@ StoresPOS.DAL/
 7. Do not add ASP.NET Core Identity.
 8. Keep UI styling decisions separate from business rules.
 9. Update `STATUS.md` after verified work.
-10. Use `plan.md` as the roadmap source of truth.
+10. Use `plan.md` as the roadmap source of truth; use `docs/page-composition.md` for screen layout.
 
 ---
 
@@ -284,7 +286,7 @@ Already in place:
 
 Next major phase:
 
-- **Phase 5 — Inventory**
+- **Phase 6 — Shifts**
 
 Track details in:
 
@@ -299,10 +301,11 @@ Before implementing a feature:
 
 1. Read `plan.md`.
 2. Read `STATUS.md`.
-3. Follow 3-tier rules.
-4. Implement only the requested scope.
-5. Build and run relevant tests.
-6. Update `STATUS.md`.
-7. Update `plan.md` if roadmap/decisions change.
+3. For UI work, read `docs/page-composition.md`.
+4. Follow 3-tier rules.
+5. Implement only the requested scope.
+6. Build and run relevant tests.
+7. Update `STATUS.md`.
+8. Update `plan.md` if roadmap/decisions change.
 
 **Important:** Build a real maintainable POS system — not a static prototype. Prioritize simplicity, correctness, offline operation, and reliable sales/inventory calculations.

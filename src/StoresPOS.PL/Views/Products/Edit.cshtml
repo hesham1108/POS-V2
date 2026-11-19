@@ -1,12 +1,17 @@
 @model ProductFormViewModel
 @{
+    ViewData["Section"] = "Products and categories";
     ViewData["Title"] = "Edit product";
+    ViewData["Subtitle"] = "Catalog price changes do not rewrite historical invoices";
 }
 
-<div class="mb-4">
-    <h1 class="h3 mb-1">Edit product</h1>
-    <p class="text-muted mb-0">Catalog price changes do not rewrite historical invoices</p>
-</div>
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">Cancel</a>
+    <button type="submit" form="product-form" class="btn sp-btn-primary">Save product</button>
+}
+
+<partial name="_PageHeader" />
+<partial name="_CatalogTabs" />
 
 <partial name="_ProductForm" model="Model" />
 

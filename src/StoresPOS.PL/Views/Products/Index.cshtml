@@ -1,15 +1,16 @@
 @model ProductIndexViewModel
 @{
+    ViewData["Section"] = "Products and categories";
     ViewData["Title"] = "Products";
+    ViewData["Subtitle"] = "Catalog · barcode · markup pricing";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h1 class="h3 mb-1">Products</h1>
-        <p class="text-muted mb-0">Catalog · barcode · markup pricing</p>
-    </div>
+@section PageActions {
     <a class="btn sp-btn-primary" asp-action="Create">Add product</a>
-</div>
+}
+
+<partial name="_PageHeader" />
+<partial name="_CatalogTabs" />
 
 @if (TempData["Success"] is string success)
 {
@@ -21,12 +22,12 @@
 }
 
 <div class="sp-card p-3 mb-4">
-    <form method="get" class="row g-2 align-items-end">
-        <div class="col-md-4">
+    <form method="get" class="sp-filter-row">
+        <div class="sp-filter-row__field">
             <label class="form-label" for="search">Search</label>
             <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Name or barcode" />
         </div>
-        <div class="col-md-3">
+        <div class="sp-filter-row__field">
             <label class="form-label" for="categoryId">Category</label>
             <select class="form-select" id="categoryId" name="categoryId">
                 <option value="">All</option>
@@ -43,22 +44,18 @@
                 }
             </select>
         </div>
-        <div class="col-md-2">
-            <div class="form-check mt-4">
-                <input class="form-check-input" type="checkbox" name="lowStockOnly" value="true" id="lowStockOnly"
-                       @(Model.LowStockOnly ? "checked" : null) />
-                <label class="form-check-label" for="lowStockOnly">Low stock</label>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="form-check mt-4">
-                <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
-                       @(Model.IncludeInactive ? "checked" : null) />
-                <label class="form-check-label" for="includeInactive">Inactive</label>
-            </div>
-        </div>
-        <div class="col-md-1">
-            <button type="submit" class="btn sp-btn-secondary w-100">Filter</button>
+        <label class="sp-filter-row__check form-check" for="lowStockOnly">
+            <input class="form-check-input" type="checkbox" name="lowStockOnly" value="true" id="lowStockOnly"
+                   @(Model.LowStockOnly ? "checked" : null) />
+            <span class="form-check-label">Low stock</span>
+        </label>
+        <label class="sp-filter-row__check form-check" for="includeInactive">
+            <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
+                   @(Model.IncludeInactive ? "checked" : null) />
+            <span class="form-check-label">Inactive</span>
+        </label>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-secondary">Filter</button>
         </div>
     </form>
 </div>
@@ -66,24 +63,26 @@
 <div class="sp-card p-0 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
                     <th>Product</th>
                     <th>Barcode</th>
                     <th>Category</th>
-                    <th class="text-end">Cost</th>
-                    <th class="text-end">Retail</th>
-                    <th class="text-end">Wholesale</th>
-                    <th class="text-end">Stock</th>
+                    <th class="col-num">Cost</th>
+                    <th class="col-num">Retail</th>
+                    <th class="col-num">Wholesale</th>
+                    <th class="col-num">Stock</th>
                     <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th class="col-num">Actions</th>
                 </tr>
             </thead>
             <tbody>
             @if (Model.Products.Count == 0)
             {
                 <tr>
-                    <td colspan="9" class="text-center text-muted py-5">No products match this filter.</td>
+                    <td colspan="9">
+                        <partial name="_EmptyState" model='("No products found", "Adjust filters or add a product to the catalog.")' />
+                    </td>
                 </tr>
             }
             else
@@ -98,27 +97,27 @@
                         </td>
                         <td class="font-monospace">@(item.Barcode ?? "—")</td>
                         <td>@(item.CategoryName ?? "—")</td>
-                        <td class="text-end font-monospace">@item.PurchasePrice.ToString("N2")</td>
-                        <td class="text-end font-monospace">@item.RetailPrice.ToString("N2")</td>
-                        <td class="text-end font-monospace">@item.WholesalePrice.ToString("N2")</td>
-                        <td class="text-end">
+                        <td class="col-num font-monospace">@item.PurchasePrice.ToString("N2")</td>
+                        <td class="col-num font-monospace">@item.RetailPrice.ToString("N2")</td>
+                        <td class="col-num font-monospace">@item.WholesalePrice.ToString("N2")</td>
+                        <td class="col-num">
                             <span class="font-monospace">@item.StockQuantity.ToString("0.###")</span>
                             @if (item.IsLowStock)
                             {
-                                <span class="badge text-bg-warning ms-1">Low</span>
+                                <span class="sp-status sp-status-warn" style="margin-inline-start:0.35rem">Low</span>
                             }
                         </td>
                         <td>
                             @if (item.IsActive)
                             {
-                                <span class="sp-badge"><span class="sp-badge-dot"></span> Active</span>
+                                <span class="sp-status sp-status-ok">Active</span>
                             }
                             else
                             {
-                                <span class="text-muted">Inactive</span>
+                                <span class="sp-status sp-status-neutral">Inactive</span>
                             }
                         </td>
-                        <td class="text-end text-nowrap">
+                        <td class="col-num text-nowrap">
                             <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
                             <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                             @if (item.IsActive)

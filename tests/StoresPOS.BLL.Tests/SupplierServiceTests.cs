@@ -32,7 +32,7 @@ public class SupplierServiceTests
     {
         await using var db = CreateDb();
         var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db);
+        var purchases = new PurchaseService(db, new InventoryService(db));
         var suppliers = new SupplierService(db);
 
         await purchases.CreateDraftAsync(new PurchaseInvoiceUpsertDto

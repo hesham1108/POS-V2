@@ -287,6 +287,64 @@ namespace StoresPOS.DAL.Migrations
                     b.ToTable("Roles", (string)null);
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.StockMovement", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("MovementType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("QuantityAfter")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<decimal>("QuantityBefore")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<decimal>("QuantityChange")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("MovementType");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ReferenceType", "ReferenceId");
+
+                    b.ToTable("StockMovements", (string)null);
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.Supplier", b =>
                 {
                     b.Property<int>("Id")
@@ -454,6 +512,25 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("PurchaseInvoice");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.StockMovement", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.User", b =>

@@ -52,8 +52,10 @@
 }
 
 .login-brand-mark__text strong {
+  font-family: var(--sp-font-display);
   color: var(--sp-text-strong);
   font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .login-brand-mark__text span {
@@ -80,7 +82,7 @@
 .login-card {
   background: var(--sp-surface);
   border: 1px solid var(--sp-border);
-  border-radius: var(--sp-radius-lg);
+  border-radius: var(--sp-radius-xl);
   box-shadow: var(--sp-shadow);
   padding: clamp(1.5rem, 3vw, 2rem);
 }
@@ -106,9 +108,11 @@
 
 .login-card__title {
   margin: 0 0 0.35rem;
+  font-family: var(--sp-font-display);
   color: var(--sp-text-strong);
   font-size: clamp(1.5rem, 2.5vw, 1.85rem);
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .login-card__subtitle {
@@ -153,20 +157,24 @@
 
 .login-submit {
   width: 100%;
-  min-height: 3rem;
-  border: 0;
-  border-radius: var(--sp-radius-sm);
-  background: var(--sp-primary);
+  min-height: 3.25rem;
+  border: 1px solid var(--sp-primary);
+  border-radius: var(--sp-radius-field);
+  background: linear-gradient(180deg, var(--sp-primary-hover), var(--sp-primary));
   color: var(--sp-text-inverse);
   font-size: 1rem;
   font-weight: 700;
-  box-shadow: var(--sp-shadow-sm);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 6px 16px -6px var(--sp-primary);
 }
 
 .login-submit:hover,
 .login-submit:focus {
   background: var(--sp-primary-hover);
   color: var(--sp-text-inverse);
+}
+
+.login-page[dir="rtl"] {
+  font-family: var(--sp-font-ar);
 }
 
 .login-footer {

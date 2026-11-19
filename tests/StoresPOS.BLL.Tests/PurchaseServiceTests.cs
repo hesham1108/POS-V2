@@ -14,7 +14,7 @@ public class PurchaseServiceTests
     {
         await using var db = CreateDb();
         var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db);
+        var purchases = new PurchaseService(db, new InventoryService(db));
 
         var draft = await purchases.CreateDraftAsync(new PurchaseInvoiceUpsertDto
         {
@@ -49,7 +49,7 @@ public class PurchaseServiceTests
     {
         await using var db = CreateDb();
         var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db);
+        var purchases = new PurchaseService(db, new InventoryService(db));
 
         var invoice = await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
         {
@@ -85,7 +85,7 @@ public class PurchaseServiceTests
     {
         await using var db = CreateDb();
         var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db);
+        var purchases = new PurchaseService(db, new InventoryService(db));
 
         var invoice = await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
         {
@@ -113,7 +113,7 @@ public class PurchaseServiceTests
     {
         await using var db = CreateDb();
         var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db);
+        var purchases = new PurchaseService(db, new InventoryService(db));
 
         await Assert.ThrowsAsync<BusinessException>(() => purchases.CreateDraftAsync(new PurchaseInvoiceUpsertDto
         {

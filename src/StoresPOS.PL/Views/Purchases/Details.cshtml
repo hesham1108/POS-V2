@@ -1,26 +1,24 @@
 @model PurchaseDetailsViewModel
 @{
+    ViewData["Section"] = "Purchase invoices";
     ViewData["Title"] = Model.InvoiceNumber;
+    ViewData["Subtitle"] = $"{Model.SupplierName} · {Model.InvoiceDate:yyyy-MM-dd}";
 }
 
-<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-    <div>
-        <h1 class="h3 mb-1">@Model.InvoiceNumber</h1>
-        <p class="text-muted mb-0">@Model.SupplierName · @Model.InvoiceDate.ToString("yyyy-MM-dd")</p>
-    </div>
-    <div class="d-flex gap-2">
-        <a class="btn sp-btn-secondary" asp-action="Index">Back</a>
-        @if (Model.Status == PurchaseInvoiceStatus.Draft)
-        {
-            <a class="btn sp-btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
-            <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
-                  onsubmit="return confirm('Confirm this purchase? Stock and selling prices will update.');">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn sp-btn-primary">Confirm</button>
-            </form>
-        }
-    </div>
-</div>
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">Back</a>
+    @if (Model.Status == PurchaseInvoiceStatus.Draft)
+    {
+        <a class="btn sp-btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
+              onsubmit="return confirm('Confirm this purchase? Stock and selling prices will update.');">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn sp-btn-primary">Confirm</button>
+        </form>
+    }
+}
+
+<partial name="_PageHeader" />
 
 @if (TempData["Success"] is string success)
 {

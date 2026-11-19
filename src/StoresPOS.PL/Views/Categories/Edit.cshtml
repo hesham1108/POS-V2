@@ -1,12 +1,12 @@
 @model CategoryFormViewModel
 @{
+    ViewData["Section"] = "Products and categories";
     ViewData["Title"] = "Edit category";
+    ViewData["Subtitle"] = "Update names, parent, or sort order";
 }
 
-<div class="mb-4">
-    <h1 class="h3 mb-1">Edit category</h1>
-    <p class="text-muted mb-0">Update names, parent, or sort order</p>
-</div>
+<partial name="_PageHeader" />
+<partial name="_CatalogTabs" />
 
 <partial name="_CategoryForm" model="Model" />
 

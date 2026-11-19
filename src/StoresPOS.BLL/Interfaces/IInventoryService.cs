@@ -1,0 +1,31 @@
+using StoresPOS.BLL.DTOs;
+
+namespace StoresPOS.BLL.Interfaces;
+
+public interface IInventoryService
+{
+    Task<IReadOnlyList<StockBalanceDto>> GetBalancesAsync(
+        StockBalanceFilterDto? filter = null,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<StockBalanceDto>> GetLowStockAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<StockMovementDto>> GetMovementsAsync(
+        StockMovementFilterDto? filter = null,
+        CancellationToken cancellationToken = default);
+
+    Task<StockMovementDto> AdjustStockAsync(
+        StockAdjustmentDto dto,
+        int userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Applies purchase receipt: increases stock, updates cost/prices, writes movements.
+    /// Must be called inside the caller's DB transaction when using SQL Server.
+    /// </summary>
+    Task ApplyPurchaseReceiptAsync(
+        int purchaseInvoiceId,
+        IReadOnlyList<PurchaseStockLineDto> lines,
+        int userId,
+        CancellationToken cancellationToken = default);
+}

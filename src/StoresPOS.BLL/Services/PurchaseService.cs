@@ -10,10 +10,12 @@ namespace StoresPOS.BLL.Services;
 public class PurchaseService : IPurchaseService
 {
     private readonly ApplicationDbContext _db;
+    private readonly IInventoryService _inventoryService;
 
-    public PurchaseService(ApplicationDbContext db)
+    public PurchaseService(ApplicationDbContext db, IInventoryService inventoryService)
     {
         _db = db;
+        _inventoryService = inventoryService;
     }
 
     public async Task<IReadOnlyList<PurchaseInvoiceListItemDto>> GetListAsync(
@@ -171,7 +173,7 @@ public class PurchaseService : IPurchaseService
                 throw new BusinessException("Cannot confirm a purchase with no lines.");
             }
 
-            await ApplyStockAndPricingAsync(entity.Items, cancellationToken);
+            await ApplyPurchaseStockAsync(entity.Id, entity.Items, userId, cancellationToken);
 
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
@@ -193,7 +195,7 @@ public class PurchaseService : IPurchaseService
             _db.PurchaseInvoices.Add(entity);
             await _db.SaveChangesAsync(cancellationToken);
 
-            await ApplyStockAndPricingAsync(entity.Items, cancellationToken);
+            await ApplyPurchaseStockAsync(entity.Id, entity.Items, userId, cancellationToken);
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
             entity.ConfirmedByUserId = userId;
@@ -255,41 +257,21 @@ public class PurchaseService : IPurchaseService
         };
     }
 
-    private async Task ApplyStockAndPricingAsync(
+    private Task ApplyPurchaseStockAsync(
+        int purchaseInvoiceId,
         IEnumerable<PurchaseInvoiceItem> items,
-        CancellationToken cancellationToken)
-    {
-        var productIds = items.Select(x => x.ProductId).Distinct().ToList();
-        var products = await _db.Products
-            .Where(x => productIds.Contains(x.Id))
-            .ToDictionaryAsync(x => x.Id, cancellationToken);
-
-        foreach (var line in items)
-        {
-            if (!products.TryGetValue(line.ProductId, out var product))
+        int userId,
+        CancellationToken cancellationToken) =>
+        _inventoryService.ApplyPurchaseReceiptAsync(
+            purchaseInvoiceId,
+            items.Select(x => new PurchaseStockLineDto
             {
-                throw new BusinessException($"Product #{line.ProductId} was not found.");
-            }
-
-            if (!product.IsActive)
-            {
-                throw new BusinessException($"Product '{product.NameEn}' is inactive.");
-            }
-
-            // Increase inventory
-            product.StockQuantity += line.Quantity;
-
-            // Update cost and recalculate sell prices from saved markups
-            product.PurchasePrice = PricingCalculator.RoundMoney(line.UnitCost);
-            product.RetailPrice = PricingCalculator.CalculateSellPrice(
-                product.PurchasePrice,
-                product.RetailMarkupPercent);
-            product.WholesalePrice = PricingCalculator.CalculateSellPrice(
-                product.PurchasePrice,
-                product.WholesaleMarkupPercent);
-            product.UpdatedAtUtc = DateTime.UtcNow;
-        }
-    }
+                ProductId = x.ProductId,
+                Quantity = x.Quantity,
+                UnitCost = x.UnitCost
+            }).ToList(),
+            userId,
+            cancellationToken);
 
     private async Task<List<PurchaseInvoiceItem>> BuildLineEntitiesAsync(
         IReadOnlyList<PurchaseInvoiceItemInputDto> items,

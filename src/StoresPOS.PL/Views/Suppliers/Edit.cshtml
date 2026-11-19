@@ -1,12 +1,11 @@
 @model SupplierFormViewModel
 @{
+    ViewData["Section"] = "Suppliers";
     ViewData["Title"] = "Edit supplier";
+    ViewData["Subtitle"] = "Update contact information";
 }
 
-<div class="mb-4">
-    <h1 class="h3 mb-1">Edit supplier</h1>
-    <p class="text-muted mb-0">Update contact information</p>
-</div>
+<partial name="_PageHeader" />
 
 <partial name="_SupplierForm" model="Model" />
 

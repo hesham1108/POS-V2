@@ -2,6 +2,7 @@
 
 > **هذا الملف هو المصدر الأساسي للخطة.** أي تعديل على النطاق أو المراحل أو القرارات يتم هنا.  
 > المرجع البصري/الوظيفي: [Claude Artifact](https://claude.ai/artifact/Gw9yNGvgsoa9WEGjYxZ8Eo) · الإصدار 1.0 · 18 نوفمبر 2026  
+> تركيبة كل صفحة (مناطق/مكوّنات): [`docs/page-composition.md`](docs/page-composition.md)  
 > التقدم الفعلي المُتحقَّق يُسجَّل في `STATUS.md` فقط.
 
 ---
@@ -59,16 +60,19 @@ Login · POS · Shifts · Cash-outs · Products · Categories · Inventory · Pu
 
 ## User Journeys (test against these)
 
-| ID | Journey |
-| --- | --- |
-| A | First cashier of the day → open shift → sell → close |
-| B | Second cashier → join open shift as participant → POS |
-| C | Left-open shift → resume or close → open new → POS |
-| D | Retail sale |
-| E | Cash-out (amount + reason) |
-| F | Supplier purchase → stock up → price recalc |
-| G | Customer return from original invoice |
-| H | Close shift (optional cash count) → print report → login |
+المصدر: قسم «رحلات المستخدم» في [`docs/client-proposal-ar.html`](docs/client-proposal-ar.html).  
+كل رحلة تنتهي بحالة واضحة ومحفوظة.
+
+| ID | الرحلة | الخطوات |
+| --- | --- | --- |
+| A | أول كاشير في اليوم | تسجيل الدخول → لا توجد وردية مفتوحة → فتح وردية (المبلغ اختياري) → البيع → إغلاق الوردية → العودة لتسجيل الدخول |
+| B | انضمام كاشير ثانٍ | تسجيل الدخول → وردية مفتوحة بالفعل → استئناف → تسجيله كمشارك → نقطة البيع |
+| C | وردية تُركت مفتوحة | تسجيل الدخول → ملخص الوردية القديمة → استئنافها أو إغلاقها → فتح وردية جديدة عند الإغلاق → نقطة البيع |
+| D | بيع قطاعي | مسح / بحث → تعديل الكمية أو السعر → دفع · F9 → اختيار طريقة الدفع → حفظ + إيصال |
+| E | مصروف نقدي | نقطة البيع أو صفحة الوردية → المبلغ + السبب → تحديث النقدية المتوقعة |
+| F | شراء من مورد | فاتورة شراء جديدة → الأصناف + التكلفة → حفظ → زيادة المخزون → إعادة حساب الأسعار |
+| G | مرتجع عميل | البحث عن الفاتورة → اختيار الأصناف والكمية → طريقة الاسترداد → تحديث المخزون والوردية |
+| H | إغلاق الوردية | مراجعة الملخص → عدّ النقدية (اختياري) → تأكيد → طباعة التقرير → تسجيل الدخول |
 
 ---
 
@@ -134,15 +138,15 @@ Each phase is built, tested, and demoed before the next starts.
 - [x] Recalculate product selling prices from saved markups.
 - [x] Preserve purchase history (prices at time of purchase).
 
-### Phase 5 — Inventory ← next
+### Phase 5 — Inventory
 
-- [ ] Stock movement records.
-- [ ] Stock balance calculations.
-- [ ] Low-stock list / notifications.
-- [ ] Authorized stock adjustments.
-- [ ] Track user performing adjustments.
+- [x] Stock movement records.
+- [x] Stock balance calculations.
+- [x] Low-stock list / notifications.
+- [x] Authorized stock adjustments.
+- [x] Track user performing adjustments.
 
-### Phase 6 — Shifts
+### Phase 6 — Shifts ← next
 
 - [ ] Shift entity + ShiftParticipant entity.
 - [ ] Open shift with optional opening amount.

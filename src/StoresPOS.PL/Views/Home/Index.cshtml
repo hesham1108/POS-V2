@@ -1,8 +1,45 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Section"] = "Dashboard";
+    ViewData["Title"] = "Dashboard";
+    ViewData["Subtitle"] = "Store overview — modules follow Hesham’s navigation plan";
+    var canManage = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Manager);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="home-hero">
+    <div class="sp-eyebrow" style="color:#7fd6b8">StoresPOS</div>
+    <h1>Fast offline cashier &amp; store ops</h1>
+    <p>Sidebar tabs match the approved mockups. Ready modules are clickable; the rest stay disabled until their phase.</p>
+</section>
+
+@if (canManage)
+{
+    <div class="home-modules">
+        <a class="home-mod" asp-controller="Products" asp-action="Index">
+            <strong>Products and categories</strong>
+            <span>Catalog, categories tree, inventory</span>
+        </a>
+        <a class="home-mod" asp-controller="Purchases" asp-action="Index">
+            <strong>Purchase invoices</strong>
+            <span>Confirm to raise stock and refresh prices</span>
+        </a>
+        <a class="home-mod" asp-controller="Suppliers" asp-action="Index">
+            <strong>Suppliers</strong>
+            <span>Contacts and purchase totals</span>
+        </a>
+        <div class="home-mod" style="opacity:.55">
+            <strong>POS</strong>
+            <span>Coming — Phase 7</span>
+        </div>
+        <div class="home-mod" style="opacity:.55">
+            <strong>Configuration</strong>
+            <span>Coming — Phase 11</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="sp-card p-4">
+        <h2 class="h5 mb-2">Cashier workspace</h2>
+        <p class="text-muted mb-0">POS and shifts arrive in later delivery phases.</p>
+    </div>
+}
