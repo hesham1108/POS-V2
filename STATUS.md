@@ -50,6 +50,19 @@ UI shell aligned to `docs/client-proposal-ar.html`: dark sidebar `#1A1D26`, prim
 
 Canonical per-page layout/components for every sidebar tab: [`docs/page-composition.md`](docs/page-composition.md). Use it before UI rebuilds; no full mockup rebuild until explicitly requested.
 
+## Change Log
+
+| Date       | Change                                                                 |
+| ---------- | ---------------------------------------------------------------------- |
+| 2026-11-17 | Phase 1 foundation + Phase 2 auth                                      |
+| 2026-11-17 | Login UI restyled from mockups; added `theme.css` design tokens        |
+| 2026-11-18 | Expanded `docs/projectOverview.md` with project purpose and structure  |
+| 2026-11-19 | `plan.md` master plan (P1–P11); Phase 3 products/categories            |
+| 2026-11-19 | Phase 4 suppliers & purchases implemented and verified                 |
+| 2026-11-19 | Phase 5 inventory (movements, adjust, low-stock) implemented           |
+| 2026-11-19 | `docs/page-composition.md` from flows A–H                              |
+| 2026-11-19 | UI parity pass: tokens, shell, shared components, Inventory→Products→rest; RTL logical props |
+
 ## Local Dev Login
 
 - Username: `admin`
