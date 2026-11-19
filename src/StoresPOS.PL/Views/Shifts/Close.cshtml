@@ -1,0 +1,96 @@
+@model ShiftCloseViewModel
+@{
+    ViewData["Section"] = L["Shifts"].Value;
+    ViewData["Title"] = L["Close shift"].Value;
+    ViewData["Subtitle"] = L["Review the summary · counting cash is optional"].Value;
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="@(Model.ReturnTo == "gate" ? "Gate" : "Current")">@L["Cancel"]</a>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="shift-layout">
+    <partial name="_ShiftSummary" model="Model.Summary" />
+
+    <section class="sp-card p-4">
+        <form asp-action="Close" method="post" id="close-form" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ShiftId" />
+            <input type="hidden" asp-for="ReturnTo" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="ActualCash" class="form-label">@L["Actual cash in drawer (optional)"]</label>
+                <input asp-for="ActualCash" class="form-control form-control-lg num" inputmode="decimal"
+                       step="0.01" min="0" placeholder="@L["Leave empty if not counted"]" autofocus />
+                <span asp-validation-for="ActualCash" class="text-danger"></span>
+            </div>
+
+            <div class="shift-close__result" id="close-result" aria-live="polite">
+                <span class="sp-status sp-status-neutral" data-state="none">@L["Not reconciled"]</span>
+                <span class="sp-status sp-status-ok d-none" data-state="matched">@L["Matched"]</span>
+                <span class="sp-status sp-status-warn d-none" data-state="surplus">@L["Surplus"] <span class="num" data-diff></span></span>
+                <span class="sp-status sp-status-bad d-none" data-state="shortage">@L["Shortage"] <span class="num" data-diff></span></span>
+                <p class="form-text mb-0" data-state-help="none">@L["Left empty, the shift is recorded as Not reconciled — never as 0 counted."]</p>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Notes" class="form-label">@L["Notes (optional)"]</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+            </div>
+
+            <button type="submit" class="btn sp-btn-primary shift-gate__primary"
+                    data-confirm="@L["Close this shift now? This cannot be undone."]">
+                @L["Confirm and close shift"]
+            </button>
+            <p class="form-text mt-3 mb-0">@L["If another cashier is mid-sale, the close will wait for that sale to finish or be held."]</p>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var input = document.getElementById('ActualCash');
+            var expectedEl = document.getElementById('shift-expected');
+            var box = document.getElementById('close-result');
+            var form = document.getElementById('close-form');
+            if (!input || !expectedEl || !box) return;
+            var expected = parseFloat(expectedEl.dataset.value || '0');
+            var fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            function show(state, diff) {
+                box.querySelectorAll('[data-state]').forEach(function (el) {
+                    el.classList.toggle('d-none', el.dataset.state !== state);
+                });
+                box.querySelectorAll('[data-state-help]').forEach(function (el) {
+                    el.classList.toggle('d-none', el.dataset.stateHelp !== state);
+                });
+                box.querySelectorAll('[data-diff]').forEach(function (el) {
+                    el.textContent = diff > 0 ? '+' + fmt.format(diff) : fmt.format(diff);
+                });
+            }
+
+            function sync() {
+                var raw = input.value.trim();
+                if (raw === '') { show('none', 0); return; }
+                var actual = parseFloat(raw);
+                if (isNaN(actual)) { show('none', 0); return; }
+                var diff = Math.round((actual - expected) * 100) / 100;
+                show(diff === 0 ? 'matched' : diff > 0 ? 'surplus' : 'shortage', diff);
+            }
+
+            input.addEventListener('input', sync);
+            sync();
+
+            form.addEventListener('submit', function (e) {
+                var btn = form.querySelector('[data-confirm]');
+                if (btn && !window.confirm(btn.dataset.confirm)) { e.preventDefault(); }
+            });
+        })();
+    </script>
+}

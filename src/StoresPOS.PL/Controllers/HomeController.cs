@@ -18,10 +18,16 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+        // Cashiers (no back-office access) always pass through the shift gate (journeys A/B/C).
+        if (!User.HasPermission(AppPermissions.DashboardView))
+        {
+            return RedirectToAction("Gate", "Shifts");
+        }
+
         return View();
     }
 
-    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
+    [Authorize(Policy = AppPermissions.DashboardView)]
     public IActionResult Privacy()
     {
         return View();

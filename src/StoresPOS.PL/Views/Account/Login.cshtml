@@ -31,6 +31,11 @@
             <h1 class="login-card__title" data-i18n="title">Welcome back</h1>
             <p class="login-card__subtitle" data-i18n="subtitle">Sign in to open the till and continue store operations.</p>
 
+            @if (TempData["Success"] is string loginNotice)
+            {
+                <div class="alert alert-success" role="status">@loginNotice</div>
+            }
+
             <form asp-action="Login" method="post" class="login-form" novalidate>
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3" data-i18n-validation></div>
                 <input type="hidden" asp-for="ReturnUrl" />

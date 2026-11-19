@@ -7,4 +7,5 @@ public class Role
     public string? Description { get; set; }
 
     public ICollection<User> Users { get; set; } = new List<User>();
+    public ICollection<RolePermission> Permissions { get; set; } = new List<RolePermission>();
 }

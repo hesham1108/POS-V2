@@ -287,6 +287,114 @@ namespace StoresPOS.DAL.Migrations
                     b.ToTable("Roles", (string)null);
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Permission")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("RoleId", "Permission");
+
+                    b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Shift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("ActualCash")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("CashDifference")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CloseNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ClosedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ClosedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ExpectedCash")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("OpenedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OpenedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("OpeningAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<byte?>("Reconciliation")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClosedByUserId");
+
+                    b.HasIndex("OpenedAtUtc");
+
+                    b.HasIndex("OpenedByUserId");
+
+                    b.HasIndex("Status")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Shifts_SingleOpen")
+                        .HasFilter("[Status] = 1");
+
+                    b.ToTable("Shifts", (string)null);
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.ShiftParticipant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("JoinedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ShiftId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ShiftId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ShiftParticipants", (string)null);
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.StockMovement", b =>
                 {
                     b.Property<long>("Id")
@@ -514,6 +622,54 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("PurchaseInvoice");
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.RolePermission", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.Role", "Role")
+                        .WithMany("Permissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Shift", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.User", "ClosedByUser")
+                        .WithMany()
+                        .HasForeignKey("ClosedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StoresPOS.DAL.Entities.User", "OpenedByUser")
+                        .WithMany()
+                        .HasForeignKey("OpenedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ClosedByUser");
+
+                    b.Navigation("OpenedByUser");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.ShiftParticipant", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.Shift", "Shift")
+                        .WithMany("Participants")
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Shift");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.StockMovement", b =>
                 {
                     b.HasOne("StoresPOS.DAL.Entities.User", "CreatedByUser")
@@ -558,7 +714,14 @@ namespace StoresPOS.DAL.Migrations
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.Role", b =>
                 {
+                    b.Navigation("Permissions");
+
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Shift", b =>
+                {
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.Supplier", b =>

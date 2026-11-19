@@ -9,7 +9,7 @@ using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
+[Authorize(Policy = AppPermissions.PurchasesManage)]
 public class PurchasesController : Controller
 {
     private readonly IPurchaseService _purchaseService;

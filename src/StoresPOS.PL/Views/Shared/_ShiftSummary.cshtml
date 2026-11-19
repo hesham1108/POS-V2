@@ -1,0 +1,57 @@
+@model ShiftSummaryDto
+@*
+    Drawer summary shared by the gate (journey C), current shift, close (H) and later shift details.
+    Only cash enters the drawer (business rule 5); non-cash is listed separately.
+*@
+@{
+    string Money(decimal v) => v.ToString("N2");
+    var names = string.Join(L[", "].Value, Model.Participants.Select(p => p.DisplayName));
+}
+<section class="sp-card shift-summary" aria-label="@L["Shift summary"]">
+    <header class="shift-summary__head">
+        <div>
+            <h2 class="shift-summary__title">@string.Format(L["Shift #{0}"].Value, Model.Id)</h2>
+            <p class="shift-summary__meta">
+                @L["Opened"] <span class="num">@Model.OpenedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span>
+                · @Model.OpenedByDisplayName
+                @if (!string.IsNullOrEmpty(names))
+                {
+                    <br />@L["Participants"]<text>: </text>@names
+                }
+            </p>
+        </div>
+        <partial name="_ShiftStatusChip" model="Model" />
+    </header>
+
+    <dl class="shift-summary__rows">
+        <div><dt>@L["Opening amount"]</dt><dd class="num">@Money(Model.OpeningAmount)</dd></div>
+        <div><dt>@L["Cash sales"]</dt><dd class="num">@Money(Model.CashSales)</dd></div>
+        <div><dt>@L["Cash refunds"]</dt><dd class="num">−@Money(Model.CashRefunds)</dd></div>
+        <div><dt>@string.Format(L["Cash-outs ({0})"].Value, Model.CashOutsCount)</dt><dd class="num">−@Money(Model.CashOutsTotal)</dd></div>
+    </dl>
+
+    <div class="shift-summary__expected">
+        <span>@L["Expected in drawer"]</span>
+        <strong class="num-total" id="shift-expected" data-value="@Model.ExpectedCash.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+            @Money(Model.ExpectedCash) <small>@L["EGP"]</small>
+        </strong>
+    </div>
+
+    <div class="shift-summary__noncash">
+        <p class="shift-summary__noncash-title">@L["Non-cash sales · not in drawer"]</p>
+        <dl class="shift-summary__rows">
+            <div><dt>@L["Visa / Card"]</dt><dd class="num">@Money(Model.CardSales)</dd></div>
+            <div><dt>@L["InstaPay"]</dt><dd class="num">@Money(Model.InstaPaySales)</dd></div>
+            <div><dt>@L["Vodafone Cash"]</dt><dd class="num">@Money(Model.VodafoneCashSales)</dd></div>
+        </dl>
+    </div>
+
+    @if (Model.Status == ShiftStatus.Closed)
+    {
+        <dl class="shift-summary__rows shift-summary__closed">
+            <div><dt>@L["Closed"]</dt><dd><span class="num">@Model.ClosedAtUtc?.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span> · @Model.ClosedByDisplayName</dd></div>
+            <div><dt>@L["Actual cash"]</dt><dd class="num">@(Model.ActualCash.HasValue ? Money(Model.ActualCash.Value) : L["Not counted"].Value)</dd></div>
+            <div><dt>@L["Difference"]</dt><dd class="num">@(Model.CashDifference.HasValue ? Money(Model.CashDifference.Value) : "—")</dd></div>
+        </dl>
+    }
+</section>

@@ -18,6 +18,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
     public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<ShiftParticipant> ShiftParticipants => Set<ShiftParticipant>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

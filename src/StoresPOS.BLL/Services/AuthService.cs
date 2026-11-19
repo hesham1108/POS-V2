@@ -53,7 +53,13 @@ public class AuthService : IAuthService
             return AuthResultDto.Fail("Invalid username or password.");
         }
 
-        var (token, expiresAt) = _jwtTokenService.CreateToken(user);
+        var permissions = await _db.RolePermissions
+            .AsNoTracking()
+            .Where(x => x.RoleId == user.RoleId)
+            .Select(x => x.Permission)
+            .ToListAsync(cancellationToken);
+
+        var (token, expiresAt) = _jwtTokenService.CreateToken(user, permissions);
         user.LastLoginAtUtc = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -85,6 +91,7 @@ public class AuthService : IAuthService
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+        await EnsureRolePermissionsAsync(cancellationToken);
 
         if (await _db.Users.AnyAsync(cancellationToken))
         {
@@ -111,6 +118,37 @@ public class AuthService : IAuthService
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow
         });
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Seeds the default permission matrix for roles that have none yet, and always keeps Admin
+    /// at the full set (prevents lock-out and picks up permissions added in later versions).
+    /// </summary>
+    private async Task EnsureRolePermissionsAsync(CancellationToken cancellationToken)
+    {
+        var roles = await _db.Roles
+            .Include(x => x.Permissions)
+            .ToListAsync(cancellationToken);
+
+        foreach (var role in roles)
+        {
+            var isAdmin = role.Name == AppRoles.Admin;
+            if (role.Permissions.Count > 0 && !isAdmin)
+            {
+                continue;
+            }
+
+            var existing = role.Permissions.Select(x => x.Permission).ToHashSet(StringComparer.Ordinal);
+            foreach (var permission in AppPermissions.DefaultsFor(role.Name))
+            {
+                if (existing.Add(permission))
+                {
+                    _db.RolePermissions.Add(new RolePermission { RoleId = role.Id, Permission = permission });
+                }
+            }
+        }
 
         await _db.SaveChangesAsync(cancellationToken);
     }

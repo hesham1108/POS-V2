@@ -1,0 +1,36 @@
+@model ShiftCurrentViewModel
+@{
+    ViewData["Section"] = L["Shifts"].Value;
+    ViewData["Title"] = L["Current shift"].Value;
+    ViewData["Subtitle"] = L["Live drawer totals · cash only counts toward the drawer"].Value;
+}
+
+@section PageActions {
+    @if (!Model.IsParticipant)
+    {
+        <form asp-action="Resume" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn sp-btn-secondary">@L["Join shift"]</button>
+        </form>
+    }
+    @if (Model.CanClose)
+    {
+        <a class="btn sp-btn-primary" asp-action="Close">@L["Close shift"]</a>
+    }
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="shift-layout">
+    <partial name="_ShiftSummary" model="Model.Summary" />
+
+    <section class="sp-card p-4">
+        <h2 class="shift-section-title">@L["Cash-outs"]</h2>
+        @* Phase 9: list + "New cash-out" modal (journey E) *@
+        @{
+            var empty = (L["No cash-outs yet"].Value, L["Cash-outs arrive in Phase 9. They will appear here and reduce expected cash."].Value);
+        }
+        <partial name="_EmptyState" model="empty" />
+    </section>
+</div>

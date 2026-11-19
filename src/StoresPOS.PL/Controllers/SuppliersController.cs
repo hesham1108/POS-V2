@@ -8,7 +8,7 @@ using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
+[Authorize(Policy = AppPermissions.PurchasesManage)]
 public class SuppliersController : Controller
 {
     private readonly ISupplierService _supplierService;

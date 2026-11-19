@@ -73,7 +73,15 @@ public static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            // One policy per permission: [Authorize(Policy = AppPermissions.ShiftsClose)]
+            foreach (var permission in AppPermissions.All)
+            {
+                options.AddPolicy(permission, policy =>
+                    policy.RequireAuthenticatedUser().RequireClaim(AppPermissions.ClaimType, permission));
+            }
+        });
         return services;
     }
 }

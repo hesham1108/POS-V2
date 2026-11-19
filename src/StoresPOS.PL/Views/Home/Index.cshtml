@@ -2,8 +2,10 @@
     ViewData["Section"] = "Dashboard";
     ViewData["Title"] = "Dashboard";
     ViewData["Subtitle"] = "Store overview — modules follow Hesham’s navigation plan";
-    var canManage = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Manager);
+    var canManage = User.HasClaim(AppPermissions.ClaimType, AppPermissions.CatalogManage);
 }
+
+<partial name="_Flash" />
 
 <section class="home-hero">
     <div class="sp-eyebrow" style="color:#7fd6b8">StoresPOS</div>
@@ -14,6 +16,10 @@
 @if (canManage)
 {
     <div class="home-modules">
+        <a class="home-mod" asp-controller="Shifts" asp-action="Gate">
+            <strong>@L["Shifts"]</strong>
+            <span>@L["Open, resume or close the store shift"]</span>
+        </a>
         <a class="home-mod" asp-controller="Products" asp-action="Index">
             <strong>Products and categories</strong>
             <span>Catalog, categories tree, inventory</span>
