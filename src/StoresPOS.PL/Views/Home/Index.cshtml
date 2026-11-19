@@ -90,6 +90,34 @@
         }
     </section>
 
+    @* Treasuries *@
+    <section class="sp-card p-4">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <h2 class="shift-section-title">@L["Treasuries"]</h2>
+            @if (Can(AppPermissions.TreasuriesView))
+            {
+                <a class="btn btn-sm sp-btn-secondary" asp-controller="Treasuries" asp-action="Index">@L["Open"]</a>
+            }
+        </div>
+        @if (Model.Treasuries.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No treasuries yet"]</p>
+        }
+        else
+        {
+            <dl class="shift-summary__rows">
+                @foreach (var t in Model.Treasuries.Take(6))
+                {
+                    var tName = isAr ? t.NameAr : t.NameEn;
+                    <div>
+                        <dt>@tName @(t.IsDefault ? $"({L["Default"].Value})" : null)</dt>
+                        <dd class="num">@t.Balance.ToString("N2")</dd>
+                    </div>
+                }
+            </dl>
+        }
+    </section>
+
     @* Low stock *@
     <section class="sp-card p-4">
         <div class="d-flex justify-content-between align-items-start gap-2">

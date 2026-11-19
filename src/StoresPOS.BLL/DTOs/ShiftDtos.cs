@@ -79,6 +79,12 @@ public class ShiftSummaryDto
     public decimal? CashDifference { get; set; }
     public ShiftReconciliation? Reconciliation { get; set; }
     public string? CloseNotes { get; set; }
+
+    /// <summary>Treasury that received the drawer handover (closed shifts only).</summary>
+    public int? HandoverTreasuryId { get; set; }
+    public string? HandoverTreasuryNameEn { get; set; }
+    public string? HandoverTreasuryNameAr { get; set; }
+    public decimal? HandoverAmount { get; set; }
 }
 
 public class CloseShiftDto
@@ -89,6 +95,9 @@ public class CloseShiftDto
     public decimal? ActualCash { get; set; }
 
     public string? Notes { get; set; }
+
+    /// <summary>Treasury that receives counted (or expected) drawer cash.</summary>
+    public int HandoverTreasuryId { get; set; }
 }
 
 /// <summary>Shift history filter "result" (docs/page-composition.md §6.2).</summary>

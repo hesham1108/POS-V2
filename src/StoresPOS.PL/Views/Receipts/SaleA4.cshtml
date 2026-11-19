@@ -1,0 +1,161 @@
+@model SaleReceiptViewModel
+@inject IPaymentMethodService PaymentMethods
+@{
+    Layout = "_A4PrintLayout";
+    var f = Model.Format;
+    f.ApplyCulture();
+    var i = Model.Invoice;
+    var lang = f.Language;
+    var isAr = lang == "ar";
+    ViewData["ReceiptFormat"] = f;
+    ViewData["AutoPrint"] = Model.AutoPrint;
+    ViewData["Title"] = i.InvoiceNumber + " A4";
+    var vat = f.Settings.IncludedVat(i.Total);
+    var method = await PaymentMethods.GetAsync((byte)i.PaymentMethod);
+    var methodName = method is null
+        ? i.PaymentMethod.ToString()
+        : method.NameFor(lang);
+    var isCash = method?.IsCash == true || i.PaymentMethod == PaymentMethod.Cash;
+    var words = AmountInWords.Format(i.Total, lang);
+}
+<article class="a4-invoice">
+    <header class="a4-invoice__header">
+        <div class="a4-invoice__store">
+            <h1>@f.Settings.NameFor(lang)</h1>
+            @if (!string.IsNullOrWhiteSpace(f.Settings.AddressFor(lang)))
+            {
+                <p>@f.Settings.AddressFor(lang)</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(f.Settings.Phone))
+            {
+                <p>@L["Phone"]: <bdi dir="ltr">@f.Digits(f.Settings.Phone)</bdi></p>
+            }
+            @if (!string.IsNullOrWhiteSpace(f.Settings.TaxNumber))
+            {
+                <p>@L["Tax no."]: <bdi dir="ltr">@f.Digits(f.Settings.TaxNumber)</bdi></p>
+            }
+            @if (!string.IsNullOrWhiteSpace(f.Settings.CommercialRegister))
+            {
+                <p>@L["Commercial register"]: <bdi dir="ltr">@f.Digits(f.Settings.CommercialRegister)</bdi></p>
+            }
+        </div>
+        <div class="a4-invoice__meta">
+            <strong>@L["Sales invoice"] — @(i.SaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</strong>
+            <div dir="ltr">@i.InvoiceNumber</div>
+            <div>@L["Date"]: <span dir="ltr">@f.DateTime(i.CompletedAtUtc)</span></div>
+            <div>@L["Cashier"]: @i.CashierDisplayName</div>
+            <div>@L["Shift"]: #@i.ShiftId</div>
+        </div>
+    </header>
+
+    <section class="a4-invoice__party">
+        <div>
+            <strong>@L["Customer"]</strong>
+            <div>@(i.CustomerName ?? L["Walk-in customer"].Value)</div>
+            @if (!string.IsNullOrEmpty(i.CustomerPhone))
+            {
+                <div>@L["Mobile"]: <bdi dir="ltr">@f.Digits(i.CustomerPhone)</bdi></div>
+            }
+            @if (!string.IsNullOrEmpty(i.CustomerAddress))
+            {
+                <div>@i.CustomerAddress</div>
+            }
+        </div>
+        <div>
+            <strong>@L["Payment"]</strong>
+            <div>@methodName</div>
+            @if (isCash)
+            {
+                <div>@L["Amount paid"]: @f.Money(i.AmountPaid) · @L["Change"]: @f.Money(i.ChangeAmount)</div>
+            }
+            else if (!string.IsNullOrEmpty(i.PaymentReference))
+            {
+                <div>@L["Reference"]: @i.PaymentReference</div>
+            }
+        </div>
+    </section>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>@L["Barcode"]</th>
+                <th>@L["Item"]</th>
+                <th>@L["Unit"]</th>
+                <th class="n">@L["Qty"]</th>
+                <th class="n">@L["Catalog price"]</th>
+                <th class="n">@L["Charged price"]</th>
+                <th class="n">@L["Line discount"]</th>
+                <th class="n">@L["Total"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ var n = 1; }
+            @foreach (var line in i.Lines)
+            {
+                var lineDiscount = Math.Max(0, (line.CatalogUnitPrice - line.UnitPrice) * line.Quantity);
+                <tr>
+                    <td class="n">@n</td>
+                    <td dir="ltr">@(line.Barcode ?? "—")</td>
+                    <td>@(isAr ? line.NameAr : line.NameEn)</td>
+                    <td>@line.Unit</td>
+                    <td class="n">@f.Qty(line.Quantity)</td>
+                    <td class="n">@f.Money(line.CatalogUnitPrice)</td>
+                    <td class="n">@f.Money(line.UnitPrice)</td>
+                    <td class="n">@f.Money(lineDiscount)</td>
+                    <td class="n">@f.Money(line.LineTotal)</td>
+                </tr>
+                n++;
+            }
+        </tbody>
+    </table>
+
+    <div class="a4-invoice__totals">
+        <dl>
+            <div><dt>@L["Subtotal"]</dt><dd class="n">@f.Money(i.Subtotal)</dd></div>
+            <div><dt>@L["Discount"]</dt><dd class="n">@f.Money(i.DiscountAmount)</dd></div>
+            @if (vat > 0)
+            {
+                <div><dt>@L["VAT included"] (@f.Settings.VatPercent%)</dt><dd class="n">@f.Money(vat)</dd></div>
+            }
+            <div class="grand"><dt>@L["Total"]</dt><dd class="n">@f.Money(i.Total) @L["EGP"]</dd></div>
+        </dl>
+    </div>
+
+    <p class="a4-invoice__words"><strong>@L["Amount in words"]:</strong> @words</p>
+
+    @if (Model.Returns.Count > 0)
+    {
+        <h2 style="font-size:1rem;margin:1rem 0 .4rem">@L["Returns against this invoice"]</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>@L["Return"]</th>
+                    <th>@L["Date"]</th>
+                    <th class="n">@L["Amount"]</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Returns)
+            {
+                <tr>
+                    <td dir="ltr">@r.ReturnNumber</td>
+                    <td dir="ltr">@f.DateTime(r.CreatedAtUtc)</td>
+                    <td class="n">@f.Money(r.TotalAmount)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+
+    <div class="a4-invoice__sign">
+        <div>@L["Prepared by"]</div>
+        <div>@L["Received by"]</div>
+        <div>@L["Stamp"]</div>
+    </div>
+
+    <footer class="a4-invoice__footer">
+        <span>@f.Settings.FooterFor(lang)</span>
+        <span>StoresPOS</span>
+    </footer>
+</article>

@@ -229,28 +229,28 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 
 > **Client request (2026-11-19):** payment methods setup, cheques (number · date · amount · paid or not · linked to customer or supplier · what we are owed vs what we owe), warehouses control, treasuries (add / edit freely), A4 landscape invoice printing. Added as Phases 11–14; Settings & Delivery moved to Phase 15.
 
-### Phase 11 — Payment Methods & A4 Invoice ← next
+### Phase 11 — Payment Methods & A4 Invoice ✅
 
-- [ ] Replace the `PaymentMethod` enum with a `PaymentMethods` table (name ar/en, kind: Cash · Card · Wallet · Bank transfer · Cheque, active, sort order); seed the 4 current methods + **Cheque** with the same ids so existing invoices keep their method.
-- [ ] Only kind = Cash counts in the shift drawer (rule 5 unchanged); other kinds stay in sales/reports.
-- [ ] Payment methods screen: add / rename / reorder / activate-deactivate (no delete once used) — permission `PaymentMethods.Manage`.
-- [ ] POS pay modal, returns refund method, filters and reports read the active list instead of hard-coded buttons.
-- [ ] Optional per method: default treasury it settles into (used from Phase 12).
-- [ ] A4 **landscape** sales invoice (`Receipts/SaleA4/{id}`) for a regular printer: store header + logo + tax/commercial reg., invoice no. / date / cashier / shift, customer name + mobile + address, lines (code · barcode · name · unit · qty · catalog price · charged price · discount · line total), subtotal / discount / VAT / total, amount in words (ar), payment method + tender/change (+ cheque details from Phase 13), returns against the invoice, notes, signature boxes, page numbers + repeated table header on multi-page.
-- [ ] Print buttons: Sales list / Sales details / POS "last invoice" → choose 80 mm or A4; Settings later picks the default.
-- [ ] Same A4 layout reused for purchase invoices and return slips (A4 variant).
-- [ ] Tests: method seed keeps old invoices intact; inactive methods hidden at POS; A4 page renders all fields (ar + en).
+- [x] Replace the `PaymentMethod` enum with a `PaymentMethods` table (name ar/en, kind: Cash · Card · Wallet · Bank transfer · Cheque, active, sort order); seed the 4 current methods + **Cheque** with the same ids so existing invoices keep their method.
+- [x] Only kind = Cash counts in the shift drawer (rule 5 unchanged); other kinds stay in sales/reports.
+- [x] Payment methods screen: add / rename / reorder / activate-deactivate (no delete once used) — permission `PaymentMethods.Manage`.
+- [x] POS pay modal, returns refund method, filters and reports read the active list instead of hard-coded buttons.
+- [x] Optional per method: default treasury it settles into (used from Phase 12).
+- [x] A4 **landscape** sales invoice (`Receipts/SaleA4/{id}`) for a regular printer: store header + tax/commercial reg., invoice no. / date / cashier / shift, customer name + mobile + address, lines (barcode · name · unit · qty · catalog price · charged price · discount · line total), subtotal / discount / VAT / total, amount in words (ar/en), payment method + tender/change, returns against the invoice, signature boxes; table header repeats on multi-page print.
+- [x] Print buttons: Sales list / Sales details → 80 mm or A4; Settings later picks the default.
+- [x] Same A4 layout reused for purchase invoices and return slips (A4 variant).
+- [x] Tests: method seed keeps old invoices intact; inactive methods hidden at POS; A4 page renders (BLL 89/89).
 
 ### Phase 12 — Treasuries (الخزائن)
 
-- [ ] `Treasury` (name, type: Cash / Bank, opening balance, active, is-default) + `TreasuryTransaction` ledger (in / out, amount, source type + id, user, date, note). Balance = opening + ledger.
-- [ ] Treasuries screen: create / edit / deactivate freely (rule 16) + balance per treasury.
-- [ ] Manual deposit / withdraw (reason required) and transfer between treasuries (one document, two ledger rows, one transaction).
-- [ ] Shift close: hand over counted (or expected) drawer cash to a chosen treasury; shift report shows it.
-- [ ] Non-cash sales settle into the method's default treasury (e.g. Visa → bank account) — confirm with client.
-- [ ] Purchases: record payment from a treasury (cash / bank) at confirm.
-- [ ] Treasury statement (كشف حساب الخزنة) with date filters + print; dashboard card with balances.
-- [ ] Permissions `Treasuries.View`, `Treasuries.Move`, `Treasuries.Manage`.
+- [x] `Treasury` (name, type: Cash / Bank, opening balance, active, is-default) + `TreasuryTransaction` ledger (in / out, amount, source type + id, user, date, note). Balance = opening + ledger.
+- [x] Treasuries screen: create / edit / deactivate freely (rule 16) + balance per treasury.
+- [x] Manual deposit / withdraw (reason required) and transfer between treasuries (one document, two ledger rows, one transaction).
+- [x] Shift close: hand over counted (or expected) drawer cash to a chosen treasury; shift report shows it.
+- [x] Non-cash sales settle into the method's default treasury (e.g. Visa → bank account) — confirm with client.
+- [x] Purchases: record payment from a treasury (cash / bank) at confirm.
+- [x] Treasury statement (كشف حساب الخزنة) with date filters + print; dashboard card with balances.
+- [x] Permissions `Treasuries.View`, `Treasuries.Move`, `Treasuries.Manage`.
 
 ### Phase 13 — Cheques (الشيكات)
 

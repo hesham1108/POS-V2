@@ -1,11 +1,19 @@
 @model PaymentMethod
+@inject IPaymentMethodService PaymentMethods
 @{
-    var (css, text) = Model switch
-    {
-        PaymentMethod.Cash => ("sp-status-ok", L["Cash"].Value),
-        PaymentMethod.Card => ("sp-status-info", L["Visa / Card"].Value),
-        PaymentMethod.InstaPay => ("sp-status-info", L["InstaPay"].Value),
-        _ => ("sp-status-info", L["Vodafone Cash"].Value)
-    };
+    var def = await PaymentMethods.GetAsync((byte)Model);
+    var isCash = def?.IsCash == true || Model == PaymentMethod.Cash;
+    var css = isCash ? "sp-status-ok" : "sp-status-info";
+    var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var text = def is null
+        ? Model switch
+        {
+            PaymentMethod.Cash => L["Cash"].Value,
+            PaymentMethod.Card => L["Visa / Card"].Value,
+            PaymentMethod.InstaPay => L["InstaPay"].Value,
+            PaymentMethod.Cheque => L["Cheque"].Value,
+            _ => L["Vodafone Cash"].Value
+        }
+        : def.NameFor(lang);
 }
 <span class="sp-status @css">@text</span>

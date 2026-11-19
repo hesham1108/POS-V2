@@ -55,10 +55,19 @@
                     <strong class="num-total" id="pay-due">0.00</strong>
                 </div>
                 <div class="pos-methods" role="radiogroup" aria-label="@L["Payment method"]">
-                    <label><input type="radio" name="method" value="1" checked /> <span>@L["Cash"]</span></label>
-                    <label><input type="radio" name="method" value="2" /> <span>@L["Visa / Card"]</span></label>
-                    <label><input type="radio" name="method" value="3" /> <span>@L["InstaPay"]</span></label>
-                    <label><input type="radio" name="method" value="4" /> <span>@L["Vodafone Cash"]</span></label>
+                    @{
+                        var first = true;
+                        foreach (var m in Model.PaymentMethods)
+                        {
+                            <label>
+                                <input type="radio" name="method" value="@m.Id"
+                                       data-cash="@(m.IsCash ? "1" : "0")"
+                                       @(first ? "checked" : null) />
+                                <span>@(isAr ? m.NameAr : m.NameEn)</span>
+                            </label>
+                            first = false;
+                        }
+                    }
                 </div>
                 <div id="pay-cash">
                     <label class="form-label" for="pay-amount">@L["Amount paid"]</label>

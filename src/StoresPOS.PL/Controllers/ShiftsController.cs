@@ -21,6 +21,7 @@ public class ShiftsController : Controller
     private readonly ICashOutService _cashOuts;
     private readonly IReturnService _returns;
     private readonly IReportService _reports;
+    private readonly ITreasuryService _treasuries;
     private readonly IStringLocalizer<SharedResource> _l;
 
     public ShiftsController(
@@ -29,6 +30,7 @@ public class ShiftsController : Controller
         ICashOutService cashOuts,
         IReturnService returns,
         IReportService reports,
+        ITreasuryService treasuries,
         IStringLocalizer<SharedResource> localizer)
     {
         _shifts = shifts;
@@ -36,6 +38,7 @@ public class ShiftsController : Controller
         _cashOuts = cashOuts;
         _returns = returns;
         _reports = reports;
+        _treasuries = treasuries;
         _l = localizer;
     }
 
@@ -178,11 +181,15 @@ public class ShiftsController : Controller
             return RedirectToAction(nameof(Gate));
         }
 
+        var treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken);
+        var defaultTreasury = treasuries.FirstOrDefault(x => x.IsDefault) ?? treasuries.FirstOrDefault();
         return View(new ShiftCloseViewModel
         {
             Summary = summary,
             ShiftId = summary.Id,
-            ReturnTo = returnTo == ReturnToGate ? ReturnToGate : null
+            ReturnTo = returnTo == ReturnToGate ? ReturnToGate : null,
+            Treasuries = treasuries,
+            HandoverTreasuryId = defaultTreasury?.Id ?? 0
         });
     }
 
@@ -199,7 +206,8 @@ public class ShiftsController : Controller
                 {
                     ShiftId = model.ShiftId,
                     ActualCash = model.ActualCash,
-                    Notes = model.Notes
+                    Notes = model.Notes,
+                    HandoverTreasuryId = model.HandoverTreasuryId
                 }, this.GetRequiredUserId(), cancellationToken);
 
                 // Journey H: confirm → print report → login. Journey C: → print report → gate (open a new shift).
@@ -220,6 +228,7 @@ public class ShiftsController : Controller
 
         model.Summary = summary;
         model.ShiftId = summary.Id;
+        model.Treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken);
         return View(model);
     }
 

@@ -85,7 +85,15 @@ public class PosJourneyTests : IClassFixture<AppFactory>
         // After the shift closes, the cashier can no longer reprint its receipts; the back office can.
         var close = await GetAsync(admin, "/Shifts/Close");
         var shiftId = Regex.Match(close.Html, "name=\"ShiftId\" value=\"(\\d+)\"").Groups[1].Value;
-        await PostFormAsync(admin, "/Shifts/Close", close.Html, new() { ["ShiftId"] = shiftId, ["ActualCash"] = "", ["ReturnTo"] = "", ["Notes"] = "" });
+        var handover = Regex.Match(close.Html, "name=\"HandoverTreasuryId\"[^>]*>\\s*<option[^>]*value=\"(\\d+)\"").Groups[1].Value;
+        await PostFormAsync(admin, "/Shifts/Close", close.Html, new()
+        {
+            ["ShiftId"] = shiftId,
+            ["ActualCash"] = "",
+            ["HandoverTreasuryId"] = handover,
+            ["ReturnTo"] = "",
+            ["Notes"] = ""
+        });
         Assert.Contains("/Account/AccessDenied", (await GetAsync(mona, receiptUrl)).Url);
         Assert.Contains("S-000001", (await GetAsync(admin, receiptUrl)).Html);
     }

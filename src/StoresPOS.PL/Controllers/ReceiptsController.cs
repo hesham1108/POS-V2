@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using StoresPOS.BLL.Constants;
+using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Interfaces;
 using StoresPOS.BLL.Models;
 using StoresPOS.PL.Printing;
@@ -20,6 +21,7 @@ public class ReceiptsController : Controller
     private readonly ISalesService _sales;
     private readonly IShiftService _shifts;
     private readonly IReturnService _returns;
+    private readonly IPurchaseService _purchases;
     private readonly StoreSettings _store;
     private readonly TimeProvider _time;
 
@@ -27,12 +29,14 @@ public class ReceiptsController : Controller
         ISalesService sales,
         IShiftService shifts,
         IReturnService returns,
+        IPurchaseService purchases,
         IOptions<StoreSettings> store,
         TimeProvider time)
     {
         _sales = sales;
         _shifts = shifts;
         _returns = returns;
+        _purchases = purchases;
         _store = store.Value;
         _time = time;
     }
@@ -63,7 +67,39 @@ public class ReceiptsController : Controller
             Invoice = invoice,
             Format = new ReceiptFormat(_store),
             BarcodeSvg = Code128.ToSvg(invoice.InvoiceNumber),
-            AutoPrint = autoprint
+            AutoPrint = autoprint,
+            Returns = await _returns.GetListAsync(new SalesReturnFilterDto { InvoiceId = id }, cancellationToken)
+        });
+    }
+
+    /// <summary>A4 landscape sales invoice for a regular printer (Phase 11).</summary>
+    [HttpGet]
+    public async Task<IActionResult> SaleA4(int id, bool autoprint, CancellationToken cancellationToken)
+    {
+        var invoice = await _sales.GetInvoiceAsync(id, cancellationToken);
+        if (invoice is null)
+        {
+            return NotFound();
+        }
+
+        if (!User.HasPermission(AppPermissions.ReportsView))
+        {
+            var activeShift = User.HasPermission(AppPermissions.PosUse)
+                ? await _shifts.GetActiveShiftIdForUserAsync(this.GetRequiredUserId(), cancellationToken)
+                : null;
+            if (activeShift != invoice.ShiftId)
+            {
+                return Forbid();
+            }
+        }
+
+        return View(new SaleReceiptViewModel
+        {
+            Invoice = invoice,
+            Format = new ReceiptFormat(_store),
+            BarcodeSvg = Code128.ToSvg(invoice.InvoiceNumber),
+            AutoPrint = autoprint,
+            Returns = await _returns.GetListAsync(new SalesReturnFilterDto { InvoiceId = id }, cancellationToken)
         });
     }
 
@@ -92,6 +128,53 @@ public class ReceiptsController : Controller
             Return = ret,
             Format = new ReceiptFormat(_store),
             BarcodeSvg = Code128.ToSvg(ret.ReturnNumber),
+            AutoPrint = autoprint
+        });
+    }
+
+    /// <summary>A4 landscape return slip.</summary>
+    [HttpGet]
+    public async Task<IActionResult> ReturnA4(int id, bool autoprint, CancellationToken cancellationToken)
+    {
+        var ret = await _returns.GetAsync(id, cancellationToken);
+        if (ret is null)
+        {
+            return NotFound();
+        }
+
+        if (!User.HasPermission(AppPermissions.ReportsView))
+        {
+            var activeShift = await _shifts.GetActiveShiftIdForUserAsync(this.GetRequiredUserId(), cancellationToken);
+            if (!User.HasPermission(AppPermissions.ReturnsCreate) || activeShift is null || activeShift != ret.ShiftId)
+            {
+                return Forbid();
+            }
+        }
+
+        return View(new ReturnReceiptViewModel
+        {
+            Return = ret,
+            Format = new ReceiptFormat(_store),
+            BarcodeSvg = Code128.ToSvg(ret.ReturnNumber),
+            AutoPrint = autoprint
+        });
+    }
+
+    /// <summary>A4 landscape purchase invoice.</summary>
+    [HttpGet]
+    [Authorize(Policy = AppPermissions.PurchasesManage)]
+    public async Task<IActionResult> PurchaseA4(int id, bool autoprint, CancellationToken cancellationToken)
+    {
+        var purchase = await _purchases.GetByIdAsync(id, cancellationToken);
+        if (purchase is null)
+        {
+            return NotFound();
+        }
+
+        return View(new PurchaseA4ViewModel
+        {
+            Purchase = purchase,
+            Format = new ReceiptFormat(_store),
             AutoPrint = autoprint
         });
     }

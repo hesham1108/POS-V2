@@ -167,6 +167,7 @@ public class SalesInvoiceDetailsDto
     public int? CustomerId { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerPhone { get; set; }
+    public string? CustomerAddress { get; set; }
     public SaleType SaleType { get; set; }
     public decimal Subtotal { get; set; }
     public decimal DiscountAmount { get; set; }

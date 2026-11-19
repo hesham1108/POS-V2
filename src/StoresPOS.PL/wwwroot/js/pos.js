@@ -371,10 +371,12 @@
   const payChange = document.getElementById("pay-change");
   const payError = document.getElementById("pay-error");
 
-  function payMethod() { return payForm.querySelector('input[name="method"]:checked').value; }
+  function payMethodInput() { return payForm.querySelector('input[name="method"]:checked'); }
+  function payMethod() { return payMethodInput().value; }
+  function payIsCash() { return payMethodInput().dataset.cash === "1"; }
 
   function syncPay() {
-    const isCash = payMethod() === "1";
+    const isCash = payIsCash();
     document.getElementById("pay-cash").hidden = !isCash;
     document.getElementById("pay-noncash").hidden = isCash;
     const paid = parseFloat(payAmount.value);
@@ -386,7 +388,8 @@
   function openPay() {
     if (cartEmpty()) return;
     document.getElementById("pay-due").textContent = money.format(cartTotal());
-    payForm.querySelector('input[name="method"][value="1"]').checked = true;
+    const first = payForm.querySelector('input[name="method"]');
+    if (first) first.checked = true;
     payAmount.value = cartTotal().toFixed(2);
     document.getElementById("pay-reference").value = "";
     payError.textContent = "";
@@ -411,7 +414,7 @@
     if (busy) return;
     const method = payMethod();
     const data = { method };
-    if (method === "1") {
+    if (payIsCash()) {
       const raw = payAmount.value.trim();
       if (raw && isNaN(parseFloat(raw))) { payError.textContent = msg.msgNeedAmount; return; }
       data.amountPaid = raw;

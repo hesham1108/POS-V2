@@ -15,8 +15,8 @@ public class ShiftServiceTests
     public async Task Gate_NoShift_IsNoOpenShift()
     {
         await using var db = CreateDb();
-        var (mona, _) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, _, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
 
         var gate = await service.GetGateAsync(mona);
 
@@ -28,8 +28,8 @@ public class ShiftServiceTests
     public async Task Open_BlankAmount_StartsAtZero_AndOpenerIsParticipant()
     {
         await using var db = CreateDb();
-        var (mona, _) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, _, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
 
         var shift = await service.OpenAsync(null, mona);
 
@@ -49,8 +49,8 @@ public class ShiftServiceTests
     public async Task Open_NegativeAmount_Throws()
     {
         await using var db = CreateDb();
-        var (mona, _) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, _, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
 
         var ex = await Assert.ThrowsAsync<BusinessException>(() => service.OpenAsync(-1m, mona));
         Assert.Equal(ShiftService.MsgInvalidOpening, ex.Message);
@@ -60,8 +60,8 @@ public class ShiftServiceTests
     public async Task Open_WhenAlreadyOpen_Throws()
     {
         await using var db = CreateDb();
-        var (mona, ahmed) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, ahmed, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
         await service.OpenAsync(500m, mona);
 
         var ex = await Assert.ThrowsAsync<BusinessException>(() => service.OpenAsync(100m, ahmed));
@@ -72,8 +72,8 @@ public class ShiftServiceTests
     public async Task Resume_SecondCashier_JoinsAsParticipant_Idempotent()
     {
         await using var db = CreateDb();
-        var (mona, ahmed) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, ahmed, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
         var opened = await service.OpenAsync(500m, mona);
 
         var gate = await service.GetGateAsync(ahmed);
@@ -93,8 +93,8 @@ public class ShiftServiceTests
     public async Task Resume_NoOpenShift_Throws()
     {
         await using var db = CreateDb();
-        var (mona, _) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, _, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
 
         var ex = await Assert.ThrowsAsync<BusinessException>(() => service.ResumeAsync(mona));
         Assert.Equal(ShiftService.MsgNoOpenShift, ex.Message);
@@ -104,9 +104,9 @@ public class ShiftServiceTests
     public async Task Gate_ShiftFromYesterday_IsOld_AndNotAutoClosed()
     {
         await using var db = CreateDb();
-        var (mona, ahmed) = await SeedUsersAsync(db);
+        var (mona, ahmed, treasuryId) = await SeedUsersAsync(db);
         var time = new FakeTime(Day1Noon);
-        var service = new ShiftService(db, time);
+        var service = CreateShiftService(db, time);
         await service.OpenAsync(200m, mona);
 
         time.Now = Day1Noon.AddDays(1);
@@ -121,11 +121,11 @@ public class ShiftServiceTests
     public async Task Close_WithoutCount_IsNotReconciled_NotZeroCounted()
     {
         await using var db = CreateDb();
-        var (mona, _) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, _, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
         var opened = await service.OpenAsync(500m, mona);
 
-        var closed = await service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, ActualCash = null }, mona);
+        var closed = await service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, ActualCash = null, HandoverTreasuryId = treasuryId }, mona);
 
         Assert.Equal(ShiftStatus.Closed, closed.Status);
         Assert.Equal(ShiftReconciliation.NotReconciled, closed.Reconciliation);
@@ -141,11 +141,11 @@ public class ShiftServiceTests
     public async Task Close_WithCount_ComputesResult(decimal actual, ShiftReconciliation expected, decimal diff)
     {
         await using var db = CreateDb();
-        var (mona, _) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, _, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
         var opened = await service.OpenAsync(500m, mona);
 
-        var closed = await service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, ActualCash = actual }, mona);
+        var closed = await service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, ActualCash = actual, HandoverTreasuryId = treasuryId }, mona);
 
         Assert.Equal(expected, closed.Reconciliation);
         Assert.Equal(diff, closed.CashDifference);
@@ -156,13 +156,13 @@ public class ShiftServiceTests
     public async Task Close_Twice_Throws_AndNewShiftCanOpen()
     {
         await using var db = CreateDb();
-        var (mona, ahmed) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, ahmed, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
         var opened = await service.OpenAsync(null, mona);
-        await service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id }, mona);
+        await service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, HandoverTreasuryId = treasuryId }, mona);
 
         var ex = await Assert.ThrowsAsync<BusinessException>(
-            () => service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id }, ahmed));
+            () => service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, HandoverTreasuryId = treasuryId }, ahmed));
         Assert.Equal(ShiftService.MsgAlreadyClosed, ex.Message);
 
         Assert.Equal(ShiftGateState.NoOpenShift, (await service.GetGateAsync(ahmed)).State);
@@ -176,12 +176,12 @@ public class ShiftServiceTests
     public async Task Close_NegativeCount_Throws()
     {
         await using var db = CreateDb();
-        var (mona, _) = await SeedUsersAsync(db);
-        var service = new ShiftService(db, new FakeTime(Day1Noon));
+        var (mona, _, treasuryId) = await SeedUsersAsync(db);
+        var service = CreateShiftService(db, new FakeTime(Day1Noon));
         var opened = await service.OpenAsync(null, mona);
 
         var ex = await Assert.ThrowsAsync<BusinessException>(
-            () => service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, ActualCash = -5m }, mona));
+            () => service.CloseAsync(new CloseShiftDto { ShiftId = opened.Id, ActualCash = -5m, HandoverTreasuryId = treasuryId }, mona));
         Assert.Equal(ShiftService.MsgInvalidActual, ex.Message);
     }
 
@@ -192,7 +192,7 @@ public class ShiftServiceTests
         Assert.Equal(4850m, ShiftCalculator.ExpectedCash(500m, 4820m, 120m, 350m));
     }
 
-    private static async Task<(int Mona, int Ahmed)> SeedUsersAsync(ApplicationDbContext db)
+    private static async Task<(int Mona, int Ahmed, int TreasuryId)> SeedUsersAsync(ApplicationDbContext db)
     {
         var role = new Role { Name = "Cashier" };
         db.Roles.Add(role);
@@ -201,9 +201,20 @@ public class ShiftServiceTests
         var mona = new User { Username = "mona", DisplayName = "Mona", PasswordHash = "h", PasswordSalt = "s", RoleId = role.Id };
         var ahmed = new User { Username = "ahmed", DisplayName = "Ahmed", PasswordHash = "h", PasswordSalt = "s", RoleId = role.Id };
         db.Users.AddRange(mona, ahmed);
+        db.Treasuries.Add(new Treasury
+        {
+            NameEn = "Main cash",
+            NameAr = "الخزنة",
+            Type = TreasuryType.Cash,
+            IsActive = true,
+            IsDefault = true
+        });
         await db.SaveChangesAsync();
-        return (mona.Id, ahmed.Id);
+        return (mona.Id, ahmed.Id, db.Treasuries.Single().Id);
     }
+
+    private static ShiftService CreateShiftService(ApplicationDbContext db, TimeProvider time) =>
+        new(db, new TreasuryService(db, time), time);
 
     private static ApplicationDbContext CreateDb()
     {

@@ -36,10 +36,14 @@ public class SalesService : ISalesService
     public const string MsgSaveFailed = "The invoice could not be saved. Try again.";
     public const string MsgCustomerNotFound = "That customer is not available. Pick another one.";
 
+    public const string MsgInvalidPaymentMethod = "That payment method is not available.";
+
     private readonly ApplicationDbContext _db;
     private readonly IShiftService _shifts;
     private readonly IInventoryService _inventory;
     private readonly IPermissionService _permissions;
+    private readonly IPaymentMethodService _paymentMethods;
+    private readonly ITreasuryService _treasuries;
     private readonly TimeProvider _time;
 
     public SalesService(
@@ -47,12 +51,16 @@ public class SalesService : ISalesService
         IShiftService shifts,
         IInventoryService inventory,
         IPermissionService permissions,
+        IPaymentMethodService paymentMethods,
+        ITreasuryService treasuries,
         TimeProvider time)
     {
         _db = db;
         _shifts = shifts;
         _inventory = inventory;
         _permissions = permissions;
+        _paymentMethods = paymentMethods;
+        _treasuries = treasuries;
         _time = time;
     }
 
@@ -477,7 +485,14 @@ public class SalesService : ISalesService
         PaymentDto payment,
         CancellationToken cancellationToken)
     {
-        var method = Enum.IsDefined(payment.Method) ? payment.Method : PaymentMethod.Cash;
+        var methodDef = await _paymentMethods.GetAsync((byte)payment.Method, cancellationToken);
+        if (methodDef is null || !methodDef.IsActive)
+        {
+            throw new BusinessException(MsgInvalidPaymentMethod);
+        }
+
+        var method = (PaymentMethod)methodDef.Id;
+        var isCash = methodDef.IsCash;
 
         await using var tx = await BeginTransactionIfNeededAsync(cancellationToken);
         try
@@ -492,7 +507,7 @@ public class SalesService : ISalesService
 
             decimal paid;
             decimal change;
-            if (method == PaymentMethod.Cash)
+            if (isCash)
             {
                 paid = PricingCalculator.RoundMoney(payment.AmountPaid ?? draft.Total);
                 if (paid < 0 || paid > MaxMoney)
@@ -540,11 +555,25 @@ public class SalesService : ISalesService
             draft.PaymentMethod = method;
             draft.AmountPaid = paid;
             draft.ChangeAmount = change;
-            draft.PaymentReference = method == PaymentMethod.Cash || string.IsNullOrWhiteSpace(payment.Reference)
+            draft.PaymentReference = isCash || string.IsNullOrWhiteSpace(payment.Reference)
                 ? null
                 : payment.Reference.Trim();
             draft.CompletedAtUtc = Now;
             draft.UpdatedAtUtc = Now;
+
+            // Non-cash (except cheque) settles into the method's default treasury when set (Phase 12).
+            if (!isCash
+                && methodDef.Kind != PaymentMethodKind.Cheque
+                && methodDef.DefaultTreasuryId is int settleTreasuryId)
+            {
+                await _treasuries.RecordSaleSettlementAsync(
+                    settleTreasuryId,
+                    draft.Total,
+                    draft.Id,
+                    userId,
+                    note: draft.InvoiceNumber,
+                    cancellationToken);
+            }
 
             await _db.SaveChangesAsync(cancellationToken);
             if (tx is not null)
@@ -675,6 +704,7 @@ public class SalesService : ISalesService
                 CustomerId = x.CustomerId,
                 CustomerName = x.Customer != null ? x.Customer.Name : null,
                 CustomerPhone = x.Customer != null ? x.Customer.Phone : null,
+                CustomerAddress = x.Customer != null ? x.Customer.Address : null,
                 SaleType = x.SaleType,
                 Subtotal = x.Subtotal,
                 DiscountAmount = x.DiscountAmount,

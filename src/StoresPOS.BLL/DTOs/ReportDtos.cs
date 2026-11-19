@@ -34,8 +34,15 @@ public class SalesReportFilterDto : ReportFilterBaseDto
 public class PaymentMethodAmountDto
 {
     public PaymentMethod Method { get; set; }
+    public byte MethodId => (byte)Method;
+    public string NameEn { get; set; } = string.Empty;
+    public string NameAr { get; set; } = string.Empty;
+    public bool IsCash { get; set; }
     public int Count { get; set; }
     public decimal Amount { get; set; }
+
+    public string NameFor(string language) =>
+        language.StartsWith("ar", StringComparison.OrdinalIgnoreCase) ? NameAr : NameEn;
 }
 
 public class DailyAmountDto
@@ -212,4 +219,7 @@ public class DashboardDto
     public IReadOnlyList<SalesInvoiceListItemDto> RecentSales { get; set; } = [];
     public IReadOnlyList<CashOutListItemDto> RecentCashOuts { get; set; } = [];
     public IReadOnlyList<PurchasesReportInvoiceDto> RecentPurchases { get; set; } = [];
+
+    /// <summary>Active treasury balances for the dashboard card (Phase 12).</summary>
+    public IReadOnlyList<TreasuryListItemDto> Treasuries { get; set; } = [];
 }

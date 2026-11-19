@@ -18,13 +18,16 @@ public class ShiftService : IShiftService
     public const string MsgInvalidOpening = "Opening amount must be zero or more.";
     public const string MsgInvalidActual = "Actual cash must be zero or more.";
     public const string MsgSaleInProgress = "{0} has an invoice in progress. Wait until it is paid or held.";
+    public const string MsgHandoverTreasury = "Choose a treasury for the drawer handover.";
 
     private readonly ApplicationDbContext _db;
+    private readonly ITreasuryService _treasuries;
     private readonly TimeProvider _time;
 
-    public ShiftService(ApplicationDbContext db, TimeProvider time)
+    public ShiftService(ApplicationDbContext db, ITreasuryService treasuries, TimeProvider time)
     {
         _db = db;
+        _treasuries = treasuries;
         _time = time;
     }
 
@@ -159,7 +162,11 @@ public class ShiftService : IShiftService
                 x.ActualCash,
                 x.CashDifference,
                 x.Reconciliation,
-                x.CloseNotes
+                x.CloseNotes,
+                x.HandoverTreasuryId,
+                x.HandoverAmount,
+                HandoverNameEn = x.HandoverTreasury != null ? x.HandoverTreasury.NameEn : null,
+                HandoverNameAr = x.HandoverTreasury != null ? x.HandoverTreasury.NameAr : null
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -227,7 +234,11 @@ public class ShiftService : IShiftService
             ActualCash = shift.ActualCash,
             CashDifference = shift.CashDifference,
             Reconciliation = shift.Reconciliation,
-            CloseNotes = shift.CloseNotes
+            CloseNotes = shift.CloseNotes,
+            HandoverTreasuryId = shift.HandoverTreasuryId,
+            HandoverAmount = shift.HandoverAmount,
+            HandoverTreasuryNameEn = shift.HandoverNameEn,
+            HandoverTreasuryNameAr = shift.HandoverNameAr
         };
     }
 
@@ -275,6 +286,13 @@ public class ShiftService : IShiftService
             shift.OpeningAmount, totals.CashSales, totals.CashRefunds, totals.CashOuts);
         var (result, difference) = ShiftCalculator.Reconcile(expected, actual);
 
+        // Counted cash when reconciled; otherwise expected (journey L / Phase 12).
+        var handoverAmount = PricingCalculator.RoundMoney(actual ?? expected);
+        if (dto.HandoverTreasuryId <= 0)
+        {
+            throw new BusinessException(MsgHandoverTreasury);
+        }
+
         shift.Status = ShiftStatus.Closed;
         shift.ClosedAtUtc = _time.GetUtcNow().UtcDateTime;
         shift.ClosedByUserId = userId;
@@ -283,9 +301,13 @@ public class ShiftService : IShiftService
         shift.CashDifference = difference;
         shift.Reconciliation = result;
         shift.CloseNotes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim();
+        shift.HandoverTreasuryId = dto.HandoverTreasuryId;
+        shift.HandoverAmount = handoverAmount;
 
         try
         {
+            await _treasuries.RecordShiftHandoverAsync(
+                dto.HandoverTreasuryId, handoverAmount, shift.Id, userId, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
@@ -440,6 +462,19 @@ public class ShiftService : IShiftService
             .Select(x => new { x.UserId, x.Amount })
             .ToListAsync(cancellationToken);
 
+        // Kind=Cash methods enter the drawer; seed Cash id=1, plus any custom cash methods.
+        var cashIds = await _db.PaymentMethods.AsNoTracking()
+            .Where(x => x.Kind == PaymentMethodKind.Cash)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+        if (cashIds.Count == 0)
+        {
+            cashIds = [(byte)PaymentMethod.Cash];
+        }
+
+        bool IsCashSale(PaymentMethod? m) => m.HasValue && cashIds.Contains((byte)m.Value);
+        bool IsCashRefund(PaymentMethod m) => cashIds.Contains((byte)m);
+
         decimal Sum(PaymentMethod method) => sales.Where(x => x.PaymentMethod == method).Sum(x => x.Total);
 
         var byCashier = sales
@@ -448,13 +483,13 @@ public class ShiftService : IShiftService
                 g => g.Key,
                 g => new CashierTotals(
                     g.Count(),
-                    g.Where(x => x.PaymentMethod == PaymentMethod.Cash).Sum(x => x.Total),
-                    g.Where(x => x.PaymentMethod != PaymentMethod.Cash).Sum(x => x.Total)));
+                    g.Where(x => IsCashSale(x.PaymentMethod)).Sum(x => x.Total),
+                    g.Where(x => !IsCashSale(x.PaymentMethod)).Sum(x => x.Total)));
 
         return new ShiftTotals(
-            CashSales: Sum(PaymentMethod.Cash),
-            CashRefunds: refunds.Where(x => x.RefundMethod == PaymentMethod.Cash).Sum(x => x.TotalAmount),
-            NonCashRefunds: refunds.Where(x => x.RefundMethod != PaymentMethod.Cash).Sum(x => x.TotalAmount),
+            CashSales: sales.Where(x => IsCashSale(x.PaymentMethod)).Sum(x => x.Total),
+            CashRefunds: refunds.Where(x => IsCashRefund(x.RefundMethod)).Sum(x => x.TotalAmount),
+            NonCashRefunds: refunds.Where(x => !IsCashRefund(x.RefundMethod)).Sum(x => x.TotalAmount),
             ReturnsCount: refunds.Count,
             CashOuts: cashOuts.Sum(x => x.Amount),
             CashOutsCount: cashOuts.Count,

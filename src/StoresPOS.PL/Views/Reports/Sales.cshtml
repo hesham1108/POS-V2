@@ -1,17 +1,12 @@
 @model SalesReportViewModel
+@inject IPaymentMethodService PaymentMethods
 @{
     ViewData["Section"] = L["Reports"].Value;
     ViewData["Title"] = L["Sales report"].Value;
     ViewData["Subtitle"] = L["Net of discounts · returns counted on the day they were refunded"].Value;
     var r = Model.Report;
     var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
-    string MethodLabel(PaymentMethod m) => m switch
-    {
-        PaymentMethod.Cash => L["Cash"].Value,
-        PaymentMethod.Card => L["Visa / Card"].Value,
-        PaymentMethod.InstaPay => L["InstaPay"].Value,
-        _ => L["Vodafone Cash"].Value
-    };
+    var methods = await PaymentMethods.ListAsync(includeInactive: true);
     var maxDay = r.ByDay.Count == 0 ? 0 : r.ByDay.Max(x => x.Amount);
 }
 
@@ -40,9 +35,9 @@
             <label class="form-label" for="method">@L["Payment method"]</label>
             <select class="form-select" id="method" name="method">
                 <option value="">@L["All"]</option>
-                @foreach (var m in Enum.GetValues<PaymentMethod>())
+                @foreach (var m in methods)
                 {
-                    <option value="@((int)m)" selected="@(Model.Method == m)">@MethodLabel(m)</option>
+                    <option value="@m.Id" selected="@(Model.Method == (PaymentMethod)m.Id)">@(isAr ? m.NameAr : m.NameEn)</option>
                 }
             </select>
         </div>

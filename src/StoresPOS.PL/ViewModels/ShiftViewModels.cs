@@ -36,6 +36,12 @@ public class ShiftCloseViewModel
     [StringLength(500)]
     public string? Notes { get; set; }
 
+    [Display(Name = "Hand over to treasury")]
+    [Range(1, int.MaxValue, ErrorMessage = "Choose a treasury for the drawer handover.")]
+    public int HandoverTreasuryId { get; set; }
+
+    public IReadOnlyList<TreasuryListItemDto> Treasuries { get; set; } = [];
+
     /// <summary>"gate" when closing an old shift from the gate (journey C) — return there to open a new one.</summary>
     public string? ReturnTo { get; set; }
 }

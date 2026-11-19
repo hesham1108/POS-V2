@@ -14,6 +14,8 @@ public class StoreSettings
     public string? AddressEn { get; set; }
     public string? Phone { get; set; }
     public string? TaxNumber { get; set; }
+    /// <summary>Commercial registration (printed on A4 invoices).</summary>
+    public string? CommercialRegister { get; set; }
     public string? ReceiptFooterAr { get; set; } = "شكرًا لزيارتكم";
     public string? ReceiptFooterEn { get; set; } = "Thank you for your visit";
 

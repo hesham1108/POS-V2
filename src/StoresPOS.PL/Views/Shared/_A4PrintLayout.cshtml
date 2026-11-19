@@ -1,0 +1,27 @@
+@{
+    var fmt = (ReceiptFormat)ViewData["ReceiptFormat"]!;
+    fmt.ApplyCulture();
+    var autoPrint = ViewData["AutoPrint"] is true;
+}
+<!DOCTYPE html>
+<html lang="@fmt.Language" dir="@(fmt.IsRtl ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/a4-invoice.css" asp-append-version="true" />
+    <style>
+        @@page { size: A4 landscape; margin: 10mm; }
+    </style>
+</head>
+<body class="a4-body">
+    @RenderBody()
+    @if (autoPrint)
+    {
+        <script>
+            window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 50); });
+        </script>
+    }
+</body>
+</html>

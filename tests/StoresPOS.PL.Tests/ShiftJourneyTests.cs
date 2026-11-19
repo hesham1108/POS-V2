@@ -75,10 +75,13 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         var close = await GetAsync(admin, "/Shifts/Close");
         Assert.Contains("Confirm and close shift", close.Html);
         var shiftId = Regex.Match(close.Html, "name=\"ShiftId\" value=\"(\\d+)\"").Groups[1].Value;
+        var handover = Regex.Match(close.Html, "name=\"HandoverTreasuryId\"[^>]*>\\s*<option[^>]*value=\"(\\d+)\"").Groups[1].Value;
+        Assert.False(string.IsNullOrEmpty(handover), "handover treasury options missing");
         var closed = await PostFormAsync(admin, "/Shifts/Close", close.Html, new()
         {
             ["ShiftId"] = shiftId,
             ["ActualCash"] = "20.00",
+            ["HandoverTreasuryId"] = handover,
             ["ReturnTo"] = "",
             ["Notes"] = ""
         });

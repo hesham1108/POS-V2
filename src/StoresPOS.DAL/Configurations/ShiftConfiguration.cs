@@ -18,6 +18,7 @@ public class ShiftConfiguration : IEntityTypeConfiguration<Shift>
         builder.Property(x => x.ActualCash).HasPrecision(18, 2);
         builder.Property(x => x.CashDifference).HasPrecision(18, 2);
         builder.Property(x => x.CloseNotes).HasMaxLength(500);
+        builder.Property(x => x.HandoverAmount).HasPrecision(18, 2);
         builder.Property(x => x.RowVersion).IsRowVersion();
 
         // Business rule 1: at most one open shift for the whole store.
@@ -36,6 +37,11 @@ public class ShiftConfiguration : IEntityTypeConfiguration<Shift>
         builder.HasOne(x => x.ClosedByUser)
             .WithMany()
             .HasForeignKey(x => x.ClosedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.HandoverTreasury)
+            .WithMany()
+            .HasForeignKey(x => x.HandoverTreasuryId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

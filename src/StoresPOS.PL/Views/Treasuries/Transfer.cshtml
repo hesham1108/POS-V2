@@ -1,0 +1,52 @@
+@model TreasuryTransferViewModel
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var options = Model.Treasuries.Select(t => new SelectListItem
+    {
+        Value = t.Id.ToString(),
+        Text = $"{(isAr ? t.NameAr : t.NameEn)} ({t.Balance:N2})"
+    }).ToList();
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Cancel"]</a>
+}
+
+<partial name="_PageHeader" />
+
+<div class="sp-card p-4" style="max-width:560px">
+    <form asp-action="Transfer" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="FromTreasuryId" class="form-label"></label>
+            <select asp-for="FromTreasuryId" class="form-select" asp-items="options">
+                <option value="">@L["— select —"]</option>
+            </select>
+            <span asp-validation-for="FromTreasuryId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="ToTreasuryId" class="form-label"></label>
+            <select asp-for="ToTreasuryId" class="form-select" asp-items="options">
+                <option value="">@L["— select —"]</option>
+            </select>
+            <span asp-validation-for="ToTreasuryId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Amount" class="form-label"></label>
+            <input asp-for="Amount" class="form-control form-control-lg num" inputmode="decimal" step="0.01" min="0.01" />
+            <span asp-validation-for="Amount" class="text-danger"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="Note" class="form-label"></label>
+            <input asp-for="Note" class="form-control" />
+        </div>
+        <button type="submit" class="btn sp-btn-primary">@L["Transfer"]</button>
+        <p class="form-text mt-3 mb-0">@L["One transfer writes two ledger rows in a single transaction."]</p>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -14,6 +14,7 @@ public class DashboardService : IDashboardService
     private readonly IShiftService _shifts;
     private readonly ISalesService _sales;
     private readonly ICashOutService _cashOuts;
+    private readonly ITreasuryService _treasuries;
     private readonly TimeProvider _time;
 
     public DashboardService(
@@ -21,12 +22,14 @@ public class DashboardService : IDashboardService
         IShiftService shifts,
         ISalesService sales,
         ICashOutService cashOuts,
+        ITreasuryService treasuries,
         TimeProvider time)
     {
         _db = db;
         _shifts = shifts;
         _sales = sales;
         _cashOuts = cashOuts;
+        _treasuries = treasuries;
         _time = time;
     }
 
@@ -37,6 +40,15 @@ public class DashboardService : IDashboardService
         var todayLocal = TimeZoneInfo.ConvertTime(_time.GetUtcNow(), zone).Date;
         var fromUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(todayLocal, DateTimeKind.Unspecified), zone);
         var toUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(todayLocal.AddDays(1), DateTimeKind.Unspecified), zone);
+
+        var cashIds = await _db.PaymentMethods.AsNoTracking()
+            .Where(x => x.Kind == PaymentMethodKind.Cash)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+        if (cashIds.Count == 0)
+        {
+            cashIds = [(byte)PaymentMethod.Cash];
+        }
 
         var sales = await _db.SalesInvoices.AsNoTracking()
             .Where(x => x.Status == SalesInvoiceStatus.Completed
@@ -59,8 +71,8 @@ public class DashboardService : IDashboardService
         {
             TodayLocal = todayLocal,
             TodaySales = sales.Sum(x => x.Total),
-            TodayCash = sales.Where(x => x.Method == PaymentMethod.Cash).Sum(x => x.Total),
-            TodayNonCash = sales.Where(x => x.Method != PaymentMethod.Cash).Sum(x => x.Total),
+            TodayCash = sales.Where(x => cashIds.Contains((byte)x.Method)).Sum(x => x.Total),
+            TodayNonCash = sales.Where(x => !cashIds.Contains((byte)x.Method)).Sum(x => x.Total),
             TodayInvoiceCount = sales.Count,
             TodayReturnsCount = returns.Count,
             TodayReturnsAmount = returns.Sum(),
@@ -99,7 +111,8 @@ public class DashboardService : IDashboardService
                     LineCount = x.Items.Count,
                     Total = x.SubTotal
                 })
-                .ToListAsync(cancellationToken)
+                .ToListAsync(cancellationToken),
+            Treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken)
         };
     }
 }

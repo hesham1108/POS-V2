@@ -9,13 +9,20 @@ namespace StoresPOS.BLL.Services;
 
 public class PurchaseService : IPurchaseService
 {
+    public const string MsgTreasuryRequired = "Choose a treasury to pay this purchase from.";
+
     private readonly ApplicationDbContext _db;
     private readonly IInventoryService _inventoryService;
+    private readonly ITreasuryService _treasuries;
 
-    public PurchaseService(ApplicationDbContext db, IInventoryService inventoryService)
+    public PurchaseService(
+        ApplicationDbContext db,
+        IInventoryService inventoryService,
+        ITreasuryService treasuries)
     {
         _db = db;
         _inventoryService = inventoryService;
+        _treasuries = treasuries;
     }
 
     public async Task<IReadOnlyList<PurchaseInvoiceListItemDto>> GetListAsync(
@@ -84,6 +91,9 @@ public class PurchaseService : IPurchaseService
                 CreatedAtUtc = x.CreatedAtUtc,
                 ConfirmedByUsername = x.ConfirmedByUser != null ? x.ConfirmedByUser.Username : null,
                 ConfirmedAtUtc = x.ConfirmedAtUtc,
+                PaidFromTreasuryId = x.PaidFromTreasuryId,
+                PaidFromTreasuryNameEn = x.PaidFromTreasury != null ? x.PaidFromTreasury.NameEn : null,
+                PaidFromTreasuryNameAr = x.PaidFromTreasury != null ? x.PaidFromTreasury.NameAr : null,
                 Items = x.Items
                     .OrderBy(i => i.Id)
                     .Select(i => new PurchaseInvoiceItemDto
@@ -154,10 +164,16 @@ public class PurchaseService : IPurchaseService
     public async Task<PurchaseInvoiceDetailDto> ConfirmAsync(
         int id,
         int userId,
+        int paidFromTreasuryId,
         CancellationToken cancellationToken = default)
     {
         return await ExecuteInTransactionAsync(async () =>
         {
+            if (paidFromTreasuryId <= 0)
+            {
+                throw new BusinessException(MsgTreasuryRequired);
+            }
+
             var entity = await _db.PurchaseInvoices
                 .Include(x => x.Items)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
@@ -178,7 +194,10 @@ public class PurchaseService : IPurchaseService
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
             entity.ConfirmedByUserId = userId;
+            entity.PaidFromTreasuryId = paidFromTreasuryId;
 
+            await _treasuries.RecordPurchasePaymentAsync(
+                paidFromTreasuryId, entity.SubTotal, entity.Id, userId, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return (await GetByIdAsync(entity.Id, cancellationToken))!;
         }, cancellationToken);
@@ -187,10 +206,16 @@ public class PurchaseService : IPurchaseService
     public async Task<PurchaseInvoiceDetailDto> CreateAndConfirmAsync(
         PurchaseInvoiceUpsertDto dto,
         int userId,
+        int paidFromTreasuryId,
         CancellationToken cancellationToken = default)
     {
         return await ExecuteInTransactionAsync(async () =>
         {
+            if (paidFromTreasuryId <= 0)
+            {
+                throw new BusinessException(MsgTreasuryRequired);
+            }
+
             var entity = await BuildDraftEntityAsync(dto, userId, cancellationToken);
             _db.PurchaseInvoices.Add(entity);
             await _db.SaveChangesAsync(cancellationToken);
@@ -199,7 +224,10 @@ public class PurchaseService : IPurchaseService
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
             entity.ConfirmedByUserId = userId;
+            entity.PaidFromTreasuryId = paidFromTreasuryId;
 
+            await _treasuries.RecordPurchasePaymentAsync(
+                paidFromTreasuryId, entity.SubTotal, entity.Id, userId, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return (await GetByIdAsync(entity.Id, cancellationToken))!;
         }, cancellationToken);

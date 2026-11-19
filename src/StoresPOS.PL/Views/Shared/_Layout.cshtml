@@ -115,7 +115,23 @@
                     <span class="app-sidebar__link is-disabled" title="@denied">@L["Customers"]</span>
                     <span class="app-sidebar__link is-disabled" title="@denied">@L["Reports"]</span>
                 }
+                @if (Can(AppPermissions.TreasuriesView))
+                {
+                    <a class="@NavClass(IsCtrl("Treasuries"))" asp-controller="Treasuries" asp-action="Index">@L["Treasuries"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Treasuries"]</span>
+                }
                 <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.UsersManage) ? soon : denied)">@L["Users and roles"]</span>
+                @if (Can(AppPermissions.PaymentMethodsManage))
+                {
+                    <a class="@NavClass(IsCtrl("PaymentMethods"))" asp-controller="PaymentMethods" asp-action="Index">@L["Payment methods"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Payment methods"]</span>
+                }
                 <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.SettingsManage) ? soon : denied)">@L["Settings"]</span>
             </nav>
 

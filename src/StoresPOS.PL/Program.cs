@@ -38,6 +38,12 @@ using (var scope = app.Services.CreateScope())
 
     var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
     await authService.EnsureSeedDataAsync();
+
+    var paymentMethods = scope.ServiceProvider.GetRequiredService<IPaymentMethodService>();
+    await paymentMethods.EnsureSeededAsync();
+
+    var treasuries = scope.ServiceProvider.GetRequiredService<ITreasuryService>();
+    await treasuries.EnsureSeededAsync();
 }
 
 if (!app.Environment.IsDevelopment())

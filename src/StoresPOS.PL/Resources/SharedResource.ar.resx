@@ -443,4 +443,89 @@
   <data name="Customer not found." xml:space="preserve"><value>العميل غير موجود.</value></data>
   <data name="Another customer already uses the phone {0}." xml:space="preserve"><value>يوجد عميل آخر يستخدم الرقم {0}.</value></data>
   <data name="That customer is not available. Pick another one." xml:space="preserve"><value>هذا العميل غير متاح. اختر عميلًا آخر.</value></data>
+  <data name="Payment methods" xml:space="preserve"><value>طرق الدفع</value></data>
+  <data name="Add payment method" xml:space="preserve"><value>إضافة طريقة دفع</value></data>
+  <data name="Edit payment method" xml:space="preserve"><value>تعديل طريقة دفع</value></data>
+  <data name="Add, rename, reorder, activate or deactivate. Used methods cannot be deleted." xml:space="preserve"><value>إضافة أو إعادة تسمية أو ترتيب أو تفعيل/تعطيل. الطرق المستخدمة لا تُحذف.</value></data>
+  <data name="Only Cash kind enters the shift drawer." xml:space="preserve"><value>نوع «نقدي» فقط يدخل درج الوردية.</value></data>
+  <data name="Lower numbers appear first in the POS pay list." xml:space="preserve"><value>الأرقام الأصغر تظهر أولاً في قائمة الدفع بنقطة البيع.</value></data>
+  <data name="Deactivate this payment method?" xml:space="preserve"><value>تعطيل طريقة الدفع هذه؟</value></data>
+  <data name="No payment methods" xml:space="preserve"><value>لا توجد طرق دفع</value></data>
+  <data name="Add a method to use at the till." xml:space="preserve"><value>أضف طريقة لاستخدامها في الصندوق.</value></data>
+  <data name="Drawer" xml:space="preserve"><value>الدرج</value></data>
+  <data name="Cheque" xml:space="preserve"><value>شيك</value></data>
+  <data name="Print 80 mm" xml:space="preserve"><value>طباعة 80 مم</value></data>
+  <data name="Print A4" xml:space="preserve"><value>طباعة A4</value></data>
+  <data name="Preview 80 mm" xml:space="preserve"><value>معاينة 80 مم</value></data>
+  <data name="Preview A4" xml:space="preserve"><value>معاينة A4</value></data>
+  <data name="Amount in words" xml:space="preserve"><value>المبلغ كتابةً</value></data>
+  <data name="Commercial register" xml:space="preserve"><value>السجل التجاري</value></data>
+  <data name="Catalog price" xml:space="preserve"><value>سعر الكتالوج</value></data>
+  <data name="Charged price" xml:space="preserve"><value>السعر المحسوب</value></data>
+  <data name="Line discount" xml:space="preserve"><value>خصم السطر</value></data>
+  <data name="Returns against this invoice" xml:space="preserve"><value>مرتجعات على هذه الفاتورة</value></data>
+  <data name="Prepared by" xml:space="preserve"><value>أُعد بواسطة</value></data>
+  <data name="Received by" xml:space="preserve"><value>استُلم بواسطة</value></data>
+  <data name="Stamp" xml:space="preserve"><value>الختم</value></data>
+  <data name="Purchase invoice" xml:space="preserve"><value>فاتورة شراء</value></data>
+  <data name="Return slip" xml:space="preserve"><value>إيصال مرتجع</value></data>
+  <data name="Order saved." xml:space="preserve"><value>تم حفظ الترتيب.</value></data>
+  <data name="Deactivated." xml:space="preserve"><value>تم التعطيل.</value></data>
+  <data name="Activated." xml:space="preserve"><value>تم التفعيل.</value></data>
+  <data name="Saved." xml:space="preserve"><value>تم الحفظ.</value></data>
+  <data name="Treasuries" xml:space="preserve"><value>الخزائن</value></data>
+  <data name="Add treasury" xml:space="preserve"><value>إضافة خزنة</value></data>
+  <data name="Edit treasury" xml:space="preserve"><value>تعديل خزنة</value></data>
+  <data name="Balances and ledger for every cash and bank location." xml:space="preserve"><value>الأرصدة والحركة لكل موقع نقدي أو بنكي.</value></data>
+  <data name="Treasury" xml:space="preserve"><value>الخزنة</value></data>
+  <data name="Bank" xml:space="preserve"><value>بنك</value></data>
+  <data name="Default" xml:space="preserve"><value>افتراضي</value></data>
+  <data name="No treasuries yet" xml:space="preserve"><value>لا توجد خزائن بعد</value></data>
+  <data name="Add a cash or bank treasury to start." xml:space="preserve"><value>أضف خزنة نقدية أو بنكية للبدء.</value></data>
+  <data name="Deposit" xml:space="preserve"><value>إيداع</value></data>
+  <data name="Withdraw" xml:space="preserve"><value>سحب</value></data>
+  <data name="Transfer" xml:space="preserve"><value>تحويل</value></data>
+  <data name="Statement" xml:space="preserve"><value>كشف حساب</value></data>
+  <data name="Treasury statement" xml:space="preserve"><value>كشف حساب الخزنة</value></data>
+  <data name="Deactivate this treasury?" xml:space="preserve"><value>تعطيل هذه الخزنة؟</value></data>
+  <data name="Balance = opening + ledger. Movements are never edited silently." xml:space="preserve"><value>الرصيد = الافتتاحي + الحركة. لا تُعدَّل الحركات بصمت.</value></data>
+  <data name="Transfer saved." xml:space="preserve"><value>تم حفظ التحويل.</value></data>
+  <data name="One transfer writes two ledger rows in a single transaction." xml:space="preserve"><value>التحويل يسجّل سطرين في الحركة في عملية واحدة.</value></data>
+  <data name="— select —" xml:space="preserve"><value>— اختر —</value></data>
+  <data name="— none —" xml:space="preserve"><value>— بلا —</value></data>
+  <data name="Opening" xml:space="preserve"><value>افتتاحي</value></data>
+  <data name="Closing" xml:space="preserve"><value>ختامي</value></data>
+  <data name="In" xml:space="preserve"><value>وارد</value></data>
+  <data name="Out" xml:space="preserve"><value>صادر</value></data>
+  <data name="Direction" xml:space="preserve"><value>الاتجاه</value></data>
+  <data name="Source" xml:space="preserve"><value>المصدر</value></data>
+  <data name="No movements in this range" xml:space="preserve"><value>لا توجد حركات في هذه الفترة</value></data>
+  <data name="Deposit, withdraw, transfer, shift close, sales and purchases appear here." xml:space="preserve"><value>الإيداع والسحب والتحويل وإغلاق الوردية والمبيعات والمشتريات تظهر هنا.</value></data>
+  <data name="Hand over to treasury" xml:space="preserve"><value>توريده إلى الخزنة</value></data>
+  <data name="Counted cash (or expected if not counted) is deposited into this treasury." xml:space="preserve"><value>النقدية المعدودة (أو المتوقعة إن لم تُعدّ) تُورَّد إلى هذه الخزنة.</value></data>
+  <data name="Choose a treasury for the drawer handover." xml:space="preserve"><value>اختر خزنة لتوريد درج الوردية.</value></data>
+  <data name="Handed over to" xml:space="preserve"><value>وُرِّد إلى</value></data>
+  <data name="Handover amount" xml:space="preserve"><value>مبلغ التوريد</value></data>
+  <data name="Non-cash sales settle into this treasury when set. Cheque waits until collected." xml:space="preserve"><value>المبيعات غير النقدية تُسوَّى إلى هذه الخزنة عند التعيين. الشيك ينتظر التحصيل.</value></data>
+  <data name="Open" xml:space="preserve"><value>فتح</value></data>
+  <data name="Include inactive" xml:space="preserve"><value>إظهار غير النشط</value></data>
+  <data name="Filter" xml:space="preserve"><value>تصفية</value></data>
+  <data name="Actions" xml:space="preserve"><value>إجراءات</value></data>
+  <data name="Active" xml:space="preserve"><value>نشط</value></data>
+  <data name="Inactive" xml:space="preserve"><value>غير نشط</value></data>
+  <data name="Edit" xml:space="preserve"><value>تعديل</value></data>
+  <data name="Deactivate" xml:space="preserve"><value>تعطيل</value></data>
+  <data name="Activate" xml:space="preserve"><value>تفعيل</value></data>
+  <data name="Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Back" xml:space="preserve"><value>رجوع</value></data>
+  <data name="Print" xml:space="preserve"><value>طباعة</value></data>
+  <data name="Date" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="Amount" xml:space="preserve"><value>المبلغ</value></data>
+  <data name="Balance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="User" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="Note" xml:space="preserve"><value>ملاحظة</value></data>
+  <data name="Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="Type" xml:space="preserve"><value>النوع</value></data>
+  <data name="Cash" xml:space="preserve"><value>نقدي</value></data>
 </root>

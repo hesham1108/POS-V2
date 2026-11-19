@@ -1,0 +1,114 @@
+@model IReadOnlyList<PaymentMethodDto>
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+
+@section PageActions {
+    <a class="btn sp-btn-primary" asp-action="Create">@L["Add payment method"]</a>
+}
+
+<partial name="_PageHeader" />
+
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<div class="sp-card p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th class="col-num">@L["Sort"]</th>
+                    <th>@L["English"]</th>
+                    <th>@L["Arabic"]</th>
+                    <th>@L["Kind"]</th>
+                    <th>@L["Status"]</th>
+                    <th class="col-num">@L["Actions"]</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="6">
+                        <partial name="_EmptyState" model='(L["No payment methods"].Value, L["Add a method to use at the till."].Value)' />
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var m in Model)
+                {
+                    <tr class="@(!m.IsActive ? "table-secondary" : null)">
+                        <td class="col-num font-monospace">@m.SortOrder</td>
+                        <td>@m.NameEn</td>
+                        <td dir="rtl">@m.NameAr</td>
+                        <td>@m.Kind</td>
+                        <td>
+                            @if (m.IsActive)
+                            {
+                                <span class="sp-status sp-status-ok">@L["Active"]</span>
+                            }
+                            else
+                            {
+                                <span class="sp-status sp-status-neutral">@L["Inactive"]</span>
+                            }
+                            @if (m.IsCash)
+                            {
+                                <span class="sp-status sp-status-warn" style="margin-inline-start:.35rem">@L["Drawer"]</span>
+                            }
+                        </td>
+                        <td class="col-num text-nowrap">
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@m.Id">@L["Edit"]</a>
+                            @if (m.IsActive)
+                            {
+                                <form asp-action="Deactivate" asp-route-id="@m.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('@L["Deactivate this payment method?"]');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@L["Deactivate"]</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="Activate" asp-route-id="@m.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm sp-btn-secondary">@L["Activate"]</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.Count > 0)
+{
+    <div class="sp-card p-4 mt-4">
+        <h2 class="h5 mb-3">@L["Reorder"]</h2>
+        <p class="text-muted small">@L["Lower numbers appear first in the POS pay list."]</p>
+        <form asp-action="Reorder" method="post">
+            @Html.AntiForgeryToken()
+            <div class="row g-2">
+                @for (var i = 0; i < Model.Count; i++)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text text-truncate" style="max-width:60%">@(isAr ? Model[i].NameAr : Model[i].NameEn)</span>
+                            <input type="hidden" name="items[@i].Id" value="@Model[i].Id" />
+                            <input class="form-control" type="number" name="items[@i].SortOrder" value="@Model[i].SortOrder" />
+                        </div>
+                    </div>
+                }
+            </div>
+            <button type="submit" class="btn sp-btn-primary mt-3">@L["Save order"]</button>
+        </form>
+    </div>
+}

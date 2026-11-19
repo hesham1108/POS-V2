@@ -23,11 +23,13 @@ public interface IPurchaseService
     Task<PurchaseInvoiceDetailDto> ConfirmAsync(
         int id,
         int userId,
+        int paidFromTreasuryId,
         CancellationToken cancellationToken = default);
 
     /// <summary>Create draft and confirm in one transaction.</summary>
     Task<PurchaseInvoiceDetailDto> CreateAndConfirmAsync(
         PurchaseInvoiceUpsertDto dto,
         int userId,
+        int paidFromTreasuryId,
         CancellationToken cancellationToken = default);
 }

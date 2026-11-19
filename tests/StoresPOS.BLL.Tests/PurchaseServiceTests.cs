@@ -13,8 +13,8 @@ public class PurchaseServiceTests
     public async Task Confirm_IncreasesStock_AndRecalculatesPricesFromMarkups()
     {
         await using var db = CreateDb();
-        var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db, new InventoryService(db));
+        var (userId, supplierId, productId, treasuryId) = await SeedAsync(db);
+        var purchases = CreatePurchases(db);
 
         var draft = await purchases.CreateDraftAsync(new PurchaseInvoiceUpsertDto
         {
@@ -33,23 +33,29 @@ public class PurchaseServiceTests
 
         Assert.Equal(PurchaseInvoiceStatus.Draft, draft.Status);
 
-        var confirmed = await purchases.ConfirmAsync(draft.Id, userId);
+        var confirmed = await purchases.ConfirmAsync(draft.Id, userId, treasuryId);
         Assert.Equal(PurchaseInvoiceStatus.Confirmed, confirmed.Status);
         Assert.Equal(650m, confirmed.SubTotal);
+        Assert.Equal(treasuryId, confirmed.PaidFromTreasuryId);
 
         var product = await db.Products.SingleAsync();
         Assert.Equal(10m, product.StockQuantity);
         Assert.Equal(65m, product.PurchasePrice);
         Assert.Equal(78m, product.RetailPrice);       // 20% markup
         Assert.Equal(71.50m, product.WholesalePrice); // 10% markup
+
+        var tx = await db.TreasuryTransactions.SingleAsync();
+        Assert.Equal(TreasuryTransactionDirection.Out, tx.Direction);
+        Assert.Equal(650m, tx.Amount);
+        Assert.Equal(TreasuryTransactionSourceType.Purchase, tx.SourceType);
     }
 
     [Fact]
     public async Task CreateAndConfirm_PreservesLineSnapshots()
     {
         await using var db = CreateDb();
-        var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db, new InventoryService(db));
+        var (userId, supplierId, productId, treasuryId) = await SeedAsync(db);
+        var purchases = CreatePurchases(db);
 
         var invoice = await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
         {
@@ -64,7 +70,7 @@ public class PurchaseServiceTests
                     UnitCost = 40m
                 }
             ]
-        }, userId);
+        }, userId, treasuryId);
 
         Assert.Single(invoice.Items);
         Assert.Equal("Oil", invoice.Items[0].ProductNameEn);
@@ -84,8 +90,8 @@ public class PurchaseServiceTests
     public async Task UpdateConfirmed_Throws()
     {
         await using var db = CreateDb();
-        var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db, new InventoryService(db));
+        var (userId, supplierId, productId, treasuryId) = await SeedAsync(db);
+        var purchases = CreatePurchases(db);
 
         var invoice = await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
         {
@@ -95,7 +101,7 @@ public class PurchaseServiceTests
             [
                 new PurchaseInvoiceItemInputDto { ProductId = productId, Quantity = 1, UnitCost = 10m }
             ]
-        }, userId);
+        }, userId, treasuryId);
 
         await Assert.ThrowsAsync<BusinessException>(() => purchases.UpdateDraftAsync(invoice.Id, new PurchaseInvoiceUpsertDto
         {
@@ -112,8 +118,8 @@ public class PurchaseServiceTests
     public async Task Validate_RejectsZeroQuantity()
     {
         await using var db = CreateDb();
-        var (userId, supplierId, productId) = await SeedAsync(db);
-        var purchases = new PurchaseService(db, new InventoryService(db));
+        var (userId, supplierId, productId, _) = await SeedAsync(db);
+        var purchases = CreatePurchases(db);
 
         await Assert.ThrowsAsync<BusinessException>(() => purchases.CreateDraftAsync(new PurchaseInvoiceUpsertDto
         {
@@ -126,7 +132,10 @@ public class PurchaseServiceTests
         }, userId));
     }
 
-    private static async Task<(int UserId, int SupplierId, int ProductId)> SeedAsync(ApplicationDbContext db)
+    private static PurchaseService CreatePurchases(ApplicationDbContext db) =>
+        new(db, new InventoryService(db), new TreasuryService(db, TimeProvider.System));
+
+    private static async Task<(int UserId, int SupplierId, int ProductId, int TreasuryId)> SeedAsync(ApplicationDbContext db)
     {
         db.Roles.Add(new Role { Name = "Admin", Description = "Admin" });
         await db.SaveChangesAsync();
@@ -154,9 +163,18 @@ public class PurchaseServiceTests
             StockQuantity = 0,
             IsActive = true
         });
+        db.Treasuries.Add(new Treasury
+        {
+            NameEn = "Main cash",
+            NameAr = "الخزنة",
+            Type = TreasuryType.Cash,
+            OpeningBalance = 100_000m,
+            IsActive = true,
+            IsDefault = true
+        });
         await db.SaveChangesAsync();
 
-        return (db.Users.Single().Id, db.Suppliers.Single().Id, db.Products.Single().Id);
+        return (db.Users.Single().Id, db.Suppliers.Single().Id, db.Products.Single().Id, db.Treasuries.Single().Id);
     }
 
     private static ApplicationDbContext CreateDb()

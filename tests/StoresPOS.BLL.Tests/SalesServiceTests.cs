@@ -238,7 +238,7 @@ public class SalesServiceTests
         var shiftId = (await c.Shifts.GetOpenShiftAsync())!.Id;
 
         var ex = await Assert.ThrowsAsync<BusinessException>(
-            () => c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = shiftId }, c.Manager));
+            () => c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = shiftId, HandoverTreasuryId = 1 }, c.Manager));
         Assert.Equal(ShiftService.MsgSaleInProgress, ex.MessageKey);
         Assert.Equal("Mona has an invoice in progress. Wait until it is paid or held.", ex.Message);
 
@@ -246,7 +246,7 @@ public class SalesServiceTests
         await c.Sales.HoldForCashierAsync(c.Manager, draftId);
         Assert.Equal(1, (await c.Shifts.GetOpenShiftAsync())!.HeldInvoiceCount);
 
-        var closed = await c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = shiftId }, c.Manager);
+        var closed = await c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = shiftId, HandoverTreasuryId = 1 }, c.Manager);
         Assert.Equal(ShiftStatus.Closed, closed.Status);
         var status = await c.Db.SalesInvoices.AsNoTracking().Where(x => x.Id == draftId).Select(x => x.Status).SingleAsync();
         Assert.Equal(SalesInvoiceStatus.Cancelled, status);
@@ -314,8 +314,12 @@ public class SalesServiceTests
         await db.SaveChangesAsync();
 
         var time = TimeProvider.System;
-        var shifts = new ShiftService(db, time);
-        var sales = new SalesService(db, shifts, new InventoryService(db), new PermissionService(db), time);
+        var paymentMethods = new PaymentMethodService(db);
+        await paymentMethods.EnsureSeededAsync();
+        var treasuries = new TreasuryService(db, time);
+        await treasuries.EnsureSeededAsync();
+        var shifts = new ShiftService(db, treasuries, time);
+        var sales = new SalesService(db, shifts, new InventoryService(db), new PermissionService(db), paymentMethods, treasuries, time);
 
         if (openShift)
         {

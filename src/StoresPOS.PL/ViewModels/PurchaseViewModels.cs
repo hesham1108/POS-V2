@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using StoresPOS.BLL.DTOs;
 using StoresPOS.DAL.Entities;
 
 namespace StoresPOS.PL.ViewModels;
@@ -43,8 +44,12 @@ public class PurchaseFormViewModel
 
     public bool ConfirmOnSave { get; set; }
 
+    [Display(Name = "Pay from treasury")]
+    public int? PaidFromTreasuryId { get; set; }
+
     public IReadOnlyList<SupplierOptionViewModel> SupplierOptions { get; set; } = [];
     public IReadOnlyList<ProductOptionViewModel> ProductOptions { get; set; } = [];
+    public IReadOnlyList<TreasuryListItemDto> TreasuryOptions { get; set; } = [];
 }
 
 public class ProductOptionViewModel
@@ -88,6 +93,9 @@ public class PurchaseDetailsViewModel
     public DateTime CreatedAtUtc { get; set; }
     public string? ConfirmedByUsername { get; set; }
     public DateTime? ConfirmedAtUtc { get; set; }
+    public int? PaidFromTreasuryId { get; set; }
+    public string? PaidFromTreasuryName { get; set; }
+    public IReadOnlyList<TreasuryListItemDto> TreasuryOptions { get; set; } = [];
     public IReadOnlyList<PurchaseLineDetailsViewModel> Items { get; set; } = [];
 }
 

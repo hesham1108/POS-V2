@@ -1,0 +1,113 @@
+@model TreasuryIndexViewModel
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+
+@section PageActions {
+    @if (Model.CanMove)
+    {
+        <a class="btn sp-btn-secondary" asp-action="Transfer">@L["Transfer"]</a>
+    }
+    @if (Model.CanManage)
+    {
+        <a class="btn sp-btn-primary" asp-action="Create">@L["Add treasury"]</a>
+    }
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="sp-card p-3 mb-4">
+    <form method="get" class="sp-filter-row">
+        <label class="sp-filter-row__check form-check" for="includeInactive">
+            <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
+                   @(Model.IncludeInactive ? "checked" : null) />
+            <span class="form-check-label">@L["Include inactive"]</span>
+        </label>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
+        </div>
+    </form>
+</div>
+
+<div class="sp-card p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>@L["Treasury"]</th>
+                    <th>@L["Type"]</th>
+                    <th class="col-num">@L["Balance"]</th>
+                    <th>@L["Status"]</th>
+                    <th class="col-num">@L["Actions"]</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Treasuries.Count == 0)
+            {
+                <tr>
+                    <td colspan="5">
+                        <partial name="_EmptyState" model='(@L["No treasuries yet"].Value, @L["Add a cash or bank treasury to start."].Value)' />
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Treasuries)
+                {
+                    var name = isAr ? item.NameAr : item.NameEn;
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@name</div>
+                            <div class="small text-muted" dir="@(isAr ? "ltr" : "rtl")">@(isAr ? item.NameEn : item.NameAr)</div>
+                            @if (item.IsDefault)
+                            {
+                                <span class="sp-badge mt-1">@L["Default"]</span>
+                            }
+                        </td>
+                        <td>@(item.Type == TreasuryType.Cash ? L["Cash"].Value : L["Bank"].Value)</td>
+                        <td class="col-num font-monospace fw-semibold">@item.Balance.ToString("N2")</td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="sp-status sp-status-ok">@L["Active"]</span>
+                            }
+                            else
+                            {
+                                <span class="sp-status sp-status-neutral">@L["Inactive"]</span>
+                            }
+                        </td>
+                        <td class="col-num text-nowrap">
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Statement" asp-route-id="@item.Id">@L["Statement"]</a>
+                            @if (Model.CanMove && item.IsActive)
+                            {
+                                <a class="btn btn-sm sp-btn-secondary" asp-action="Deposit" asp-route-id="@item.Id">@L["Deposit"]</a>
+                                <a class="btn btn-sm sp-btn-secondary" asp-action="Withdraw" asp-route-id="@item.Id">@L["Withdraw"]</a>
+                            }
+                            @if (Model.CanManage)
+                            {
+                                <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">@L["Edit"]</a>
+                                @if (item.IsActive)
+                                {
+                                    <form asp-action="Deactivate" asp-route-id="@item.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('@L["Deactivate this treasury?"]');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm sp-btn-secondary">@L["Deactivate"]</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Activate" asp-route-id="@item.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm sp-btn-secondary">@L["Activate"]</button>
+                                    </form>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

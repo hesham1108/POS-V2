@@ -27,6 +27,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
     public DbSet<SalesReturnItem> SalesReturnItems => Set<SalesReturnItem>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<PaymentMethodDefinition> PaymentMethods => Set<PaymentMethodDefinition>();
+    public DbSet<Treasury> Treasuries => Set<Treasury>();
+    public DbSet<TreasuryTransaction> TreasuryTransactions => Set<TreasuryTransaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

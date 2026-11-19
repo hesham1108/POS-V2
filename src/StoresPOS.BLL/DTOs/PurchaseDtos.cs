@@ -44,6 +44,9 @@ public class PurchaseInvoiceDetailDto
     public DateTime CreatedAtUtc { get; set; }
     public string? ConfirmedByUsername { get; set; }
     public DateTime? ConfirmedAtUtc { get; set; }
+    public int? PaidFromTreasuryId { get; set; }
+    public string? PaidFromTreasuryNameEn { get; set; }
+    public string? PaidFromTreasuryNameAr { get; set; }
     public IReadOnlyList<PurchaseInvoiceItemDto> Items { get; set; } = [];
 }
 

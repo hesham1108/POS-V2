@@ -1,4 +1,13 @@
 @model PurchaseFormViewModel
+@{
+    var treasuryItems = Model.TreasuryOptions
+        .Select(t => new SelectListItem
+        {
+            Text = t.NameEn + " · " + t.Balance.ToString("N2"),
+            Value = t.Id.ToString()
+        })
+        .ToList();
+}
 
 <div class="sp-card p-4">
     <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post" id="purchase-form">
@@ -99,6 +108,14 @@
                     </tr>
                 </tfoot>
             </table>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="PaidFromTreasuryId" class="form-label"></label>
+            <select asp-for="PaidFromTreasuryId" class="form-select" asp-items="treasuryItems">
+                <option value="">— select treasury —</option>
+            </select>
+            <div class="form-text">Required when confirming — pays the supplier from this treasury.</div>
         </div>
 
         <div class="form-check mb-3">

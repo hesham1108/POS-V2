@@ -15,7 +15,8 @@ public class InventoryServiceTests
         await using var db = CreateDb();
         var (userId, supplierId, productId) = await SeedAsync(db);
         var inventory = new InventoryService(db);
-        var purchases = new PurchaseService(db, inventory);
+        var treasuryId = await SeedTreasuryAsync(db);
+        var purchases = new PurchaseService(db, inventory, new TreasuryService(db, TimeProvider.System));
 
         await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
         {
@@ -25,7 +26,7 @@ public class InventoryServiceTests
             [
                 new PurchaseInvoiceItemInputDto { ProductId = productId, Quantity = 8, UnitCost = 65m }
             ]
-        }, userId);
+        }, userId, treasuryId);
 
         var balances = await inventory.GetBalancesAsync();
         Assert.Equal(8m, balances.Single().StockQuantity);
@@ -140,6 +141,21 @@ public class InventoryServiceTests
         await db.SaveChangesAsync();
 
         return (db.Users.Single().Id, db.Suppliers.Single().Id, db.Products.Single().Id);
+    }
+
+    private static async Task<int> SeedTreasuryAsync(ApplicationDbContext db)
+    {
+        db.Treasuries.Add(new Treasury
+        {
+            NameEn = "Main",
+            NameAr = "رئيسية",
+            Type = TreasuryType.Cash,
+            OpeningBalance = 100_000m,
+            IsActive = true,
+            IsDefault = true
+        });
+        await db.SaveChangesAsync();
+        return db.Treasuries.Single().Id;
     }
 
     private static ApplicationDbContext CreateDb()

@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 10 complete** — next is **Phase 11 (payment methods & A4 invoice)**; client added phases 11–14, settings & delivery is now Phase 15
-- Overall progress: Phases 1–10 verified (unit + HTTP tests; Phase 10 pages checked in a browser on the Mac dev SQL)
+- Current phase: **Phase 12 complete** — next is **Phase 13 (Cheques)**
+- Overall progress: Phases 1–12 verified
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -87,28 +87,57 @@
 - Migration `Customers` (applied to the Mac dev SQL — Azure SQL Edge)
 - Tests: BLL 86/86, PL 12/12
 
+### Phase 11 — Payment methods & A4 invoice
+
+- `PaymentMethods` table (`PaymentMethodDefinition`): NameEn/Ar, Kind (Cash/Card/Wallet/BankTransfer/Cheque), IsActive, SortOrder, optional DefaultTreasuryId (Phase 12)
+- Seed keeps ids 1–4 + Cheque=5 so historical invoice/return bytes stay valid; `PaymentMethod` enum kept as id constants
+- Drawer rule uses Kind=Cash (not hard-coded id); sales/returns/shift/dashboard/reports wired through `IPaymentMethodService`
+- Permission `PaymentMethods.Manage` (Admin on; Manager optional/off); CRUD + reorder screen under Settings in the sidebar
+- POS pay modal, returns refund radios, Sales/Reports filters: active methods from DB (`data-cash` in pos.js)
+- A4 landscape: `Receipts/SaleA4`, `ReturnA4`, `PurchaseA4` + amount-in-words (ar/en); Sales list/details print 80 mm or A4
+- Migration `PaymentMethods` applied
+- Tests: BLL 89/89 (incl. payment-method seed/inactive/create), PL 12/12
+- **Re-login required** after deploy so Admin JWT picks up `PaymentMethods.Manage`
+
+### Phase 12 — Treasuries (الخزائن)
+
+- `Treasury` + `TreasuryTransaction` ledger (In/Out, source type + id, user, note, transfer group); balance = opening + ledger (rule 16)
+- Seed: Main cash (default) + Main bank; deactivate allowed, no silent balance edits
+- `ITreasuryService`: CRUD, deposit/withdraw (reason required), transfer (two ledger rows / one TX), statement with date filters + running balance
+- Shift close: required handover treasury; amount = counted cash or expected; shift report shows handover; `Shift.HandoverTreasuryId` / `HandoverAmount`
+- Non-cash sales (except Cheque) settle into the method's `DefaultTreasuryId` when set; payment-method edit has treasury picker
+- Purchases: `PaidFromTreasuryId` required at confirm → treasury Out
+- PL: `Treasuries/*` (list, edit, deposit, withdraw, transfer, statement + print); dashboard balances card; sidebar link
+- Permissions `Treasuries.View` / `Move` / `Manage` (Admin full; Manager View+Move; Manage optional/off)
+- Migration `Treasuries` applied
+- Tests: BLL 93/93, PL 12/12
+- **Re-login required** after deploy so JWT picks up treasury permissions
+
 ## Pending Tasks
 - Returns: no in-line manager approval for cashiers yet (manager makes the return) — confirm with client
 - Silent printing on the real thermal printer not tested (no printer here) — follow `docs/printing.md` on the store PC
-- Apply migrations up to `Customers` on the store's SQL Server (Windows); full POS click-through on the store PC (en + ar)
+- Apply migrations through `Treasuries` on every store SQL; full POS click-through (en + ar)
 - Profit uses the purchase price saved on each sale line (last purchase price), not weighted average cost — open decision "Profit costing"
 - Customers screens use Reports.View (Admin/Manager); cashiers add customers only from the POS (F4) — confirm with client
 - Minus signs in the existing `_ShiftSummary` render after the number in Arabic (e.g. "0.00-") — cosmetic
 - Client to confirm the POS open decisions applied as defaults (split tender, zero stock, held at close, tax)
 - Error messages that name a product use the English name even in Arabic UI
+- A4 logo upload deferred to Settings (Phase 15); cheque payment details on A4 when Phase 13 lands
+- POS "Reprint last" still defaults to 80 mm (A4 available from Sales)
+- Non-cash settlement into default treasury — confirm with client (applied as default)
 
 ## Tests & Build Results
 
 | Command | Result |
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 86/86 |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 93/93 |
 | `dotnet test tests/StoresPOS.PL.Tests` | Passed 12/12 |
-| `dotnet ef database update` | All migrations through `Customers` applied on the Mac dev SQL (Docker); store SQL Server not yet |
+| `dotnet ef database update` | Applied through `Treasuries` |
 
 ## Next Recommended Task
 
-Phase 11 — payment methods table (+ Cheque) and A4 landscape invoice. Then 12 treasuries, 13 cheques, 14 warehouses, 15 settings & delivery
+Phase 13 — Cheques (الشيكات). Then 14 warehouses, 15 settings & delivery
 
 ## Design System Note (2026-11-19)
 
@@ -137,6 +166,8 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 6 shifts + permissions + ar/en localization groundwork |
 | 2026-11-19 | `page-composition.md` rewritten as per-page build spec; `plan.md` gained rules 11–12, permission/localization/Draft-invoice tasks, new open decisions; sidebar reordered (+Shifts, +Cash-outs, Configuration→Settings) — build verified, BLL tests 29/29 |
 | 2026-11-19 | UI parity pass: tokens, shell, shared components, Inventory→Products→rest; RTL logical props |
+| 2026-11-19 | Phase 11 payment methods table (+ Cheque) + manage screen + A4 landscape invoices |
+| 2026-11-19 | Phase 12 treasuries ledger, shift handover, purchase pay-from, statement + dashboard |
 
 ## Local Dev Login
 

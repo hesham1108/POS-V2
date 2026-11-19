@@ -1,0 +1,52 @@
+@model PaymentMethodEditViewModel
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Cancel"]</a>
+}
+
+<partial name="_PageHeader" />
+
+<div class="sp-card p-4" style="max-width:640px">
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label asp-for="NameEn" class="form-label"></label>
+            <input asp-for="NameEn" class="form-control" />
+            <span asp-validation-for="NameEn" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NameAr" class="form-label"></label>
+            <input asp-for="NameAr" class="form-control" dir="rtl" />
+            <span asp-validation-for="NameAr" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Kind" class="form-label"></label>
+            <select asp-for="Kind" class="form-select" asp-items="Html.GetEnumSelectList<PaymentMethodKind>()"></select>
+            <div class="form-text">@L["Only Cash kind enters the shift drawer."]</div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="SortOrder" class="form-label"></label>
+            <input asp-for="SortOrder" class="form-control" type="number" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="DefaultTreasuryId" class="form-label"></label>
+            <select asp-for="DefaultTreasuryId" class="form-select"
+                    asp-items="Model.TreasuryOptions.Select(t => new SelectListItem(t.NameEn, t.Id.ToString()))">
+                <option value="">@L["— none —"]</option>
+            </select>
+            <div class="form-text">@L["Non-cash sales settle into this treasury when set. Cheque waits until collected."]</div>
+        </div>
+        <div class="form-check mb-4">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+        <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

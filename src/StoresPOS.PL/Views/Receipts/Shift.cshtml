@@ -79,6 +79,11 @@
         {
             <div><span>@L["Actual cash"]</span><span>@(s.ActualCash.HasValue ? f.Money(s.ActualCash.Value) : L["Not counted"].Value)</span></div>
             <div><span>@L["Difference"]</span><span dir="ltr">@(s.CashDifference.HasValue ? f.Money(s.CashDifference.Value) : "—")</span></div>
+            @if (s.HandoverTreasuryId.HasValue)
+            {
+                <div><span>@L["Handed over to"]</span><span>@(s.HandoverTreasuryNameEn ?? "—")</span></div>
+                <div><span>@L["Handover amount"]</span><span>@(s.HandoverAmount.HasValue ? f.Money(s.HandoverAmount.Value) : "—")</span></div>
+            }
         }
         <div class="receipt__strong"><span>@L["Result"]</span><span>@result</span></div>
     </section>

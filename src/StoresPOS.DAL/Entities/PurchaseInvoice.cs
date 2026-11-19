@@ -14,8 +14,12 @@ public class PurchaseInvoice
     public DateTime? ConfirmedAtUtc { get; set; }
     public int? ConfirmedByUserId { get; set; }
 
+    /// <summary>Treasury the purchase was paid from at confirm (Phase 12).</summary>
+    public int? PaidFromTreasuryId { get; set; }
+
     public Supplier Supplier { get; set; } = null!;
     public User CreatedByUser { get; set; } = null!;
     public User? ConfirmedByUser { get; set; }
+    public Treasury? PaidFromTreasury { get; set; }
     public ICollection<PurchaseInvoiceItem> Items { get; set; } = new List<PurchaseInvoiceItem>();
 }

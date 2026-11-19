@@ -28,9 +28,16 @@ public class Shift
     public ShiftReconciliation? Reconciliation { get; set; }
     public string? CloseNotes { get; set; }
 
+    /// <summary>Treasury that received the drawer handover at close (Phase 12).</summary>
+    public int? HandoverTreasuryId { get; set; }
+
+    /// <summary>Amount handed over (counted cash, or expected when not counted).</summary>
+    public decimal? HandoverAmount { get; set; }
+
     public byte[]? RowVersion { get; set; }
 
     public User OpenedByUser { get; set; } = null!;
     public User? ClosedByUser { get; set; }
+    public Treasury? HandoverTreasury { get; set; }
     public ICollection<ShiftParticipant> Participants { get; set; } = new List<ShiftParticipant>();
 }

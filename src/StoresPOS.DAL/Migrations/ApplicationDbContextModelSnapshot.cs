@@ -153,6 +153,91 @@ namespace StoresPOS.DAL.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.PaymentMethodDefinition", b =>
+                {
+                    b.Property<byte>("Id")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int?>("DefaultTreasuryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<byte>("Kind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DefaultTreasuryId");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("PaymentMethods", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = (byte)1,
+                            IsActive = true,
+                            Kind = (byte)1,
+                            NameAr = "نقدي",
+                            NameEn = "Cash",
+                            SortOrder = 10
+                        },
+                        new
+                        {
+                            Id = (byte)2,
+                            IsActive = true,
+                            Kind = (byte)2,
+                            NameAr = "فيزا / بطاقة",
+                            NameEn = "Visa / Card",
+                            SortOrder = 20
+                        },
+                        new
+                        {
+                            Id = (byte)3,
+                            IsActive = true,
+                            Kind = (byte)3,
+                            NameAr = "إنستا باي",
+                            NameEn = "InstaPay",
+                            SortOrder = 30
+                        },
+                        new
+                        {
+                            Id = (byte)4,
+                            IsActive = true,
+                            Kind = (byte)3,
+                            NameAr = "فودافون كاش",
+                            NameEn = "Vodafone Cash",
+                            SortOrder = 40
+                        },
+                        new
+                        {
+                            Id = (byte)5,
+                            IsActive = true,
+                            Kind = (byte)5,
+                            NameAr = "شيك",
+                            NameEn = "Cheque",
+                            SortOrder = 50
+                        });
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -269,6 +354,9 @@ namespace StoresPOS.DAL.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int?>("PaidFromTreasuryId")
+                        .HasColumnType("int");
+
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint");
 
@@ -289,6 +377,8 @@ namespace StoresPOS.DAL.Migrations
 
                     b.HasIndex("InvoiceNumber")
                         .IsUnique();
+
+                    b.HasIndex("PaidFromTreasuryId");
 
                     b.HasIndex("Status");
 
@@ -706,6 +796,13 @@ namespace StoresPOS.DAL.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("HandoverAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("HandoverTreasuryId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("OpenedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -730,6 +827,8 @@ namespace StoresPOS.DAL.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClosedByUserId");
+
+                    b.HasIndex("HandoverTreasuryId");
 
                     b.HasIndex("OpenedAtUtc");
 
@@ -882,6 +981,126 @@ namespace StoresPOS.DAL.Migrations
                     b.ToTable("Suppliers", (string)null);
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Treasury", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<decimal>("OpeningBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.ToTable("Treasuries", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAtUtc = new DateTime(2026, 11, 19, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsDefault = true,
+                            NameAr = "الخزنة النقدية",
+                            NameEn = "Main cash",
+                            OpeningBalance = 0m,
+                            Type = (byte)1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAtUtc = new DateTime(2026, 11, 19, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsDefault = false,
+                            NameAr = "الحساب البنكي",
+                            NameEn = "Main bank",
+                            OpeningBalance = 0m,
+                            Type = (byte)2
+                        });
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.TreasuryTransaction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Direction")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("SourceId")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("SourceType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid?>("TransferGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TreasuryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransferGroupId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SourceType", "SourceId");
+
+                    b.HasIndex("TreasuryId", "CreatedAtUtc");
+
+                    b.ToTable("TreasuryTransactions", (string)null);
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -961,6 +1180,16 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("ParentCategory");
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.PaymentMethodDefinition", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.Treasury", "DefaultTreasury")
+                        .WithMany()
+                        .HasForeignKey("DefaultTreasuryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("DefaultTreasury");
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.Product", b =>
                 {
                     b.HasOne("StoresPOS.DAL.Entities.Category", "Category")
@@ -984,6 +1213,11 @@ namespace StoresPOS.DAL.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("StoresPOS.DAL.Entities.Treasury", "PaidFromTreasury")
+                        .WithMany()
+                        .HasForeignKey("PaidFromTreasuryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StoresPOS.DAL.Entities.Supplier", "Supplier")
                         .WithMany("PurchaseInvoices")
                         .HasForeignKey("SupplierId")
@@ -993,6 +1227,8 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("ConfirmedByUser");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("PaidFromTreasury");
 
                     b.Navigation("Supplier");
                 });
@@ -1146,6 +1382,11 @@ namespace StoresPOS.DAL.Migrations
                         .HasForeignKey("ClosedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("StoresPOS.DAL.Entities.Treasury", "HandoverTreasury")
+                        .WithMany()
+                        .HasForeignKey("HandoverTreasuryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StoresPOS.DAL.Entities.User", "OpenedByUser")
                         .WithMany()
                         .HasForeignKey("OpenedByUserId")
@@ -1153,6 +1394,8 @@ namespace StoresPOS.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("ClosedByUser");
+
+                    b.Navigation("HandoverTreasury");
 
                     b.Navigation("OpenedByUser");
                 });
@@ -1193,6 +1436,25 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.TreasuryTransaction", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.Treasury", "Treasury")
+                        .WithMany("Transactions")
+                        .HasForeignKey("TreasuryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Treasury");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.User", b =>
@@ -1243,6 +1505,11 @@ namespace StoresPOS.DAL.Migrations
             modelBuilder.Entity("StoresPOS.DAL.Entities.Supplier", b =>
                 {
                     b.Navigation("PurchaseInvoices");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Treasury", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

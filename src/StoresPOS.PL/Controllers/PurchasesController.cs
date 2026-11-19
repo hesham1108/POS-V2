@@ -15,15 +15,18 @@ public class PurchasesController : Controller
     private readonly IPurchaseService _purchaseService;
     private readonly ISupplierService _supplierService;
     private readonly IProductService _productService;
+    private readonly ITreasuryService _treasuries;
 
     public PurchasesController(
         IPurchaseService purchaseService,
         ISupplierService supplierService,
-        IProductService productService)
+        IProductService productService,
+        ITreasuryService treasuries)
     {
         _purchaseService = purchaseService;
         _supplierService = supplierService;
         _productService = productService;
+        _treasuries = treasuries;
     }
 
     [HttpGet]
@@ -70,7 +73,7 @@ public class PurchasesController : Controller
             return NotFound();
         }
 
-        return View(MapDetails(invoice));
+        return View(await MapDetailsAsync(invoice, cancellationToken));
     }
 
     [HttpGet]
@@ -95,7 +98,8 @@ public class PurchasesController : Controller
             var userId = this.GetRequiredUserId();
             var dto = ToUpsert(model);
             var result = model.ConfirmOnSave
-                ? await _purchaseService.CreateAndConfirmAsync(dto, userId, cancellationToken)
+                ? await _purchaseService.CreateAndConfirmAsync(
+                    dto, userId, model.PaidFromTreasuryId ?? 0, cancellationToken)
                 : await _purchaseService.CreateDraftAsync(dto, userId, cancellationToken);
 
             TempData["Success"] = model.ConfirmOnSave
@@ -151,7 +155,8 @@ public class PurchasesController : Controller
 
             if (model.ConfirmOnSave)
             {
-                var confirmed = await _purchaseService.ConfirmAsync(id, this.GetRequiredUserId(), cancellationToken);
+                var confirmed = await _purchaseService.ConfirmAsync(
+                    id, this.GetRequiredUserId(), model.PaidFromTreasuryId ?? 0, cancellationToken);
                 TempData["Success"] = "Purchase confirmed. Stock and prices updated.";
                 return RedirectToAction(nameof(Details), new { id = confirmed.Id });
             }
@@ -169,11 +174,12 @@ public class PurchasesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Confirm(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Confirm(int id, int paidFromTreasuryId, CancellationToken cancellationToken)
     {
         try
         {
-            await _purchaseService.ConfirmAsync(id, this.GetRequiredUserId(), cancellationToken);
+            await _purchaseService.ConfirmAsync(
+                id, this.GetRequiredUserId(), paidFromTreasuryId, cancellationToken);
             TempData["Success"] = "Purchase confirmed. Stock and prices updated.";
         }
         catch (BusinessException ex)
@@ -211,6 +217,12 @@ public class PurchasesController : Controller
     {
         model.SupplierOptions = await LoadSupplierOptionsAsync(cancellationToken);
         model.ProductOptions = await LoadProductOptionsAsync(cancellationToken);
+        model.TreasuryOptions = await _treasuries.ListAsync(includeInactive: false, cancellationToken);
+        if (!model.PaidFromTreasuryId.HasValue)
+        {
+            model.PaidFromTreasuryId = model.TreasuryOptions.FirstOrDefault(x => x.IsDefault)?.Id
+                ?? model.TreasuryOptions.FirstOrDefault()?.Id;
+        }
     }
 
     private async Task<IReadOnlyList<SupplierOptionViewModel>> LoadSupplierOptionsAsync(
@@ -276,8 +288,15 @@ public class PurchasesController : Controller
             .ToList()
     };
 
-    private static PurchaseDetailsViewModel MapDetails(PurchaseInvoiceDetailDto invoice) => new()
+    private async Task<PurchaseDetailsViewModel> MapDetailsAsync(
+        PurchaseInvoiceDetailDto invoice,
+        CancellationToken cancellationToken)
     {
+        var treasuries = invoice.Status == PurchaseInvoiceStatus.Draft
+            ? await _treasuries.ListAsync(includeInactive: false, cancellationToken)
+            : Array.Empty<TreasuryListItemDto>();
+        return new PurchaseDetailsViewModel
+        {
         Id = invoice.Id,
         InvoiceNumber = invoice.InvoiceNumber,
         SupplierName = $"{invoice.SupplierNameEn} / {invoice.SupplierNameAr}",
@@ -289,14 +308,20 @@ public class PurchasesController : Controller
         CreatedAtUtc = invoice.CreatedAtUtc,
         ConfirmedByUsername = invoice.ConfirmedByUsername,
         ConfirmedAtUtc = invoice.ConfirmedAtUtc,
-        Items = invoice.Items.Select(x => new PurchaseLineDetailsViewModel
-        {
-            ProductNameEn = x.ProductNameEn,
-            ProductNameAr = x.ProductNameAr,
-            Unit = x.Unit,
-            Quantity = x.Quantity,
-            UnitCost = x.UnitCost,
-            LineTotal = x.LineTotal
-        }).ToList()
-    };
+        PaidFromTreasuryId = invoice.PaidFromTreasuryId
+            ?? treasuries.FirstOrDefault(x => x.IsDefault)?.Id
+            ?? treasuries.FirstOrDefault()?.Id,
+        PaidFromTreasuryName = invoice.PaidFromTreasuryNameEn,
+        TreasuryOptions = treasuries,
+            Items = invoice.Items.Select(x => new PurchaseLineDetailsViewModel
+            {
+                ProductNameEn = x.ProductNameEn,
+                ProductNameAr = x.ProductNameAr,
+                Unit = x.Unit,
+                Quantity = x.Quantity,
+                UnitCost = x.UnitCost,
+                LineTotal = x.LineTotal
+            }).ToList()
+        };
+    }
 }

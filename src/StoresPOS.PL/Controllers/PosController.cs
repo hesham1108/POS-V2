@@ -22,17 +22,20 @@ public class PosController : Controller
     private readonly ISalesService _sales;
     private readonly IShiftService _shifts;
     private readonly ICustomerService _customers;
+    private readonly IPaymentMethodService _paymentMethods;
     private readonly IStringLocalizer<SharedResource> _l;
 
     public PosController(
         ISalesService sales,
         IShiftService shifts,
         ICustomerService customers,
+        IPaymentMethodService paymentMethods,
         IStringLocalizer<SharedResource> localizer)
     {
         _sales = sales;
         _shifts = shifts;
         _customers = customers;
+        _paymentMethods = paymentMethods;
         _l = localizer;
     }
 
@@ -58,7 +61,8 @@ public class PosController : Controller
             CanDiscount = User.HasPermission(AppPermissions.SalesDiscount),
             CanCloseShift = User.HasPermission(AppPermissions.ShiftsClose),
             CanSeeDashboard = User.HasPermission(AppPermissions.DashboardView),
-            LastInvoiceId = await _sales.GetLastInvoiceIdAsync(userId, cancellationToken)
+            LastInvoiceId = await _sales.GetLastInvoiceIdAsync(userId, cancellationToken),
+            PaymentMethods = await _paymentMethods.ListActiveAsync(cancellationToken)
         });
     }
 
@@ -158,7 +162,7 @@ public class PosController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Pay(
-        PaymentMethod method,
+        byte method,
         decimal? amountPaid,
         string? reference,
         CancellationToken cancellationToken) =>
@@ -166,16 +170,25 @@ public class PosController : Controller
         {
             var sale = await _sales.CompleteAsync(
                 userId,
-                new PaymentDto { Method = method, AmountPaid = amountPaid, Reference = reference },
+                new PaymentDto { Method = (PaymentMethod)method, AmountPaid = amountPaid, Reference = reference },
                 cancellationToken);
 
-            var message = sale.PaymentMethod == PaymentMethod.Cash
+            var isCash = await _paymentMethods.IsCashAsync((byte)sale.PaymentMethod, cancellationToken);
+            var message = isCash
                 ? string.Format(_l["Payment received. Invoice {0}. Change: {1} EGP. Receipt sent to printer."].Value, sale.InvoiceNumber, sale.ChangeAmount.ToString("N2"))
                 : string.Format(_l["Payment received. Invoice {0}. Receipt sent to printer."].Value, sale.InvoiceNumber);
 
-            // The page prints this URL in a hidden iframe (80 mm receipt, store language).
             var receiptUrl = Url.Action("Sale", "Receipts", new { id = sale.InvoiceId });
-            return Json(new { ok = true, invoiceId = sale.InvoiceId, invoiceNumber = sale.InvoiceNumber, message, receiptUrl });
+            var receiptA4Url = Url.Action("SaleA4", "Receipts", new { id = sale.InvoiceId });
+            return Json(new
+            {
+                ok = true,
+                invoiceId = sale.InvoiceId,
+                invoiceNumber = sale.InvoiceNumber,
+                message,
+                receiptUrl,
+                receiptA4Url
+            });
         });
 
     private Task<IActionResult> CartAction(Func<int, Task<CartDto>> action) =>

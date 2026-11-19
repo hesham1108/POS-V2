@@ -165,16 +165,11 @@ public class ReportService : IReportService
             ReturnsCount = returnLines.Select(x => x.SalesReturnId).Distinct().Count(),
             ReturnsAmount = returnLines.Sum(x => x.RefundAmount),
             Cost = rows.Sum(x => x.Cost) - PricingCalculator.RoundMoney(returnLines.Sum(x => x.Cost)),
-            ByMethod = rows
-                .GroupBy(x => x.Method)
-                .Select(g => new PaymentMethodAmountDto
-                {
-                    Method = g.Key,
-                    Count = g.Select(x => x.SalesInvoiceId).Distinct().Count(),
-                    Amount = g.Sum(x => x.Net)
-                })
-                .OrderBy(x => x.Method)
-                .ToList(),
+            ByMethod = await BuildByMethodAsync(
+                rows.GroupBy(x => x.Method)
+                    .Select(g => (g.Key, Count: g.Select(x => x.SalesInvoiceId).Distinct().Count(), Amount: g.Sum(x => x.Net)))
+                    .ToList(),
+                cancellationToken),
             ByCashier = rows
                 .GroupBy(x => new { x.CashierId, x.CashierName })
                 .Select(g => new NamedAmountDto
@@ -451,6 +446,31 @@ public class ReportService : IReportService
             .ToListAsync(cancellationToken);
 
     // ------------------------------------------------------------------ helpers
+
+    private async Task<IReadOnlyList<PaymentMethodAmountDto>> BuildByMethodAsync(
+        IReadOnlyList<(PaymentMethod Method, int Count, decimal Amount)> groups,
+        CancellationToken cancellationToken)
+    {
+        var lookup = await _db.PaymentMethods.AsNoTracking()
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        return groups
+            .Select(g =>
+            {
+                lookup.TryGetValue((byte)g.Method, out var def);
+                return new PaymentMethodAmountDto
+                {
+                    Method = g.Method,
+                    Count = g.Count,
+                    Amount = g.Amount,
+                    NameEn = def?.NameEn ?? g.Method.ToString(),
+                    NameAr = def?.NameAr ?? g.Method.ToString(),
+                    IsCash = def?.Kind == PaymentMethodKind.Cash || g.Method == PaymentMethod.Cash
+                };
+            })
+            .OrderBy(x => x.Method)
+            .ToList();
+    }
 
     private async Task<HashSet<int>> GetCategoryWithDescendantsAsync(int categoryId, CancellationToken cancellationToken)
     {

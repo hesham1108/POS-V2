@@ -1,8 +1,11 @@
 @model SalesIndexViewModel
+@inject IPaymentMethodService PaymentMethods
 @{
     ViewData["Section"] = L["Sales invoices"].Value;
     ViewData["Title"] = L["Sales invoices"].Value;
     ViewData["Subtitle"] = L["Completed sales · saved at the prices they were sold at"].Value;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var methods = await PaymentMethods.ListAsync(includeInactive: true);
 }
 
 <partial name="_PageHeader" />
@@ -26,16 +29,9 @@
             <label class="form-label" for="method">@L["Payment method"]</label>
             <select class="form-select" id="method" name="method">
                 <option value="">@L["All"]</option>
-                @foreach (var m in Enum.GetValues<PaymentMethod>())
+                @foreach (var m in methods)
                 {
-                    var label = m switch
-                    {
-                        PaymentMethod.Cash => L["Cash"].Value,
-                        PaymentMethod.Card => L["Visa / Card"].Value,
-                        PaymentMethod.InstaPay => L["InstaPay"].Value,
-                        _ => L["Vodafone Cash"].Value
-                    };
-                    <option value="@((int)m)" selected="@(Model.Method == m)">@label</option>
+                    <option value="@m.Id" selected="@(Model.Method == (PaymentMethod)m.Id)">@(isAr ? m.NameAr : m.NameEn)</option>
                 }
             </select>
         </div>
@@ -98,7 +94,8 @@ else
                                 }
                             </td>
                             <td class="text-end">
-                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Sale", "Receipts", new { id = i.Id })">@L["Print"]</button>
+                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Sale", "Receipts", new { id = i.Id })">80</button>
+                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("SaleA4", "Receipts", new { id = i.Id })">A4</button>
                             </td>
                         </tr>
                     }

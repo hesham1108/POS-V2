@@ -110,7 +110,8 @@ else
                             <td>@r.Reason</td>
                             <td class="text-end num">@r.TotalAmount.ToString("N2")</td>
                             <td class="text-end">
-                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Return", "Receipts", new { id = r.Id })">@L["Print"]</button>
+                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Return", "Receipts", new { id = r.Id })">80</button>
+                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("ReturnA4", "Receipts", new { id = r.Id })">A4</button>
                             </td>
                         </tr>
                     }

@@ -194,7 +194,7 @@ public class CashOutAndReturnTests
         await c.Sales.AddProductAsync(c.Manager, c.Oil, 2m);
         var sale = (await c.Sales.CompleteAsync(c.Manager, new PaymentDto { Method = PaymentMethod.InstaPay })).InvoiceId;
         var shiftId = (await c.Shifts.GetOpenShiftAsync())!.Id;
-        await c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = shiftId }, c.Manager);
+        await c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = shiftId, HandoverTreasuryId = 1 }, c.Manager);
         var line = (await c.Returns.GetReturnableAsync(sale))!.Lines[0];
 
         var ex = await Assert.ThrowsAsync<BusinessException>(() => c.Returns.CreateAsync(new CreateReturnDto
@@ -302,8 +302,12 @@ public class CashOutAndReturnTests
         var clock = new Clock(DateTimeOffset.UtcNow);
         var inventory = new InventoryService(db);
         var permissions = new PermissionService(db);
-        var shifts = new ShiftService(db, clock);
-        var sales = new SalesService(db, shifts, inventory, permissions, clock);
+        var paymentMethods = new PaymentMethodService(db);
+        await paymentMethods.EnsureSeededAsync();
+        var treasuries = new TreasuryService(db, clock);
+        await treasuries.EnsureSeededAsync();
+        var shifts = new ShiftService(db, treasuries, clock);
+        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, clock);
 
         if (openShift)
         {
@@ -317,7 +321,7 @@ public class CashOutAndReturnTests
             Shifts = shifts,
             Sales = sales,
             CashOuts = new CashOutService(db, shifts, clock),
-            Returns = new ReturnService(db, inventory, permissions, Options.Create(new StoreSettings()), clock),
+            Returns = new ReturnService(db, inventory, permissions, paymentMethods, Options.Create(new StoreSettings()), clock),
             Clock = clock,
             Cashier = mona.Id,
             Manager = omar.Id,

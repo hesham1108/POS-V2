@@ -3,6 +3,13 @@
     ViewData["Section"] = L["Shifts"].Value;
     ViewData["Title"] = L["Close shift"].Value;
     ViewData["Subtitle"] = L["Review the summary · counting cash is optional"].Value;
+    var treasuryItems = Model.Treasuries
+        .Select(t => new SelectListItem
+        {
+            Text = t.NameEn + " · " + t.Balance.ToString("N2"),
+            Value = t.Id.ToString()
+        })
+        .ToList();
 }
 
 @section PageActions {
@@ -65,6 +72,13 @@
                 <span class="sp-status sp-status-warn d-none" data-state="surplus">@L["Surplus"] <span class="num" data-diff></span></span>
                 <span class="sp-status sp-status-bad d-none" data-state="shortage">@L["Shortage"] <span class="num" data-diff></span></span>
                 <p class="form-text mb-0" data-state-help="none">@L["Left empty, the shift is recorded as Not reconciled — never as 0 counted."]</p>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="HandoverTreasuryId" class="form-label">@L["Hand over to treasury"]</label>
+                <select asp-for="HandoverTreasuryId" class="form-select" asp-items="treasuryItems"></select>
+                <span asp-validation-for="HandoverTreasuryId" class="text-danger"></span>
+                <p class="form-text mb-0">@L["Counted cash (or expected if not counted) is deposited into this treasury."]</p>
             </div>
 
             <div class="mb-4">

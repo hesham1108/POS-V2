@@ -32,6 +32,7 @@ public class ReturnService : IReturnService
     private readonly ApplicationDbContext _db;
     private readonly IInventoryService _inventory;
     private readonly IPermissionService _permissions;
+    private readonly IPaymentMethodService _paymentMethods;
     private readonly StoreSettings _store;
     private readonly TimeProvider _time;
 
@@ -39,12 +40,14 @@ public class ReturnService : IReturnService
         ApplicationDbContext db,
         IInventoryService inventory,
         IPermissionService permissions,
+        IPaymentMethodService paymentMethods,
         IOptions<StoreSettings> store,
         TimeProvider time)
     {
         _db = db;
         _inventory = inventory;
         _permissions = permissions;
+        _paymentMethods = paymentMethods;
         _store = store.Value;
         _time = time;
     }
@@ -192,7 +195,9 @@ public class ReturnService : IReturnService
             }
 
             var method = dto.RefundMethod;
-            if (!Enum.IsDefined(method) || (method != PaymentMethod.Cash && method != invoice.PaymentMethod))
+            var methodDef = await _paymentMethods.GetAsync((byte)method, cancellationToken);
+            var isCashRefund = methodDef?.IsCash == true;
+            if (methodDef is null || (!isCashRefund && method != invoice.PaymentMethod))
             {
                 throw new BusinessException(MsgInvalidMethod);
             }
@@ -201,7 +206,7 @@ public class ReturnService : IReturnService
                 .Where(x => x.Status == ShiftStatus.Open)
                 .Select(x => (int?)x.Id)
                 .FirstOrDefaultAsync(cancellationToken);
-            if (method == PaymentMethod.Cash && openShiftId is null)
+            if (isCashRefund && openShiftId is null)
             {
                 throw new BusinessException(MsgNoShiftForCash);
             }

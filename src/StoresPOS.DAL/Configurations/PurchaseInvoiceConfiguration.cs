@@ -36,5 +36,10 @@ public class PurchaseInvoiceConfiguration : IEntityTypeConfiguration<PurchaseInv
             .WithMany()
             .HasForeignKey(x => x.ConfirmedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.PaidFromTreasury)
+            .WithMany()
+            .HasForeignKey(x => x.PaidFromTreasuryId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

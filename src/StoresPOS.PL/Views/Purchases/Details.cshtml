@@ -3,16 +3,27 @@
     ViewData["Section"] = "Purchase invoices";
     ViewData["Title"] = Model.InvoiceNumber;
     ViewData["Subtitle"] = $"{Model.SupplierName} · {Model.InvoiceDate:yyyy-MM-dd}";
+    var treasuryItems = Model.TreasuryOptions
+        .Select(t => new SelectListItem
+        {
+            Text = t.NameEn + " · " + t.Balance.ToString("N2"),
+            Value = t.Id.ToString(),
+            Selected = t.Id == Model.PaidFromTreasuryId
+        })
+        .ToList();
 }
 
 @section PageActions {
     <a class="btn sp-btn-secondary" asp-action="Index">Back</a>
+    <button type="button" class="btn sp-btn-secondary" data-print-url="@Url.Action("PurchaseA4", "Receipts", new { id = Model.Id })">Print A4</button>
     @if (Model.Status == PurchaseInvoiceStatus.Draft)
     {
         <a class="btn sp-btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
         <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
-              onsubmit="return confirm('Confirm this purchase? Stock and selling prices will update.');">
+              onsubmit="return confirm('Confirm this purchase? Stock and selling prices will update.');"
+              class="d-inline-flex align-items-center gap-2">
             @Html.AntiForgeryToken()
+            <select name="paidFromTreasuryId" class="form-select form-select-sm" asp-items="treasuryItems" required></select>
             <button type="submit" class="btn sp-btn-primary">Confirm</button>
         </form>
     }
@@ -56,6 +67,13 @@
             <div class="text-muted small">Total</div>
             <div class="fs-4 fw-bold font-monospace" style="color: var(--sp-primary);">@Model.SubTotal.ToString("N2") EGP</div>
         </div>
+        @if (!string.IsNullOrWhiteSpace(Model.PaidFromTreasuryName))
+        {
+            <div class="col-md-3">
+                <div class="text-muted small">Paid from treasury</div>
+                <div>@Model.PaidFromTreasuryName</div>
+            </div>
+        }
         @if (!string.IsNullOrWhiteSpace(Model.Notes))
         {
             <div class="col-12">

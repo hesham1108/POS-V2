@@ -285,7 +285,7 @@ public class CustomersAndReportsTests
         await c.Sales.CompleteAsync(c.Cashier, new PaymentDto { Method = PaymentMethod.Cash, AmountPaid = 62m });
 
         // Expected 100 + 62 = 162; counted 150 → shortage of 12.
-        await c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = first, ActualCash = 150m }, c.Manager);
+        await c.Shifts.CloseAsync(new CloseShiftDto { ShiftId = first, ActualCash = 150m, HandoverTreasuryId = 1 }, c.Manager);
         c.Clock.Now = c.Clock.Now.AddHours(1);
         await c.Shifts.OpenAsync(40m, c.Manager);
 
@@ -435,8 +435,12 @@ public class CustomersAndReportsTests
         var clock = new Clock(new DateTimeOffset(2026, 11, 19, 10, 0, 0, TimeSpan.Zero));
         var inventory = new InventoryService(db);
         var permissions = new PermissionService(db);
-        var shifts = new ShiftService(db, clock);
-        var sales = new SalesService(db, shifts, inventory, permissions, clock);
+        var paymentMethods = new PaymentMethodService(db);
+        await paymentMethods.EnsureSeededAsync();
+        var treasuries = new TreasuryService(db, clock);
+        await treasuries.EnsureSeededAsync();
+        var shifts = new ShiftService(db, treasuries, clock);
+        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, clock);
         var cashOuts = new CashOutService(db, shifts, clock);
 
         await shifts.OpenAsync(100m, mona.Id);
@@ -448,10 +452,10 @@ public class CustomersAndReportsTests
             Shifts = shifts,
             Sales = sales,
             CashOuts = cashOuts,
-            Returns = new ReturnService(db, inventory, permissions, Options.Create(new StoreSettings()), clock),
+            Returns = new ReturnService(db, inventory, permissions, paymentMethods, Options.Create(new StoreSettings()), clock),
             Customers = new CustomerService(db, clock),
             Reports = new ReportService(db, shifts, cashOuts, clock),
-            Dashboard = new DashboardService(db, shifts, sales, cashOuts, clock),
+            Dashboard = new DashboardService(db, shifts, sales, cashOuts, treasuries, clock),
             Clock = clock,
             Cashier = mona.Id,
             Manager = omar.Id,
