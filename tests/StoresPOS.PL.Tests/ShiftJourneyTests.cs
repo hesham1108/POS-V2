@@ -39,6 +39,8 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         var pos = await PostFormAsync(mona, "/Shifts/Open", gate.Html, new() { ["OpeningAmount"] = "" });
         Assert.Contains("/Pos", pos.Url);
         Assert.Contains("Pay and print · F9", pos.Html);
+        AssertAssetUrlsResolved(pos.Html);
+        Assert.Contains("data-flash=\"Shift #", pos.Html); // "opened" message shown on the till, not on a later page
 
         var current = await GetAsync(mona, "/Shifts/Current");
         Assert.Contains("Shift #", current.Html);
@@ -56,6 +58,7 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         var admin = _factory.CreateBrowser();
         var dashboard = await LoginAsync(admin, "admin", "Admin@12345");
         Assert.DoesNotContain("/Shifts/Gate", dashboard.Url);
+        AssertAssetUrlsResolved(dashboard.Html);
         var adminGate = await GetAsync(admin, "/Shifts/Gate");
         Assert.Contains("A shift is already open", adminGate.Html);
         var joined = await PostFormAsync(admin, "/Shifts/Resume", adminGate.Html, new());
@@ -126,12 +129,20 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         var gate = await LoginAsync(mona, "mona", CashierPassword);
 
         Assert.Contains("dir=\"rtl\"", gate.Html);
-        Assert.Contains("bootstrap.rtl.min.css", gate.Html);
+        Assert.Contains("href=\"/lib/bootstrap/dist/css/bootstrap.rtl.min.css\"", gate.Html);
         Assert.Contains("افتح وردية لبدء البيع", gate.Html);
         Assert.Contains("الورديات", gate.Html); // sidebar
     }
 
     internal sealed record Page(string Url, string Html);
+
+    /// <summary>App-relative "~/" URLs must be resolved; a literal "~/" in href/src means a 404 asset.</summary>
+    internal static void AssertAssetUrlsResolved(string html)
+    {
+        Assert.DoesNotContain("href=\"~/", html);
+        Assert.DoesNotContain("src=\"~/", html);
+        Assert.Contains("href=\"/lib/bootstrap/dist/css/bootstrap", html);
+    }
 
     internal static async Task<Page> GetAsync(HttpClient client, string url)
     {
