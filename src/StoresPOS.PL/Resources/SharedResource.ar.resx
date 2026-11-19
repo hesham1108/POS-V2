@@ -87,4 +87,107 @@
   <data name="Users and roles" xml:space="preserve"><value>المستخدمون والصلاحيات</value></data>
   <data name="Visa / Card" xml:space="preserve"><value>فيزا / كارت</value></data>
   <data name="Vodafone Cash" xml:space="preserve"><value>فودافون كاش</value></data>
+  <data name="&quot;{0}&quot; is no longer for sale." xml:space="preserve"><value>«{0}» لم يعد متاحًا للبيع.</value></data>
+  <data name="&quot;{0}&quot; is out of stock." xml:space="preserve"><value>«{0}» نفد من المخزون.</value></data>
+  <data name="All" xml:space="preserve"><value>الكل</value></data>
+  <data name="Amount" xml:space="preserve"><value>مبلغ</value></data>
+  <data name="Amount paid" xml:space="preserve"><value>المبلغ المدفوع</value></data>
+  <data name="Apply" xml:space="preserve"><value>تطبيق</value></data>
+  <data name="Back to list" xml:space="preserve"><value>العودة للقائمة</value></data>
+  <data name="Back to selling" xml:space="preserve"><value>العودة للبيع</value></data>
+  <data name="Barcode, name or code" xml:space="preserve"><value>باركود، اسم أو كود</value></data>
+  <data name="Cash" xml:space="preserve"><value>نقدي</value></data>
+  <data name="Cash-out" xml:space="preserve"><value>مصروف</value></data>
+  <data name="Cashier" xml:space="preserve"><value>الكاشير</value></data>
+  <data name="Catalog {0} · by {1}" xml:space="preserve"><value>سعر الكتالوج {0} · بواسطة {1}</value></data>
+  <data name="Change" xml:space="preserve"><value>الباقي</value></data>
+  <data name="Change price for this invoice only" xml:space="preserve"><value>تغيير السعر لهذه الفاتورة فقط</value></data>
+  <data name="Check the spelling or scan the barcode instead." xml:space="preserve"><value>تأكد من الكتابة أو امسح الباركود بدلًا من ذلك.</value></data>
+  <data name="Clear" xml:space="preserve"><value>مسح</value></data>
+  <data name="Clear all items from this invoice?" xml:space="preserve"><value>مسح كل الأصناف من هذه الفاتورة؟</value></data>
+  <data name="Completed sales from the POS appear here." xml:space="preserve"><value>تظهر هنا المبيعات المكتملة من نقطة البيع.</value></data>
+  <data name="Completed sales · saved at the prices they were sold at" xml:space="preserve"><value>المبيعات المكتملة · محفوظة بالأسعار وقت البيع</value></data>
+  <data name="Confirm payment" xml:space="preserve"><value>تأكيد الدفع</value></data>
+  <data name="Customer" xml:space="preserve"><value>العميل</value></data>
+  <data name="Customer records arrive in Phase 10. Sales use the walk-in customer for now." xml:space="preserve"><value>بيانات العملاء تُضاف في المرحلة 10. المبيعات حاليًا باسم العميل النقدي.</value></data>
+  <data name="Date" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="Decrease quantity" xml:space="preserve"><value>تقليل الكمية</value></data>
+  <data name="Discount" xml:space="preserve"><value>خصم</value></data>
+  <data name="Discount must be between 0 and the invoice subtotal." xml:space="preserve"><value>يجب أن يكون الخصم بين 0 وإجمالي الفاتورة.</value></data>
+  <data name="Enter 0 to remove the discount." xml:space="preserve"><value>أدخل 0 لإلغاء الخصم.</value></data>
+  <data name="Enter a valid amount paid." xml:space="preserve"><value>أدخل مبلغًا مدفوعًا صحيحًا.</value></data>
+  <data name="Exact" xml:space="preserve"><value>المبلغ بالضبط</value></data>
+  <data name="Filter" xml:space="preserve"><value>تصفية</value></data>
+  <data name="From" xml:space="preserve"><value>من</value></data>
+  <data name="Held" xml:space="preserve"><value>المعلّقة</value></data>
+  <data name="Held invoices" xml:space="preserve"><value>الفواتير المعلّقة</value></data>
+  <data name="Hold" xml:space="preserve"><value>تعليق</value></data>
+  <data name="Hold it" xml:space="preserve"><value>تعليقها</value></data>
+  <data name="Hold or finish the current invoice first." xml:space="preserve"><value>علّق الفاتورة الحالية أو أنهها أولًا.</value></data>
+  <data name="Increase quantity" xml:space="preserve"><value>زيادة الكمية</value></data>
+  <data name="Invoice" xml:space="preserve"><value>الفاتورة</value></data>
+  <data name="Invoice held. It will be cancelled when the shift closes." xml:space="preserve"><value>تم تعليق الفاتورة. ستُلغى عند إغلاق الوردية.</value></data>
+  <data name="Invoice number" xml:space="preserve"><value>رقم الفاتورة</value></data>
+  <data name="Invoice {0}" xml:space="preserve"><value>الفاتورة {0}</value></data>
+  <data name="Invoices" xml:space="preserve"><value>الفواتير</value></data>
+  <data name="Item" xml:space="preserve"><value>الصنف</value></data>
+  <data name="Items" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="Low stock" xml:space="preserve"><value>مخزون منخفض</value></data>
+  <data name="New invoice" xml:space="preserve"><value>فاتورة جديدة</value></data>
+  <data name="No held invoices." xml:space="preserve"><value>لا توجد فواتير معلّقة.</value></data>
+  <data name="No invoices found" xml:space="preserve"><value>لا توجد فواتير</value></data>
+  <data name="No product with barcode &quot;{0}&quot;." xml:space="preserve"><value>لا يوجد منتج بالباركود «{0}».</value></data>
+  <data name="No products match" xml:space="preserve"><value>لا توجد منتجات مطابقة</value></data>
+  <data name="Non-cash" xml:space="preserve"><value>غير نقدي</value></data>
+  <data name="Only {0} left of &quot;{1}&quot;. Lower the quantity to {0} or less." xml:space="preserve"><value>متبقٍ {0} فقط من «{1}». قلّل الكمية إلى {0} أو أقل.</value></data>
+  <data name="Open or join the shift before selling." xml:space="preserve"><value>افتح الوردية أو انضم إليها قبل البيع.</value></data>
+  <data name="Out of stock" xml:space="preserve"><value>نفد</value></data>
+  <data name="Paid" xml:space="preserve"><value>المدفوع</value></data>
+  <data name="Paid {0} is less than the total {1}." xml:space="preserve"><value>المدفوع {0} أقل من الإجمالي {1}.</value></data>
+  <data name="Pay · F9" xml:space="preserve"><value>دفع · F9</value></data>
+  <data name="Payment" xml:space="preserve"><value>الدفع</value></data>
+  <data name="Payment method" xml:space="preserve"><value>طريقة الدفع</value></data>
+  <data name="Payment received. Invoice {0}." xml:space="preserve"><value>تم استلام الدفع. الفاتورة {0}.</value></data>
+  <data name="Payment received. Invoice {0}. Change: {1} EGP." xml:space="preserve"><value>تم استلام الدفع. الفاتورة {0}. الباقي: {1} ج.م.</value></data>
+  <data name="Price" xml:space="preserve"><value>السعر</value></data>
+  <data name="Price edited" xml:space="preserve"><value>سعر معدّل</value></data>
+  <data name="Price must be greater than zero." xml:space="preserve"><value>يجب أن يكون السعر أكبر من صفر.</value></data>
+  <data name="Product not found." xml:space="preserve"><value>المنتج غير موجود.</value></data>
+  <data name="Products" xml:space="preserve"><value>المنتجات</value></data>
+  <data name="Qty" xml:space="preserve"><value>الكمية</value></data>
+  <data name="Quantity must be greater than zero." xml:space="preserve"><value>يجب أن تكون الكمية أكبر من صفر.</value></data>
+  <data name="Reference" xml:space="preserve"><value>المرجع</value></data>
+  <data name="Remove line" xml:space="preserve"><value>حذف السطر</value></data>
+  <data name="Reprint receipt" xml:space="preserve"><value>إعادة طباعة الإيصال</value></data>
+  <data name="Reset" xml:space="preserve"><value>إعادة ضبط</value></data>
+  <data name="Resume" xml:space="preserve"><value>استئناف</value></data>
+  <data name="Retail" xml:space="preserve"><value>قطاعي</value></data>
+  <data name="Return" xml:space="preserve"><value>مرتجع</value></data>
+  <data name="Sale type" xml:space="preserve"><value>نوع البيع</value></data>
+  <data name="Sales by cashier" xml:space="preserve"><value>المبيعات حسب الكاشير</value></data>
+  <data name="Save price" xml:space="preserve"><value>حفظ السعر</value></data>
+  <data name="Scan a barcode or pick a product to start." xml:space="preserve"><value>امسح باركود أو اختر منتجًا للبدء.</value></data>
+  <data name="Search completed sales" xml:space="preserve"><value>البحث في المبيعات المكتملة</value></data>
+  <data name="Sell through the open shift" xml:space="preserve"><value>البيع من خلال الوردية المفتوحة</value></data>
+  <data name="Something went wrong. Try again." xml:space="preserve"><value>حدث خطأ. حاول مرة أخرى.</value></data>
+  <data name="Start return" xml:space="preserve"><value>بدء مرتجع</value></data>
+  <data name="Subtotal" xml:space="preserve"><value>الإجمالي الفرعي</value></data>
+  <data name="That held invoice is no longer available." xml:space="preserve"><value>هذه الفاتورة المعلّقة لم تعد متاحة.</value></data>
+  <data name="That line is no longer on the invoice." xml:space="preserve"><value>هذا السطر لم يعد في الفاتورة.</value></data>
+  <data name="The catalog price stays the same." xml:space="preserve"><value>سعر الكتالوج لا يتغير.</value></data>
+  <data name="The invoice could not be saved. Try again." xml:space="preserve"><value>تعذّر حفظ الفاتورة. حاول مرة أخرى.</value></data>
+  <data name="The invoice is empty. Add at least one item." xml:space="preserve"><value>الفاتورة فارغة. أضف صنفًا واحدًا على الأقل.</value></data>
+  <data name="To" xml:space="preserve"><value>إلى</value></data>
+  <data name="Total" xml:space="preserve"><value>الإجمالي</value></data>
+  <data name="Transaction reference (optional)" xml:space="preserve"><value>مرجع العملية (اختياري)</value></data>
+  <data name="Waiting for sales in progress" xml:space="preserve"><value>في انتظار مبيعات جارية</value></data>
+  <data name="Walk-in customer" xml:space="preserve"><value>عميل نقدي</value></data>
+  <data name="Wholesale" xml:space="preserve"><value>جملة</value></data>
+  <data name="You do not have permission to change prices." xml:space="preserve"><value>ليس لديك صلاحية تغيير الأسعار.</value></data>
+  <data name="You do not have permission to close the shift." xml:space="preserve"><value>ليس لديك صلاحية إغلاق الوردية.</value></data>
+  <data name="You do not have permission to give discounts." xml:space="preserve"><value>ليس لديك صلاحية منح الخصومات.</value></data>
+  <data name="{0} has an invoice in progress. Wait until it is paid or held." xml:space="preserve"><value>{0} لديه فاتورة جارية. انتظر حتى تُدفع أو تُعلَّق.</value></data>
+  <data name="{0} held invoice(s) will be cancelled when this shift closes." xml:space="preserve"><value>سيتم إلغاء {0} فاتورة معلّقة عند إغلاق هذه الوردية.</value></data>
+  <data name="{0} invoices" xml:space="preserve"><value>{0} فاتورة</value></data>
+  <data name="{0} items" xml:space="preserve"><value>{0} أصناف</value></data>
 </root>

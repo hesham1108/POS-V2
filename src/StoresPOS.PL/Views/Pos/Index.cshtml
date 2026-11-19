@@ -1,0 +1,146 @@
+@model PosPageViewModel
+@{
+    Layout = "_PosLayout";
+    ViewData["Title"] = L["POS"].Value;
+    ViewData["ShiftId"] = Model.ShiftId;
+    ViewData["CashierName"] = Model.CashierName;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+
+<div id="pos-root" class="pos-layout"
+     data-msg-confirm-clear="@L["Clear all items from this invoice?"]"
+     data-msg-customer="@L["Customer records arrive in Phase 10. Sales use the walk-in customer for now."]"
+     data-msg-need-amount="@L["Enter a valid amount paid."]"
+     data-msg-error="@L["Something went wrong. Try again."]">
+    @Html.AntiForgeryToken()
+
+    <section class="pos-catalog" aria-label="@L["Products"]">
+        <div class="pos-search">
+            <input id="pos-search" class="form-control form-control-lg" type="search" autocomplete="off" autofocus
+                   placeholder="@L["Barcode, name or code"]" aria-label="@L["Barcode, name or code"]" />
+            <kbd>F2</kbd>
+        </div>
+        <div class="pos-pills" role="tablist">
+            <button type="button" class="sp-pill is-active" data-category="">@L["All"]</button>
+            @foreach (var cat in Model.Categories)
+            {
+                <button type="button" class="sp-pill" data-category="@cat.Id">@(isAr ? cat.NameAr : cat.NameEn)</button>
+            }
+        </div>
+        <div id="pos-products" class="pos-products">
+            <partial name="_PosProducts" model="Model.Products" />
+        </div>
+    </section>
+
+    <aside id="pos-cart" class="pos-cart-panel" aria-label="@L["Invoice"]">
+        <partial name="_PosCart" model="new PosCartViewModel { Cart = Model.Cart, CanOverridePrice = Model.CanOverridePrice, CanDiscount = Model.CanDiscount }" />
+    </aside>
+</div>
+
+<div id="pos-toast" class="pos-toast" role="status" aria-live="polite" hidden></div>
+
+@* ---- Pay (F9) ---- *@
+<div class="modal fade" id="pay-modal" tabindex="-1" aria-labelledby="pay-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" id="pay-form" novalidate>
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="pay-title">@L["Payment"]</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
+            </div>
+            <div class="modal-body">
+                <div class="pos-pay__due">
+                    <span>@L["Total"]</span>
+                    <strong class="num-total" id="pay-due">0.00</strong>
+                </div>
+                <div class="pos-methods" role="radiogroup" aria-label="@L["Payment method"]">
+                    <label><input type="radio" name="method" value="1" checked /> <span>@L["Cash"]</span></label>
+                    <label><input type="radio" name="method" value="2" /> <span>@L["Visa / Card"]</span></label>
+                    <label><input type="radio" name="method" value="3" /> <span>@L["InstaPay"]</span></label>
+                    <label><input type="radio" name="method" value="4" /> <span>@L["Vodafone Cash"]</span></label>
+                </div>
+                <div id="pay-cash">
+                    <label class="form-label" for="pay-amount">@L["Amount paid"]</label>
+                    <input id="pay-amount" name="amountPaid" class="form-control form-control-lg num" inputmode="decimal" autocomplete="off" />
+                    <div class="pos-quick" id="pay-quick">
+                        <button type="button" data-quick="exact">@L["Exact"]</button>
+                        <button type="button" data-quick="50">50</button>
+                        <button type="button" data-quick="100">100</button>
+                        <button type="button" data-quick="200">200</button>
+                        <button type="button" data-quick="500">500</button>
+                    </div>
+                    <div class="pos-pay__change">
+                        <span>@L["Change"]</span>
+                        <strong class="num" id="pay-change">0.00</strong>
+                    </div>
+                </div>
+                <div id="pay-noncash" hidden>
+                    <label class="form-label" for="pay-reference">@L["Transaction reference (optional)"]</label>
+                    <input id="pay-reference" name="reference" class="form-control" autocomplete="off" maxlength="100" />
+                </div>
+                <div class="text-danger mt-2" id="pay-error" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn sp-btn-primary pos-pay">@L["Confirm payment"]</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* ---- Price override ---- *@
+<div class="modal fade" id="price-modal" tabindex="-1" aria-labelledby="price-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content" id="price-form" novalidate>
+            <div class="modal-header">
+                <h2 class="modal-title h6" id="price-title">@L["Change price for this invoice only"]</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
+            </div>
+            <div class="modal-body">
+                <input id="price-value" class="form-control form-control-lg num" inputmode="decimal" autocomplete="off" />
+                <p class="form-text mb-0">@L["The catalog price stays the same."]</p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn sp-btn-primary">@L["Save price"]</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* ---- Discount (F6) ---- *@
+<div class="modal fade" id="discount-modal" tabindex="-1" aria-labelledby="discount-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content" id="discount-form" novalidate>
+            <div class="modal-header">
+                <h2 class="modal-title h6" id="discount-title">@L["Discount"]</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
+            </div>
+            <div class="modal-body">
+                <div class="pos-segmented mb-3" role="group">
+                    <button type="button" class="is-active" data-discount-mode="amount">@L["Amount"]</button>
+                    <button type="button" data-discount-mode="percent">%</button>
+                </div>
+                <input id="discount-value" class="form-control form-control-lg num" inputmode="decimal" autocomplete="off" />
+                <p class="form-text mb-0">@L["Enter 0 to remove the discount."]</p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn sp-btn-primary">@L["Apply"]</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* ---- Held invoices (F7) ---- *@
+<div class="modal fade" id="held-modal" tabindex="-1" aria-labelledby="held-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="held-title">@L["Held invoices"]</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
+            </div>
+            <div class="modal-body" id="held-list"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pos.js" asp-append-version="true"></script>
+}

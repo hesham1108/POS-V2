@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 6 complete** (2 items depend on Phase 7) — next is **Phase 7 (POS & Sales)**
-- Overall progress: Phases 1–6 verified
+- Current phase: **Phase 7 complete** — next is **Phase 8 (receipts & printing)**
+- Overall progress: Phases 1–7 verified (unit + HTTP tests; not yet on SQL Server / browser)
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -37,24 +37,36 @@
 - Migration `ShiftsAndPermissions`; local tool manifest `dotnet-tools.json` (`dotnet tool restore` → `dotnet ef`)
 - Tests: BLL 44/44, new `StoresPOS.PL.Tests` HTTP journeys 3/3
 
+### Phase 7 — POS & Sales
+
+- `SalesInvoice` (Draft → Held → Completed / Cancelled) + `SalesInvoiceItem` snapshots (names, catalog price, charged price, override user, cost)
+- One Draft per cashier (`UX_SalesInvoices_OneDraftPerCashier`); sequential numbers `S-000001` at payment (unique, retried on collision)
+- `ISalesService`: search/scan, add, qty, remove, retail↔wholesale reprice (overrides kept), price override + discount checked against DB permissions, hold/resume, pay (cash + change, card, InstaPay, Vodafone Cash — one method per invoice), stock deduction via inventory ledger (`Sale` movements), invoice list/details
+- Shift totals now real: cash vs non-cash, per cashier; close blocked while a Draft has items (closer can hold it); held + empty drafts cancelled at close
+- PL: full-screen `Pos/Index` (`_PosLayout`, `pos.js`, `pos.css`) with F2/F4/F6/F7/F8/F9, +/−/Del/arrows; AJAX partials; `Sales/Index` + `Sales/Details`; gate now hands off to POS
+- Arabic strings for all Phase 7 screens and messages
+- Migration `SalesInvoices`
+- Tests: BLL 61/61, PL HTTP 5/5
+
 ## Pending Tasks
 
-- Phase 6 carry-overs (need Phase 7): attribute sales to the shift; block close while another cashier has a Draft sale
-- Phase 7 onward in `plan.md`
-- Not yet checked on SQL Server / in a browser (dev Mac has no SQL Server): apply migration, eyeball gate/close screens in en + ar
+- Phase 8: 80 mm receipt + reprint, shift report printout
+- Apply migrations `ShiftsAndPermissions` + `SalesInvoices` on SQL Server; click through POS in a browser (en + ar) — not possible on the dev Mac (no SQL Server)
+- Client to confirm the POS open decisions applied as defaults (split tender, zero stock, held at close, tax)
+- Error messages that name a product use the English name even in Arabic UI
 
 ## Tests & Build Results
 
 | Command | Result |
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 44/44 |
-| `dotnet test tests/StoresPOS.PL.Tests` | Passed 3/3 |
-| `dotnet ef database update` | `ShiftsAndPermissions` not yet applied to SQL Server |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 61/61 |
+| `dotnet test tests/StoresPOS.PL.Tests` | Passed 5/5 |
+| `dotnet ef database update` | `ShiftsAndPermissions`, `SalesInvoices` not yet applied to SQL Server |
 
 ## Next Recommended Task
 
-Phase 7 — POS & Sales (start with the server-side `Draft` sales invoice)
+Phase 8 — 80 mm receipt (`Receipts/Sale/{id}`), reprint from `Sales/Details`, shift report print
 
 ## Design System Note (2026-11-19)
 
@@ -75,6 +87,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 4 suppliers & purchases implemented and verified                 |
 | 2026-11-19 | Phase 5 inventory (movements, adjust, low-stock) implemented           |
 | 2026-11-19 | `docs/page-composition.md` from flows A–H                              |
+| 2026-11-19 | Phase 7 POS, sales invoices, shift totals + close guard |
 | 2026-11-19 | Phase 6 shifts + permissions + ar/en localization groundwork |
 | 2026-11-19 | `page-composition.md` rewritten as per-page build spec; `plan.md` gained rules 11–12, permission/localization/Draft-invoice tasks, new open decisions; sidebar reordered (+Shifts, +Cash-outs, Configuration→Settings) — build verified, BLL tests 29/29 |
 | 2026-11-19 | UI parity pass: tokens, shell, shared components, Inventory→Products→rest; RTL logical props |

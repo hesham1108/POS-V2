@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.AddScoped<IPurchaseService, PurchaseService>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IShiftService, ShiftService>();
+        services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<ISalesService, SalesService>();
 
         return services;
     }

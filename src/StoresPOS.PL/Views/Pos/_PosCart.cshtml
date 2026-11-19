@@ -1,0 +1,87 @@
+@model PosCartViewModel
+@{
+    var cart = Model.Cart;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var wholesale = cart.SaleType == SaleType.Wholesale;
+}
+<div class="pos-cart" data-total="@cart.Total.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+     data-empty="@(cart.IsEmpty ? "true" : "false")" data-held="@cart.HeldCount">
+
+    <div class="pos-cart__top">
+        <div class="pos-segmented" role="group" aria-label="@L["Sale type"]">
+            <button type="button" class="@(wholesale ? null : "is-active")" data-action="sale-type" data-value="1">@L["Retail"]</button>
+            <button type="button" class="@(wholesale ? "is-active" : null)" data-action="sale-type" data-value="2">@L["Wholesale"]</button>
+        </div>
+        <button type="button" class="pos-cart__customer" data-action="customer">
+            <span>@L["Customer"] · F4</span>
+            <strong>@L["Walk-in customer"]</strong>
+        </button>
+    </div>
+
+    <div class="pos-cart__head">
+        <span>@L["New invoice"]</span>
+        <button type="button" class="btn btn-sm sp-btn-secondary" data-action="held" @(cart.HeldCount == 0 ? "disabled" : null)>
+            @L["Held"] · F7 <span class="badge text-bg-secondary">@cart.HeldCount</span>
+        </button>
+    </div>
+
+    <div class="pos-cart__lines">
+        @if (cart.IsEmpty)
+        {
+            <p class="pos-cart__empty">@L["Scan a barcode or pick a product to start."]</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var line in cart.Lines)
+                {
+                    <li class="pos-line" data-line-id="@line.Id" tabindex="-1">
+                        <div class="pos-line__name">
+                            @(isAr ? line.NameAr : line.NameEn)
+                            @if (line.IsPriceOverridden)
+                            {
+                                <span class="sp-status sp-status-warn">@L["Price edited"]</span>
+                            }
+                        </div>
+                        <div class="pos-line__qty">
+                            <button type="button" data-action="qty" data-delta="-1" aria-label="@L["Decrease quantity"]">−</button>
+                            <span class="num">@line.Quantity.ToString("0.###")</span>
+                            <button type="button" data-action="qty" data-delta="1" aria-label="@L["Increase quantity"]">+</button>
+                        </div>
+                        @if (Model.CanOverridePrice)
+                        {
+                            <button type="button" class="pos-line__price num" data-action="price"
+                                    data-price="@line.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                    title="@L["Change price for this invoice only"]">@line.UnitPrice.ToString("N2")</button>
+                        }
+                        else
+                        {
+                            <span class="pos-line__price num">@line.UnitPrice.ToString("N2")</span>
+                        }
+                        <strong class="pos-line__total num">@line.LineTotal.ToString("N2")</strong>
+                        <button type="button" class="pos-line__remove" data-action="remove" aria-label="@L["Remove line"]">×</button>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <dl class="pos-cart__totals">
+        <div><dt>@L["Subtotal"]</dt><dd class="num">@cart.Subtotal.ToString("N2")</dd></div>
+        <div><dt>@L["Discount"]</dt><dd class="num">@cart.DiscountAmount.ToString("N2")</dd></div>
+        <div class="pos-cart__total"><dt>@L["Total"] <small>@L["EGP"]</small></dt><dd class="num-total">@cart.Total.ToString("N2")</dd></div>
+    </dl>
+
+    <div class="pos-cart__actions">
+        <button type="button" class="btn sp-btn-secondary" data-action="discount"
+                @(!Model.CanDiscount || cart.IsEmpty ? "disabled" : null)
+                title="@(Model.CanDiscount ? null : L["You do not have permission to give discounts."].Value)">@L["Discount"] · F6</button>
+        <button type="button" class="btn sp-btn-secondary" data-action="hold" @(cart.IsEmpty ? "disabled" : null)>@L["Hold"] · F8</button>
+        <button type="button" class="btn sp-btn-secondary" disabled title="@L["Coming in a later phase"]">@L["Return"]</button>
+        <button type="button" class="btn sp-btn-secondary" data-action="clear" @(cart.IsEmpty ? "disabled" : null)>@L["Clear"]</button>
+    </div>
+
+    <button type="button" class="btn sp-btn-primary pos-pay" data-action="pay" @(cart.IsEmpty ? "disabled" : null)>
+        @L["Pay · F9"]
+    </button>
+</div>

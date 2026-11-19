@@ -17,6 +17,7 @@ public class ShiftService : IShiftService
     public const string MsgConcurrentClose = "Another user is closing the shift. Refresh and try again.";
     public const string MsgInvalidOpening = "Opening amount must be zero or more.";
     public const string MsgInvalidActual = "Actual cash must be zero or more.";
+    public const string MsgSaleInProgress = "{0} has an invoice in progress. Wait until it is paid or held.";
 
     private readonly ApplicationDbContext _db;
     private readonly TimeProvider _time;
@@ -181,6 +182,19 @@ public class ShiftService : IShiftService
             .ToListAsync(cancellationToken);
 
         var totals = await ComputeTotalsAsync(shiftId, cancellationToken);
+        foreach (var participant in participants)
+        {
+            if (totals.ByCashier.TryGetValue(participant.UserId, out var mine))
+            {
+                participant.InvoiceCount = mine.InvoiceCount;
+                participant.CashSales = mine.CashSales;
+                participant.NonCashSales = mine.NonCashSales;
+            }
+        }
+
+        var heldCount = await _db.SalesInvoices
+            .CountAsync(x => x.ShiftId == shiftId && x.Status == SalesInvoiceStatus.Held, cancellationToken);
+        var inProgress = await GetInProgressSalesAsync(shiftId, cancellationToken);
 
         return new ShiftSummaryDto
         {
@@ -202,6 +216,8 @@ public class ShiftService : IShiftService
             VodafoneCashSales = totals.VodafoneCashSales,
             InvoiceCount = totals.InvoiceCount,
             Participants = participants,
+            HeldInvoiceCount = heldCount,
+            InProgressSales = inProgress,
             ClosedAtUtc = shift.ClosedAtUtc,
             ClosedByDisplayName = shift.ClosedBy,
             ActualCash = shift.ActualCash,
@@ -232,8 +248,23 @@ public class ShiftService : IShiftService
             throw new BusinessException(MsgAlreadyClosed);
         }
 
-        // TODO(Phase 7): refuse while another participant has a non-empty Draft sales invoice
-        // ("wait until the sale is completed or held" — see docs/page-composition.md §5).
+        // A cashier mid-sale: wait until that invoice is paid or held (docs/page-composition.md §5).
+        var inProgress = await GetInProgressSalesAsync(shift.Id, cancellationToken);
+        if (inProgress.Count > 0)
+        {
+            throw new BusinessException(MsgSaleInProgress, inProgress[0].CashierDisplayName);
+        }
+
+        // Held invoices and empty carts do not survive the shift (plan.md open decisions).
+        var leftovers = await _db.SalesInvoices
+            .Where(x => x.ShiftId == shift.Id
+                        && (x.Status == SalesInvoiceStatus.Held || x.Status == SalesInvoiceStatus.Draft))
+            .ToListAsync(cancellationToken);
+        foreach (var invoice in leftovers)
+        {
+            invoice.Status = SalesInvoiceStatus.Cancelled;
+            invoice.UpdatedAtUtc = _time.GetUtcNow().UtcDateTime;
+        }
 
         var totals = await ComputeTotalsAsync(shift.Id, cancellationToken);
         var expected = ShiftCalculator.ExpectedCash(
@@ -270,6 +301,8 @@ public class ShiftService : IShiftService
         return openedLocal.Date < todayLocal;
     }
 
+    private sealed record CashierTotals(int InvoiceCount, decimal CashSales, decimal NonCashSales);
+
     private sealed record ShiftTotals(
         decimal CashSales,
         decimal CashRefunds,
@@ -278,18 +311,60 @@ public class ShiftService : IShiftService
         decimal CardSales,
         decimal InstaPaySales,
         decimal VodafoneCashSales,
-        int InvoiceCount);
+        int InvoiceCount,
+        IReadOnlyDictionary<int, CashierTotals> ByCashier);
 
     /// <summary>
-    /// Single place where shift money is aggregated. Sales (Phase 7–8), returns and cash-outs (Phase 9)
-    /// plug in here; until those tables exist every total is zero, so expected cash = opening amount.
+    /// Single place where shift money is aggregated. Completed sales feed it now;
+    /// returns and cash-outs (Phase 9) plug in here and stay zero until then.
     /// </summary>
-    private static Task<ShiftTotals> ComputeTotalsAsync(int shiftId, CancellationToken cancellationToken)
+    private async Task<ShiftTotals> ComputeTotalsAsync(int shiftId, CancellationToken cancellationToken)
     {
-        _ = shiftId;
-        _ = cancellationToken;
-        return Task.FromResult(new ShiftTotals(0m, 0m, 0m, 0, 0m, 0m, 0m, 0));
+        var sales = await _db.SalesInvoices
+            .AsNoTracking()
+            .Where(x => x.ShiftId == shiftId && x.Status == SalesInvoiceStatus.Completed)
+            .Select(x => new { x.CashierUserId, x.PaymentMethod, x.Total })
+            .ToListAsync(cancellationToken);
+
+        decimal Sum(PaymentMethod method) => sales.Where(x => x.PaymentMethod == method).Sum(x => x.Total);
+
+        var byCashier = sales
+            .GroupBy(x => x.CashierUserId)
+            .ToDictionary(
+                g => g.Key,
+                g => new CashierTotals(
+                    g.Count(),
+                    g.Where(x => x.PaymentMethod == PaymentMethod.Cash).Sum(x => x.Total),
+                    g.Where(x => x.PaymentMethod != PaymentMethod.Cash).Sum(x => x.Total)));
+
+        return new ShiftTotals(
+            CashSales: Sum(PaymentMethod.Cash),
+            CashRefunds: 0m,
+            CashOuts: 0m,
+            CashOutsCount: 0,
+            CardSales: Sum(PaymentMethod.Card),
+            InstaPaySales: Sum(PaymentMethod.InstaPay),
+            VodafoneCashSales: Sum(PaymentMethod.VodafoneCash),
+            InvoiceCount: sales.Count,
+            ByCashier: byCashier);
     }
+
+    private async Task<IReadOnlyList<InProgressSaleDto>> GetInProgressSalesAsync(
+        int shiftId,
+        CancellationToken cancellationToken) =>
+        await _db.SalesInvoices
+            .AsNoTracking()
+            .Where(x => x.ShiftId == shiftId && x.Status == SalesInvoiceStatus.Draft && x.Items.Any())
+            .OrderBy(x => x.UpdatedAtUtc)
+            .Select(x => new InProgressSaleDto
+            {
+                InvoiceId = x.Id,
+                CashierUserId = x.CashierUserId,
+                CashierDisplayName = x.CashierUser.DisplayName,
+                LineCount = x.Items.Count,
+                Total = x.Total
+            })
+            .ToListAsync(cancellationToken);
 
     private async Task EnsureUserExistsAsync(int userId, CancellationToken cancellationToken)
     {

@@ -5,6 +5,7 @@ using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.PL.Extensions;
 using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
@@ -16,11 +17,13 @@ public class ShiftsController : Controller
     private const string ReturnToGate = "gate";
 
     private readonly IShiftService _shifts;
+    private readonly ISalesService _sales;
     private readonly IStringLocalizer<SharedResource> _l;
 
-    public ShiftsController(IShiftService shifts, IStringLocalizer<SharedResource> localizer)
+    public ShiftsController(IShiftService shifts, ISalesService sales, IStringLocalizer<SharedResource> localizer)
     {
         _shifts = shifts;
+        _sales = sales;
         _l = localizer;
     }
 
@@ -56,7 +59,7 @@ public class ShiftsController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, _l[ex.Message]);
+            ModelState.AddModelError(string.Empty, _l.Localize(ex));
             return await GateViewWithErrorsAsync(userId, model.OpeningAmount, cancellationToken);
         }
     }
@@ -73,7 +76,7 @@ public class ShiftsController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = _l[ex.Message].Value;
+            TempData["Error"] = _l.Localize(ex);
             return RedirectToAction(nameof(Gate));
         }
     }
@@ -148,7 +151,7 @@ public class ShiftsController : Controller
             }
             catch (BusinessException ex)
             {
-                ModelState.AddModelError(string.Empty, _l[ex.Message]);
+                ModelState.AddModelError(string.Empty, _l.Localize(ex));
             }
         }
 
@@ -164,8 +167,32 @@ public class ShiftsController : Controller
         return View(model);
     }
 
-    /// <summary>Where the gate hands off. TODO(Phase 7): POS/Index once the POS screen exists.</summary>
-    private IActionResult AfterGate() => RedirectToAction(nameof(Current));
+    /// <summary>
+    /// Lets the closer hold another cashier's in-progress cart so the close can go ahead.
+    /// </summary>
+    [HttpPost]
+    [Authorize(Policy = AppPermissions.ShiftsClose)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> HoldInProgress(int invoiceId, string? returnTo, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _sales.HoldForCashierAsync(this.GetRequiredUserId(), invoiceId, cancellationToken);
+            TempData["Success"] = _l["Invoice held. It will be cancelled when the shift closes."].Value;
+        }
+        catch (BusinessException ex)
+        {
+            TempData["Error"] = _l.Localize(ex);
+        }
+
+        return RedirectToAction(nameof(Close), new { returnTo });
+    }
+
+    /// <summary>Where the gate hands off: the till for sellers, otherwise the shift page.</summary>
+    private IActionResult AfterGate() =>
+        User.HasPermission(AppPermissions.PosUse)
+            ? RedirectToAction("Index", "Pos")
+            : RedirectToAction(nameof(Current));
 
     private ShiftGateViewModel BuildGate(ShiftGateDto gate, decimal? openingAmount = null) => new()
     {

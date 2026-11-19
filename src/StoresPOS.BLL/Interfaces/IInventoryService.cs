@@ -28,4 +28,14 @@ public interface IInventoryService
         IReadOnlyList<PurchaseStockLineDto> lines,
         int userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deducts stock for a completed sale and writes Sale movements (reference: SalesInvoice).
+    /// Must be called inside the caller's DB transaction when using SQL Server.
+    /// </summary>
+    Task ApplySaleAsync(
+        int salesInvoiceId,
+        IReadOnlyList<SaleStockLineDto> lines,
+        int userId,
+        CancellationToken cancellationToken = default);
 }

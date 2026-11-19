@@ -14,9 +14,10 @@ namespace StoresPOS.PL.Tests;
 /// End-to-end HTTP checks for journeys A, B and H against the real MVC pipeline
 /// (auth cookie, permission policies, antiforgery, views) on the EF InMemory provider.
 /// </summary>
+[Collection("app")]
 public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
 {
-    private const string CashierPassword = "Cashier@12345";
+    internal const string CashierPassword = "Cashier@12345";
     private readonly AppFactory _factory;
 
     public ShiftJourneyTests(AppFactory factory)
@@ -35,8 +36,11 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         Assert.Contains("/Shifts/Gate", gate.Url);
         Assert.Contains("Open a shift to start selling", gate.Html);
 
-        var current = await PostFormAsync(mona, "/Shifts/Open", gate.Html, new() { ["OpeningAmount"] = "" });
-        Assert.Contains("/Shifts/Current", current.Url);
+        var pos = await PostFormAsync(mona, "/Shifts/Open", gate.Html, new() { ["OpeningAmount"] = "" });
+        Assert.Contains("/Pos", pos.Url);
+        Assert.Contains("Pay · F9", pos.Html);
+
+        var current = await GetAsync(mona, "/Shifts/Current");
         Assert.Contains("Shift #", current.Html);
         Assert.Contains("0.00", current.Html);
 
@@ -55,13 +59,14 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         var adminGate = await GetAsync(admin, "/Shifts/Gate");
         Assert.Contains("A shift is already open", adminGate.Html);
         var joined = await PostFormAsync(admin, "/Shifts/Resume", adminGate.Html, new());
-        Assert.Contains("/Shifts/Current", joined.Url);
-        Assert.Contains("Mona", joined.Html);
-        Assert.Contains("System Admin", joined.Html);
+        Assert.Contains("/Pos", joined.Url);
+        var shiftPage = await GetAsync(admin, "/Shifts/Current");
+        Assert.Contains("Mona", shiftPage.Html);
+        Assert.Contains("System Admin", shiftPage.Html);
 
-        // Second visit to the gate for a participant goes straight through.
+        // Second visit to the gate for a participant goes straight through to the till.
         var through = await GetAsync(mona, "/Shifts/Gate");
-        Assert.Contains("/Shifts/Current", through.Url);
+        Assert.Contains("/Pos", through.Url);
 
         // H — admin counts 20.00 over → Surplus, signed out to login with a notice.
         var close = await GetAsync(admin, "/Shifts/Close");
@@ -115,15 +120,15 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         Assert.Contains("الورديات", gate.Html); // sidebar
     }
 
-    private sealed record Page(string Url, string Html);
+    internal sealed record Page(string Url, string Html);
 
-    private static async Task<Page> GetAsync(HttpClient client, string url)
+    internal static async Task<Page> GetAsync(HttpClient client, string url)
     {
         var response = await client.GetAsync(url);
         return new Page(response.RequestMessage!.RequestUri!.PathAndQuery, await response.Content.ReadAsStringAsync());
     }
 
-    private static async Task<Page> LoginAsync(HttpClient client, string username, string password)
+    internal static async Task<Page> LoginAsync(HttpClient client, string username, string password)
     {
         var form = await GetAsync(client, "/Account/Login");
         return await PostFormAsync(client, "/Account/Login", form.Html, new()
@@ -133,7 +138,7 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         });
     }
 
-    private static async Task<Page> PostFormAsync(
+    internal static async Task<Page> PostFormAsync(
         HttpClient client,
         string url,
         string pageWithToken,
@@ -180,6 +185,25 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             db.ShiftParticipants.RemoveRange(db.ShiftParticipants);
             db.Shifts.RemoveRange(db.Shifts);
+
+            db.SalesInvoiceItems.RemoveRange(db.SalesInvoiceItems);
+            db.SalesInvoices.RemoveRange(db.SalesInvoices);
+            db.StockMovements.RemoveRange(db.StockMovements);
+
+            var oil = await db.Products.FirstOrDefaultAsync(x => x.Barcode == "622100");
+            if (oil is null)
+            {
+                db.Products.Add(new Product
+                {
+                    NameAr = "زيت عباد الشمس ١ لتر", NameEn = "Sunflower oil 1 L", Barcode = "622100", Unit = "L",
+                    PurchasePrice = 65m, RetailPrice = 78m, WholesalePrice = 72m,
+                    StockQuantity = 20m, LowStockThreshold = 5m
+                });
+            }
+            else
+            {
+                oil.StockQuantity = 20m;
+            }
 
             if (!await db.Users.AnyAsync(x => x.Username == "mona"))
             {

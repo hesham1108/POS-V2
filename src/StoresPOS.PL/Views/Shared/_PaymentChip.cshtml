@@ -1,0 +1,11 @@
+@model PaymentMethod
+@{
+    var (css, text) = Model switch
+    {
+        PaymentMethod.Cash => ("sp-status-ok", L["Cash"].Value),
+        PaymentMethod.Card => ("sp-status-info", L["Visa / Card"].Value),
+        PaymentMethod.InstaPay => ("sp-status-info", L["InstaPay"].Value),
+        _ => ("sp-status-info", L["Vodafone Cash"].Value)
+    };
+}
+<span class="sp-status @css">@text</span>

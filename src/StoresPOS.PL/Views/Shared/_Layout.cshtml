@@ -45,14 +45,24 @@
                     <a class="@NavClass(IsCtrl("Home"))" asp-controller="Home" asp-action="Index">@L["Dashboard"]</a>
                 }
 
-                <span class="app-sidebar__link is-disabled" title="@soon">@L["POS"]</span>
+                @if (Can(AppPermissions.PosUse))
+                {
+                    <a class="@NavClass(IsCtrl("Pos"))" asp-controller="Shifts" asp-action="Gate">@L["POS"]</a>
+                }
 
                 @if (Can(AppPermissions.ShiftsOpenResume))
                 {
                     <a class="@NavClass(IsCtrl("Shifts"))" asp-controller="Shifts" asp-action="Current">@L["Shifts"]</a>
                 }
 
-                <span class="app-sidebar__link is-disabled" title="@soon">@L["Sales invoices"]</span>
+                @if (Can(AppPermissions.ReportsView))
+                {
+                    <a class="@NavClass(IsCtrl("Sales"))" asp-controller="Sales" asp-action="Index">@L["Sales invoices"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Sales invoices"]</span>
+                }
                 <span class="app-sidebar__link is-disabled" title="@soon">@L["Returns"]</span>
                 <span class="app-sidebar__link is-disabled" title="@soon">@L["Cash-outs"]</span>
 

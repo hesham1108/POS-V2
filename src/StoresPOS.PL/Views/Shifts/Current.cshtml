@@ -25,6 +25,38 @@
 <div class="shift-layout">
     <partial name="_ShiftSummary" model="Model.Summary" />
 
+    <div class="d-flex flex-column gap-4">
+    <section class="sp-card p-4">
+        <h2 class="shift-section-title">@L["Sales by cashier"]</h2>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@L["Cashier"]</th>
+                        <th class="text-end">@L["Invoices"]</th>
+                        <th class="text-end">@L["Cash"]</th>
+                        <th class="text-end">@L["Non-cash"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Summary.Participants)
+                    {
+                        <tr>
+                            <td>@p.DisplayName</td>
+                            <td class="text-end num">@p.InvoiceCount</td>
+                            <td class="text-end num">@p.CashSales.ToString("N2")</td>
+                            <td class="text-end num">@p.NonCashSales.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Model.IsParticipant)
+        {
+            <a class="btn sp-btn-primary mt-3" asp-controller="Pos" asp-action="Index">@L["Back to selling"]</a>
+        }
+    </section>
+
     <section class="sp-card p-4">
         <h2 class="shift-section-title">@L["Cash-outs"]</h2>
         @* Phase 9: list + "New cash-out" modal (journey E) *@
@@ -33,4 +65,5 @@
         }
         <partial name="_EmptyState" model="empty" />
     </section>
+</div>
 </div>

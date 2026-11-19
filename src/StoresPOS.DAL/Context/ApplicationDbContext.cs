@@ -21,6 +21,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<ShiftParticipant> ShiftParticipants => Set<ShiftParticipant>();
+    public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
+    public DbSet<SalesInvoiceItem> SalesInvoiceItems => Set<SalesInvoiceItem>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
