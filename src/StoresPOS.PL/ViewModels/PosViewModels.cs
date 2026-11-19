@@ -13,6 +13,7 @@ public class PosPageViewModel
     public bool CanDiscount { get; set; }
     public bool CanCloseShift { get; set; }
     public bool CanSeeDashboard { get; set; }
+    public int? LastInvoiceId { get; set; }
 }
 
 public class PosCartViewModel

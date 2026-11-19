@@ -51,6 +51,20 @@ public class PosJourneyTests : IClassFixture<AppFactory>
         using var json = JsonDocument.Parse(paid.Body);
         Assert.Equal("S-000001", json.RootElement.GetProperty("invoiceNumber").GetString());
         Assert.Contains("Change: 44.00", json.RootElement.GetProperty("message").GetString());
+        var receiptUrl = json.RootElement.GetProperty("receiptUrl").GetString()!;
+
+        // 80 mm receipt: store header, invoice meta, charged prices, tender, change, barcode — in Arabic.
+        var receipt = await GetAsync(mona, receiptUrl);
+        Assert.Contains("سوبر ماركت النور", receipt.Html);
+        Assert.Contains("S-000001", receipt.Html);
+        Assert.Contains("زيت عباد الشمس ١ لتر", receipt.Html);
+        Assert.Contains("200.00", receipt.Html);
+        Assert.Contains("44.00", receipt.Html);
+        Assert.Contains("<svg", receipt.Html);
+        Assert.Contains("dir=\"rtl\"", receipt.Html);
+
+        // POS now offers "reprint last".
+        Assert.Contains($"data-print-url=\"{receiptUrl}\"", (await GetAsync(mona, "/Pos")).Html);
 
         await using (var scope = _factory.Services.CreateAsyncScope())
         {
@@ -67,6 +81,13 @@ public class PosJourneyTests : IClassFixture<AppFactory>
 
         // Cashier cannot open the sales list (Reports.View).
         Assert.Contains("/Account/AccessDenied", (await GetAsync(mona, "/Sales")).Url);
+
+        // After the shift closes, the cashier can no longer reprint its receipts; the back office can.
+        var close = await GetAsync(admin, "/Shifts/Close");
+        var shiftId = Regex.Match(close.Html, "name=\"ShiftId\" value=\"(\\d+)\"").Groups[1].Value;
+        await PostFormAsync(admin, "/Shifts/Close", close.Html, new() { ["ShiftId"] = shiftId, ["ActualCash"] = "", ["ReturnTo"] = "", ["Notes"] = "" });
+        Assert.Contains("/Account/AccessDenied", (await GetAsync(mona, receiptUrl)).Url);
+        Assert.Contains("S-000001", (await GetAsync(admin, receiptUrl)).Html);
     }
 
     [Fact]

@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 7 complete** — next is **Phase 8 (receipts & printing)**
-- Overall progress: Phases 1–7 verified (unit + HTTP tests; not yet on SQL Server / browser)
+- Current phase: **Phase 8 complete** — next is **Phase 9 (cash-outs & returns)**
+- Overall progress: Phases 1–8 verified (unit + HTTP tests; receipts checked visually; not yet on SQL Server)
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -48,9 +48,22 @@
 - Migration `SalesInvoices`
 - Tests: BLL 61/61, PL HTTP 5/5
 
+### Phase 8 — Receipts & printing
+
+- `StoreSettings` (`appsettings` → `Store`): header, footer, receipt language (store default `ar`), Western/Arabic-Indic digits, VAT-included line (14%), paper width
+- `Receipts/Sale/{id}` 80 mm receipt: store header, invoice meta, lines at charged prices, item count, subtotal/discount/total, VAT included, tender, change, footer, Code 128 barcode of the invoice number (offline SVG)
+- `Receipts/Shift/{id}`: times, opened/closed by, participants, sales by method and by cashier, drawer, actual, difference, result
+- Printing via hidden iframe + `window.print()`; Chrome `--kiosk-printing` setup in `docs/printing.md`
+- POS: "Pay and print · F9" prints automatically; "Reprint last" in the header; Sales list/details reprint + preview
+- Close → `Shifts/Closed/{id}` auto-prints the report → "Finish and sign out" (H) or "Open a new shift" (C); X report from Current shift
+- Cashiers can only reprint invoices of the shift they are working in
+- Store name from settings in sidebar and POS header
+- Tests: BLL 61/61, PL 9/9 (receipt + shift report content, Code 128 table/checksum); receipt/report rendered and checked in a browser at 80 mm (Arabic)
+
 ## Pending Tasks
 
-- Phase 8: 80 mm receipt + reprint, shift report printout
+- Phase 9: cash-outs, returns (scan the receipt barcode to find the invoice)
+- Silent printing on the real thermal printer not tested (no printer here) — follow `docs/printing.md` on the store PC
 - Apply migrations `ShiftsAndPermissions` + `SalesInvoices` on SQL Server; click through POS in a browser (en + ar) — not possible on the dev Mac (no SQL Server)
 - Client to confirm the POS open decisions applied as defaults (split tender, zero stock, held at close, tax)
 - Error messages that name a product use the English name even in Arabic UI
@@ -61,12 +74,12 @@
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
 | `dotnet test tests/StoresPOS.BLL.Tests` | Passed 61/61 |
-| `dotnet test tests/StoresPOS.PL.Tests` | Passed 5/5 |
+| `dotnet test tests/StoresPOS.PL.Tests` | Passed 9/9 |
 | `dotnet ef database update` | `ShiftsAndPermissions`, `SalesInvoices` not yet applied to SQL Server |
 
 ## Next Recommended Task
 
-Phase 8 — 80 mm receipt (`Receipts/Sale/{id}`), reprint from `Sales/Details`, shift report print
+Phase 9 — cash-outs (modal on POS + Current shift) and returns from the original invoice
 
 ## Design System Note (2026-11-19)
 
@@ -87,6 +100,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 4 suppliers & purchases implemented and verified                 |
 | 2026-11-19 | Phase 5 inventory (movements, adjust, low-stock) implemented           |
 | 2026-11-19 | `docs/page-composition.md` from flows A–H                              |
+| 2026-11-19 | Phase 8 receipts, shift report, printing workflow |
 | 2026-11-19 | Phase 7 POS, sales invoices, shift totals + close guard |
 | 2026-11-19 | Phase 6 shifts + permissions + ar/en localization groundwork |
 | 2026-11-19 | `page-composition.md` rewritten as per-page build spec; `plan.md` gained rules 11–12, permission/localization/Draft-invoice tasks, new open decisions; sidebar reordered (+Shifts, +Cash-outs, Configuration→Settings) — build verified, BLL tests 29/29 |

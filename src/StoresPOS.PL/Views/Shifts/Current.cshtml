@@ -13,6 +13,10 @@
             <button type="submit" class="btn sp-btn-secondary">@L["Join shift"]</button>
         </form>
     }
+    @if (Model.CanClose || User.HasClaim(AppPermissions.ClaimType, AppPermissions.ReportsView))
+    {
+        <button type="button" class="btn sp-btn-secondary" data-print-url="@Url.Action("Shift", "Receipts", new { id = Model.Summary.Id })">@L["Print X report"]</button>
+    }
     @if (Model.CanClose)
     {
         <a class="btn sp-btn-primary" asp-action="Close">@L["Close shift"]</a>

@@ -81,13 +81,13 @@ flowchart TD
 | --- | --- | --- | --- | --- | --- | --- |
 | 3 | تسجيل الدخول | `Account/Login` | A B C H | 2 | الكل | ✅ |
 | 4 | بوابة الوردية | `Shifts/Gate` | A B C | 6 | الكل | ✅ |
-| 5 | إغلاق الوردية | `Shifts/Close` | C H | 6 (+ طباعة 8) | Admin · Manager · Cashier (اختياري) | 🟡 (ناقص الطباعة — Phase 8) |
+| 5 | إغلاق الوردية | `Shifts/Close` → `Shifts/Closed/{id}` | C H | 6 + 8 | Admin · Manager · Cashier (اختياري) | ✅ |
 | 6 | الورديات (الحالية + السجل + التفاصيل) | `Shifts/Current` · `Shifts/Index` · `Shifts/Details/{id}` | E H | 6 / 10 | الحالية: الكل · السجل: Admin · Manager | 🟡 (الحالية ✅ · السجل والتفاصيل Phase 10) |
 | 7 | نقطة البيع POS | `Pos/Index` | A B C D E G | 7 | الكل (بوردية مفتوحة) | ✅ (العميل F4 والمرتجع والمصروف placeholders) |
 | 8 | لوحة الدفع | جزء من POS (modal) | D | 8 | الكل | ✅ (اتعملت في Phase 7؛ الطباعة Phase 8) |
-| 9 | الإيصال 80مم + تقرير الوردية | `Receipts/Sale/{id}` · `Receipts/Shift/{id}` | D H | 8 | الكل | ⬜ |
+| 9 | الإيصال 80مم + تقرير الوردية | `Receipts/Sale/{id}` · `Receipts/Shift/{id}` | D H | 8 | الكل (الكاشير: فواتير ورديته فقط) | ✅ |
 | 10 | المصروفات النقدية | modal في POS/Shift + `CashOuts/Index` | E | 9 | الكل | ⬜ |
-| 11 | فواتير البيع | `Sales/Index` · `Sales/Details/{id}` | D G | 7 / 8 | Admin · Manager (Reports.View) | 🟡 (القائمة والتفاصيل ✅ · إعادة الطباعة Phase 8 · المرتجع Phase 9) |
+| 11 | فواتير البيع | `Sales/Index` · `Sales/Details/{id}` | D G | 7 / 8 | Admin · Manager (Reports.View) | 🟡 (القائمة + التفاصيل + إعادة الطباعة ✅ · المرتجع Phase 9) |
 | 12 | المرتجعات | `Returns/Create?saleId=` · `Returns/Index` | G | 9 | Admin · Manager · Cashier (اختياري) | ⬜ |
 | 13 | المنتجات | `Products/*` | D F G | 3 | Admin · Manager | ✅ |
 | 14 | التصنيفات | `Categories/*` | D | 3 | Admin · Manager | ✅ |
@@ -159,7 +159,7 @@ flowchart TD
 
 ---
 
-## 5) إغلاق الوردية — `Shifts/Close` · 🟡 Phase 6 (+ الطباعة في 8)
+## 5) إغلاق الوردية — `Shifts/Close` · ✅ Phase 6 + 8
 
 **Flows:** H، وجزء من C. **القواعد:** R4 · R5 · R7.
 
@@ -276,7 +276,7 @@ flowchart TD
 
 ---
 
-## 9) الإيصالات — ⬜ Phase 8
+## 9) الإيصالات — ✅ Phase 8 (إعداد الطابعة: [printing.md](printing.md))
 
 ### 9.1 إيصال البيع 80مم — `Receipts/Sale/{id}`
 
@@ -476,7 +476,7 @@ view منفصل بـ print CSS (عرض 80mm، بدون layout)، بلغة الم
 | `_EmptyState` | ✅ | كل القوائم |
 | `_CatalogTabs` | ✅ | منتجات/تصنيفات/مخزون |
 | `_PosLayout` (بدون سايدبار، full screen) | ✅ | POS (البوابة لسه بالـ layout العادي) |
-| `_PrintLayout` (80mm) | ⬜ | الإيصال، تقرير الوردية |
+| `_PrintLayout` (80mm) | ✅ | الإيصال، تقرير الوردية |
 | `_ShiftSummary` (ملخص الدرج + غير النقدي) | ✅ | البوابة C · الإغلاق · الوردية الحالية · التفاصيل · Dashboard |
 | `_StatusChip` (Shift open · Matched · Surplus · Shortage · Not reconciled · Closed · Low stock · Out of stock · Held · طرق الدفع) | 🟡 (`_ShiftStatusChip` + `_PaymentChip`) | كل مكان |
 | `_MoneyText` / tag helper للفلوس (EGP، خانتين، tabular) | ⬜ | كل مكان |
@@ -514,8 +514,8 @@ view منفصل بـ print CSS (عرض 80mm، بدون layout)، بلغة الم
 
 ### د) تحسينات UX مقترحة (مش في النطاق — تتأكد قبل التنفيذ)
 
-13. أزرار مبالغ نقدية سريعة في لوحة الدفع (§8).
-14. «آخر فاتورة» في هيدر POS لإعادة الطباعة السريعة.
+13. ✅ *(Phase 7)* أزرار مبالغ نقدية سريعة في لوحة الدفع (§8).
+14. ✅ *(Phase 8)* «آخر فاتورة» في هيدر POS لإعادة الطباعة السريعة.
 15. معاينة «السعر القديم → الجديد» قبل تأكيد فاتورة الشراء (§16).
 16. نوع العميل الافتراضي (قطاعي/جملة) يقلب وضع POS تلقائياً (§18).
 17. إيصال مرتجع مطبوع (§12).

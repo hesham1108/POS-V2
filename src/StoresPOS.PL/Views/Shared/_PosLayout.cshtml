@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Options.IOptions<StoresPOS.BLL.Models.StoreSettings> StoreOptions
 @{
     var isRtl = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
@@ -20,11 +21,14 @@
     <header class="pos-header">
         <div class="pos-header__brand">
             <span class="sp-brand-mark" aria-hidden="true">SP</span>
-            <strong>[STORE NAME]</strong>
+            <strong>@(isRtl ? StoreOptions.Value.NameAr : StoreOptions.Value.NameEn)</strong>
             <span class="sp-status sp-status-ok">@L["Shift open"] · #@shiftId</span>
         </div>
         <div class="pos-header__actions">
             <span class="pos-header__cashier">@L["Cashier"]: <strong>@ViewData["CashierName"]</strong></span>
+            <button type="button" id="pos-reprint" class="btn btn-sm sp-btn-secondary"
+                    data-print-url="@(ViewData["LastInvoiceId"] is int last ? Url.Action("Sale", "Receipts", new { id = last }) : null)"
+                    @(ViewData["LastInvoiceId"] is int ? null : "disabled")>@L["Reprint last"]</button>
             <a class="btn btn-sm sp-btn-secondary" asp-controller="Shifts" asp-action="Current">@L["Shift"]</a>
             <span class="btn btn-sm sp-btn-secondary disabled" title="@L["Coming in a later phase"]" aria-disabled="true">@L["Cash-out"]</span>
             @if (Can(AppPermissions.ShiftsClose))
@@ -54,6 +58,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/print-frame.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

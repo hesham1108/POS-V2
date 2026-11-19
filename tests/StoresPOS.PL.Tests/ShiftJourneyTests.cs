@@ -38,7 +38,7 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
 
         var pos = await PostFormAsync(mona, "/Shifts/Open", gate.Html, new() { ["OpeningAmount"] = "" });
         Assert.Contains("/Pos", pos.Url);
-        Assert.Contains("Pay · F9", pos.Html);
+        Assert.Contains("Pay and print · F9", pos.Html);
 
         var current = await GetAsync(mona, "/Shifts/Current");
         Assert.Contains("Shift #", current.Html);
@@ -68,19 +68,30 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         var through = await GetAsync(mona, "/Shifts/Gate");
         Assert.Contains("/Pos", through.Url);
 
-        // H — admin counts 20.00 over → Surplus, signed out to login with a notice.
+        // H — admin counts 20.00 over → Surplus → report printed → sign out.
         var close = await GetAsync(admin, "/Shifts/Close");
         Assert.Contains("Confirm and close shift", close.Html);
         var shiftId = Regex.Match(close.Html, "name=\"ShiftId\" value=\"(\\d+)\"").Groups[1].Value;
-        var login = await PostFormAsync(admin, "/Shifts/Close", close.Html, new()
+        var closed = await PostFormAsync(admin, "/Shifts/Close", close.Html, new()
         {
             ["ShiftId"] = shiftId,
             ["ActualCash"] = "20.00",
             ["ReturnTo"] = "",
             ["Notes"] = ""
         });
+        Assert.Contains($"/Shifts/Closed/{shiftId}", closed.Url);
+        Assert.Contains($"Shift #{shiftId} closed.", closed.Html);
+        Assert.Contains($"data-print-on-load=\"/Receipts/Shift/{shiftId}\"", closed.Html);
+        Assert.Contains("Finish and sign out", closed.Html);
+
+        // Shift report prints in the store language (Arabic by default).
+        var report = await GetAsync(admin, $"/Receipts/Shift/{shiftId}?autoprint=true");
+        Assert.Contains("تقرير الوردية", report.Html);
+        Assert.Contains("زيادة", report.Html);       // Surplus
+        Assert.Contains("window.print()", report.Html);
+
+        var login = await PostFormAsync(admin, "/Account/Logout", closed.Html, new());
         Assert.Contains("/Account/Login", login.Url);
-        Assert.Contains($"Shift #{shiftId} closed.", login.Html);
 
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

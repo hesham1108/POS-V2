@@ -1,0 +1,94 @@
+@model ShiftReportViewModel
+@{
+    Layout = "_PrintLayout";
+    var f = Model.Format;
+    f.ApplyCulture();
+    var s = Model.Shift;
+    var lang = f.Language;
+    ViewData["ReceiptFormat"] = f;
+    ViewData["AutoPrint"] = Model.AutoPrint;
+    ViewData["Title"] = string.Format(L["Shift #{0}"].Value, s.Id);
+    var result = s.Status == ShiftStatus.Open
+        ? L["Shift open"].Value
+        : s.Reconciliation switch
+        {
+            ShiftReconciliation.Matched => L["Matched"].Value,
+            ShiftReconciliation.Surplus => L["Surplus"].Value,
+            ShiftReconciliation.Shortage => L["Shortage"].Value,
+            _ => L["Not reconciled"].Value
+        };
+}
+<article class="receipt">
+    <header class="receipt__store">
+        <h1>@f.Settings.NameFor(lang)</h1>
+        <p class="receipt__doc">@L["Shift report"] · <span dir="ltr">#@f.Digits(s.Id.ToString())</span></p>
+    </header>
+
+    <section class="receipt__meta">
+        <div><span>@L["Opened"]</span><span dir="ltr">@f.DateTime(s.OpenedAtUtc)</span></div>
+        <div><span>@L["Opened by"]</span><span>@s.OpenedByDisplayName</span></div>
+        @if (s.ClosedAtUtc.HasValue)
+        {
+            <div><span>@L["Closed"]</span><span dir="ltr">@f.DateTime(s.ClosedAtUtc.Value)</span></div>
+            <div><span>@L["Closed by"]</span><span>@s.ClosedByDisplayName</span></div>
+        }
+        <div><span>@L["Participants"]</span><span>@string.Join(L[", "].Value, s.Participants.Select(p => p.DisplayName))</span></div>
+        <div><span>@L["Invoices"]</span><span>@f.Digits(s.InvoiceCount.ToString())</span></div>
+    </section>
+
+    <h2 class="receipt__section">@L["Sales by payment method"]</h2>
+    <section class="receipt__totals">
+        <div><span>@L["Cash"]</span><span>@f.Money(s.CashSales)</span></div>
+        <div><span>@L["Visa / Card"]</span><span>@f.Money(s.CardSales)</span></div>
+        <div><span>@L["InstaPay"]</span><span>@f.Money(s.InstaPaySales)</span></div>
+        <div><span>@L["Vodafone Cash"]</span><span>@f.Money(s.VodafoneCashSales)</span></div>
+        <div class="receipt__strong"><span>@L["Total sales"]</span><span>@f.Money(s.CashSales + s.NonCashTotal)</span></div>
+    </section>
+
+    <h2 class="receipt__section">@L["Sales by cashier"]</h2>
+    <table class="receipt__lines">
+        <thead>
+            <tr>
+                <th>@L["Cashier"]</th>
+                <th class="n">@L["Invoices"]</th>
+                <th class="n">@L["Cash"]</th>
+                <th class="n">@L["Non-cash"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in s.Participants)
+            {
+                <tr>
+                    <td>@p.DisplayName</td>
+                    <td class="n">@f.Digits(p.InvoiceCount.ToString())</td>
+                    <td class="n">@f.Money(p.CashSales)</td>
+                    <td class="n">@f.Money(p.NonCashSales)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2 class="receipt__section">@L["Drawer"]</h2>
+    <section class="receipt__totals">
+        <div><span>@L["Opening amount"]</span><span>@f.Money(s.OpeningAmount)</span></div>
+        <div><span>@L["Cash sales"]</span><span>@f.Money(s.CashSales)</span></div>
+        <div><span>@L["Cash refunds"]</span><span>−@f.Money(s.CashRefunds)</span></div>
+        <div><span>@string.Format(L["Cash-outs ({0})"].Value, f.Digits(s.CashOutsCount.ToString()))</span><span>−@f.Money(s.CashOutsTotal)</span></div>
+        <div class="receipt__grand"><span>@L["Expected in drawer"]</span><span>@f.Money(s.ExpectedCash)</span></div>
+        @if (s.Status == ShiftStatus.Closed)
+        {
+            <div><span>@L["Actual cash"]</span><span>@(s.ActualCash.HasValue ? f.Money(s.ActualCash.Value) : L["Not counted"].Value)</span></div>
+            <div><span>@L["Difference"]</span><span dir="ltr">@(s.CashDifference.HasValue ? f.Money(s.CashDifference.Value) : "—")</span></div>
+        }
+        <div class="receipt__strong"><span>@L["Result"]</span><span>@result</span></div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(s.CloseNotes))
+    {
+        <p class="receipt__notes">@s.CloseNotes</p>
+    }
+
+    <footer class="receipt__footer">
+        <p class="receipt__small">@L["Printed"] <span dir="ltr">@f.DateTime(Model.PrintedAtUtc)</span></p>
+    </footer>
+</article>

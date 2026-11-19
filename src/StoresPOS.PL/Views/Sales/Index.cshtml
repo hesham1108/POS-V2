@@ -70,6 +70,7 @@ else
                         <th>@L["Payment method"]</th>
                         <th class="text-end">@L["Items"]</th>
                         <th class="text-end">@L["Total"]</th>
+                        <th><span class="visually-hidden">@L["Reprint receipt"]</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,6 +85,9 @@ else
                             <td><partial name="_PaymentChip" model="i.PaymentMethod" /></td>
                             <td class="text-end num">@i.LineCount</td>
                             <td class="text-end num num-total">@i.Total.ToString("N2")</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Sale", "Receipts", new { id = i.Id })">@L["Print"]</button>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -91,6 +95,7 @@ else
                     <tr>
                         <th colspan="7">@string.Format(L["{0} invoices"].Value, Model.Invoices.Count)</th>
                         <th class="text-end num num-total">@Model.Total.ToString("N2")</th>
+                        <th></th>
                     </tr>
                 </tfoot>
             </table>
