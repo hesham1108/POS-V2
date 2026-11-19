@@ -54,4 +54,22 @@ public interface ITreasuryService
         int purchaseInvoiceId,
         int userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Incoming cheque collected → treasury In (rule 15).</summary>
+    Task RecordChequeCollectedAsync(
+        int treasuryId,
+        decimal amount,
+        int chequeId,
+        int userId,
+        string? note = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Outgoing cheque paid → treasury Out (rule 15).</summary>
+    Task RecordChequePaidAsync(
+        int treasuryId,
+        decimal amount,
+        int chequeId,
+        int userId,
+        string? note = null,
+        CancellationToken cancellationToken = default);
 }

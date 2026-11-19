@@ -1,0 +1,152 @@
+@model ChequeDetailsViewModel
+@{
+    var c = Model.Cheque;
+    var isIn = c.Direction == ChequeDirection.In;
+    var treasuryItems = Model.Treasuries.Select(t => new SelectListItem(t.NameEn, t.Id.ToString())).ToList();
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index" asp-route-direction="@((int)c.Direction)">@L["Back"]</a>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="sp-card p-4 mb-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="text-muted small">@L["Number"]</div>
+            <div class="fw-semibold">@c.Number</div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@L["Status"]</div>
+            <div><span class="sp-status">@c.Status</span></div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@(isIn ? L["Customer"].Value : L["Supplier"].Value)</div>
+            <div>@(isIn ? c.CustomerName : c.SupplierName)</div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@L["Amount"]</div>
+            <div class="fs-4 fw-bold font-monospace" style="color:var(--sp-primary)">@c.Amount.ToString("N2")</div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@L["Due date"]</div>
+            <div class="num">@c.DueDate.ToString("yyyy/MM/dd") @(c.IsOverdue ? $"· {L["Overdue"].Value}" : null)</div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-muted small">@L["Bank"]</div>
+            <div>@(c.Bank ?? "—")</div>
+        </div>
+        @if (!string.IsNullOrEmpty(c.SalesInvoiceNumber))
+        {
+            <div class="col-md-3">
+                <div class="text-muted small">@L["Sales invoices"]</div>
+                <div><a asp-controller="Sales" asp-action="Details" asp-route-id="@c.SalesInvoiceId">@c.SalesInvoiceNumber</a></div>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(c.PurchaseInvoiceNumber))
+        {
+            <div class="col-md-3">
+                <div class="text-muted small">@L["Purchase invoices"]</div>
+                <div><a asp-controller="Purchases" asp-action="Details" asp-route-id="@c.PurchaseInvoiceId">@c.PurchaseInvoiceNumber</a></div>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(c.SettledTreasuryName))
+        {
+            <div class="col-md-3">
+                <div class="text-muted small">@L["Treasury"]</div>
+                <div>@c.SettledTreasuryName</div>
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(c.Notes))
+        {
+            <div class="col-12">
+                <div class="text-muted small">@L["Notes"]</div>
+                <div>@c.Notes</div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.CanChangeStatus)
+{
+    <div class="sp-card p-4 mb-4">
+        <h2 class="shift-section-title">@L["Change status"]</h2>
+        <div class="d-flex flex-wrap gap-3">
+            @if (isIn)
+            {
+                <form asp-action="ChangeStatus" method="post" class="sp-card p-3" style="min-width:240px">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ChequeId" value="@c.Id" />
+                    <input type="hidden" name="NewStatus" value="@((int)ChequeStatus.Collected)" />
+                    <div class="fw-semibold mb-2">@L["Collect"]</div>
+                    <select name="TreasuryId" class="form-select mb-2" asp-items="treasuryItems" required>
+                        <option value="">@L["— select —"]</option>
+                    </select>
+                    <input name="Note" class="form-control mb-2" placeholder="@L["Note"]" />
+                    <button type="submit" class="btn sp-btn-primary btn-sm">@L["Collect"]</button>
+                </form>
+                <form asp-action="ChangeStatus" method="post" class="sp-card p-3" style="min-width:200px"
+                      onsubmit="return confirm('@L["Mark this cheque as bounced?"]');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ChequeId" value="@c.Id" />
+                    <input type="hidden" name="NewStatus" value="@((int)ChequeStatus.Bounced)" />
+                    <div class="fw-semibold mb-2">@L["Bounce"]</div>
+                    <input name="Note" class="form-control mb-2" placeholder="@L["Note"]" />
+                    <button type="submit" class="btn sp-btn-secondary btn-sm">@L["Bounce"]</button>
+                </form>
+            }
+            else
+            {
+                <form asp-action="ChangeStatus" method="post" class="sp-card p-3" style="min-width:240px">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ChequeId" value="@c.Id" />
+                    <input type="hidden" name="NewStatus" value="@((int)ChequeStatus.Paid)" />
+                    <div class="fw-semibold mb-2">@L["Pay"]</div>
+                    <select name="TreasuryId" class="form-select mb-2" asp-items="treasuryItems" required>
+                        <option value="">@L["— select —"]</option>
+                    </select>
+                    <input name="Note" class="form-control mb-2" placeholder="@L["Note"]" />
+                    <button type="submit" class="btn sp-btn-primary btn-sm">@L["Pay"]</button>
+                </form>
+            }
+            <form asp-action="ChangeStatus" method="post" class="sp-card p-3" style="min-width:200px"
+                  onsubmit="return confirm('@L["Cancel this cheque?"]');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ChequeId" value="@c.Id" />
+                <input type="hidden" name="NewStatus" value="@((int)ChequeStatus.Cancelled)" />
+                <div class="fw-semibold mb-2">@L["Cancel cheque"]</div>
+                <input name="Note" class="form-control mb-2" placeholder="@L["Note"]" />
+                <button type="submit" class="btn sp-btn-secondary btn-sm">@L["Cancel cheque"]</button>
+            </form>
+        </div>
+    </div>
+}
+
+<div class="sp-card p-0 overflow-hidden">
+    <div class="p-3 border-bottom fw-semibold">@L["Status history"]</div>
+    <table class="table mb-0 align-middle">
+        <thead>
+            <tr>
+                <th>@L["Date"]</th>
+                <th>@L["Status"]</th>
+                <th>@L["User"]</th>
+                <th>@L["Treasury"]</th>
+                <th>@L["Note"]</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var h in c.History)
+        {
+            <tr>
+                <td class="num">@h.CreatedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                <td>@h.Status</td>
+                <td>@h.UserDisplayName</td>
+                <td>@(h.TreasuryName ?? "—")</td>
+                <td>@(h.Note ?? "—")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

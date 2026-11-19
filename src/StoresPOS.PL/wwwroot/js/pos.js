@@ -374,11 +374,14 @@
   function payMethodInput() { return payForm.querySelector('input[name="method"]:checked'); }
   function payMethod() { return payMethodInput().value; }
   function payIsCash() { return payMethodInput().dataset.cash === "1"; }
+  function payIsCheque() { return payMethodInput().dataset.kind === "5"; }
 
   function syncPay() {
     const isCash = payIsCash();
+    const isCheque = payIsCheque();
     document.getElementById("pay-cash").hidden = !isCash;
-    document.getElementById("pay-noncash").hidden = isCash;
+    document.getElementById("pay-noncash").hidden = isCash || isCheque;
+    document.getElementById("pay-cheque").hidden = !isCheque;
     const paid = parseFloat(payAmount.value);
     const change = isNaN(paid) ? 0 : Math.round((paid - cartTotal()) * 100) / 100;
     payChange.textContent = money.format(Math.max(change, 0));
@@ -392,6 +395,9 @@
     if (first) first.checked = true;
     payAmount.value = cartTotal().toFixed(2);
     document.getElementById("pay-reference").value = "";
+    document.getElementById("pay-cheque-number").value = "";
+    document.getElementById("pay-cheque-bank").value = "";
+    document.getElementById("pay-cheque-due").value = "";
     payError.textContent = "";
     syncPay();
     modals.pay.show();
@@ -418,6 +424,12 @@
       const raw = payAmount.value.trim();
       if (raw && isNaN(parseFloat(raw))) { payError.textContent = msg.msgNeedAmount; return; }
       data.amountPaid = raw;
+    } else if (payIsCheque()) {
+      data.chequeNumber = document.getElementById("pay-cheque-number").value.trim();
+      data.chequeBank = document.getElementById("pay-cheque-bank").value.trim();
+      data.chequeDueDate = document.getElementById("pay-cheque-due").value;
+      if (!data.chequeNumber) { payError.textContent = msg.msgChequeNumber || "Cheque number is required."; return; }
+      if (!data.chequeDueDate) { payError.textContent = msg.msgChequeDue || "Cheque due date is required."; return; }
     } else {
       data.reference = document.getElementById("pay-reference").value.trim();
     }

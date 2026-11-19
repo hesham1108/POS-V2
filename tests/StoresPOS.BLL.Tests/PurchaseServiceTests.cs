@@ -132,8 +132,11 @@ public class PurchaseServiceTests
         }, userId));
     }
 
-    private static PurchaseService CreatePurchases(ApplicationDbContext db) =>
-        new(db, new InventoryService(db), new TreasuryService(db, TimeProvider.System));
+    private static PurchaseService CreatePurchases(ApplicationDbContext db)
+    {
+        var treasuries = new TreasuryService(db, TimeProvider.System);
+        return new PurchaseService(db, new InventoryService(db), treasuries, new ChequeService(db, treasuries, TimeProvider.System));
+    }
 
     private static async Task<(int UserId, int SupplierId, int ProductId, int TreasuryId)> SeedAsync(ApplicationDbContext db)
     {

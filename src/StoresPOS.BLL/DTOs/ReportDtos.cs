@@ -222,4 +222,7 @@ public class DashboardDto
 
     /// <summary>Active treasury balances for the dashboard card (Phase 12).</summary>
     public IReadOnlyList<TreasuryListItemDto> Treasuries { get; set; } = [];
+
+    /// <summary>Pending cheque due / overdue counts (Phase 13).</summary>
+    public ChequeDashboardDto Cheques { get; set; } = new();
 }

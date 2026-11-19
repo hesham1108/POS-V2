@@ -1,0 +1,80 @@
+@model ChequeEditViewModel
+@{
+    var customerItems = Model.CustomerOptions.Select(c => new SelectListItem(c.Name, c.Id.ToString())).ToList();
+    var supplierItems = Model.SupplierOptions.Select(s => new SelectListItem(s.Name, s.Id.ToString())).ToList();
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index" asp-route-direction="@((int)Model.Direction)">@L["Cancel"]</a>
+}
+
+<partial name="_PageHeader" />
+
+<div class="sp-card p-4" style="max-width:640px">
+    <form asp-action="Create" method="post" id="cheque-form">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Direction" class="form-label"></label>
+            <select asp-for="Direction" class="form-select" id="cheque-direction">
+                <option value="@((int)ChequeDirection.In)">@L["Receivable (لينا)"]</option>
+                <option value="@((int)ChequeDirection.Out)">@L["Payable (علينا)"]</option>
+            </select>
+        </div>
+        <div class="mb-3" id="customer-wrap">
+            <label asp-for="CustomerId" class="form-label"></label>
+            <select asp-for="CustomerId" class="form-select" asp-items="customerItems">
+                <option value="">@L["— select —"]</option>
+            </select>
+        </div>
+        <div class="mb-3" id="supplier-wrap">
+            <label asp-for="SupplierId" class="form-label"></label>
+            <select asp-for="SupplierId" class="form-select" asp-items="supplierItems">
+                <option value="">@L["— select —"]</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Number" class="form-label"></label>
+            <input asp-for="Number" class="form-control" autofocus />
+            <span asp-validation-for="Number" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Bank" class="form-label"></label>
+            <input asp-for="Bank" class="form-control" />
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label asp-for="DueDate" class="form-label"></label>
+                <input asp-for="DueDate" class="form-control" type="date" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Amount" class="form-label"></label>
+                <input asp-for="Amount" class="form-control num" inputmode="decimal" step="0.01" min="0.01" />
+            </div>
+        </div>
+        <div class="mb-4">
+            <label asp-for="Notes" class="form-label"></label>
+            <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var dir = document.getElementById('cheque-direction');
+            var cust = document.getElementById('customer-wrap');
+            var supp = document.getElementById('supplier-wrap');
+            function sync() {
+                var isIn = dir.value === '@((int)ChequeDirection.In)';
+                cust.classList.toggle('d-none', !isIn);
+                supp.classList.toggle('d-none', isIn);
+            }
+            dir.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
+}

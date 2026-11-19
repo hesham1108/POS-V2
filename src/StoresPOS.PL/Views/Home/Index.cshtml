@@ -90,6 +90,28 @@
         }
     </section>
 
+    @* Cheques *@
+    <section class="sp-card p-4">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <h2 class="shift-section-title">@L["Cheques"]</h2>
+            @if (Can(AppPermissions.ChequesView))
+            {
+                <a class="btn btn-sm sp-btn-secondary" asp-controller="Cheques" asp-action="Index">@L["Open"]</a>
+            }
+        </div>
+        @{
+            var ch = Model.Cheques;
+        }
+        <dl class="shift-summary__rows">
+            <div><dt>@L["Receivable overdue"]</dt><dd class="num">@ch.IncomingOverdue · @ch.IncomingOverdueAmount.ToString("N2")</dd></div>
+            <div><dt>@L["Receivable due today"]</dt><dd class="num">@ch.IncomingDueToday</dd></div>
+            <div><dt>@L["Receivable this week"]</dt><dd class="num">@ch.IncomingDueThisWeek</dd></div>
+            <div><dt>@L["Payable overdue"]</dt><dd class="num">@ch.OutgoingOverdue · @ch.OutgoingOverdueAmount.ToString("N2")</dd></div>
+            <div><dt>@L["Payable due today"]</dt><dd class="num">@ch.OutgoingDueToday</dd></div>
+            <div><dt>@L["Payable this week"]</dt><dd class="num">@ch.OutgoingDueThisWeek</dd></div>
+        </dl>
+    </section>
+
     @* Treasuries *@
     <section class="sp-card p-4">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">

@@ -1,0 +1,133 @@
+@model ChequeIndexViewModel
+@{
+    var isIn = Model.Direction == ChequeDirection.In;
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary"
+       asp-action="Index"
+       asp-route-direction="@((int)Model.Direction)"
+       asp-route-status="@((int?)Model.Status)"
+       asp-route-dueFrom="@(Model.DueFrom?.ToString("yyyy-MM-dd"))"
+       asp-route-dueTo="@(Model.DueTo?.ToString("yyyy-MM-dd"))"
+       asp-route-overdueOnly="@Model.OverdueOnly"
+       asp-route-search="@Model.Search"
+       asp-route-print="true">@L["Print"]</a>
+    @if (Model.CanManage)
+    {
+        <a class="btn sp-btn-primary" asp-action="Create" asp-route-direction="@((int)Model.Direction)">@L["Add cheque"]</a>
+    }
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<div class="report-tabs mb-3 no-print">
+    <a class="@(isIn ? "is-active" : null)" asp-action="Index" asp-route-direction="@((int)ChequeDirection.In)">@L["Receivable (لينا)"]</a>
+    <a class="@(!isIn ? "is-active" : null)" asp-action="Index" asp-route-direction="@((int)ChequeDirection.Out)">@L["Payable (علينا)"]</a>
+</div>
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi sp-kpi--primary">
+        <span class="sp-kpi__label">@L["Total"]</span>
+        <strong class="sp-kpi__value num">@Model.Result.TotalAmount.ToString("N2")</strong>
+        <span class="sp-kpi__hint">@string.Format(L["{0} cheques"].Value, Model.Result.Items.Count)</span>
+    </div>
+    <div class="sp-kpi">
+        <span class="sp-kpi__label">@L["Pending"]</span>
+        <strong class="sp-kpi__value num">@Model.Result.PendingAmount.ToString("N2")</strong>
+        <span class="sp-kpi__hint">@string.Format(L["{0} cheques"].Value, Model.Result.PendingCount)</span>
+    </div>
+    <div class="sp-kpi @(Model.Result.OverdueCount > 0 ? "sp-kpi--warn" : null)">
+        <span class="sp-kpi__label">@L["Overdue"]</span>
+        <strong class="sp-kpi__value num">@Model.Result.OverdueCount</strong>
+    </div>
+</div>
+
+<div class="sp-card p-3 mb-4 no-print">
+    <form method="get" class="sp-filter-row">
+        <input type="hidden" name="direction" value="@((int)Model.Direction)" />
+        <div class="sp-filter-row__field">
+            <label class="form-label">@L["Status"]</label>
+            <select class="form-select" name="status" asp-items="Html.GetEnumSelectList<ChequeStatus>()">
+                <option value="">@L["All"]</option>
+            </select>
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label">@L["From"]</label>
+            <input class="form-control" type="date" name="dueFrom" value="@Model.DueFrom?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label">@L["To"]</label>
+            <input class="form-control" type="date" name="dueTo" value="@Model.DueTo?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label">@L["Search"]</label>
+            <input class="form-control" name="search" value="@Model.Search" />
+        </div>
+        <label class="sp-filter-row__check form-check">
+            <input class="form-check-input" type="checkbox" name="overdueOnly" value="true" @(Model.OverdueOnly ? "checked" : null) />
+            <span class="form-check-label">@L["Overdue only"]</span>
+        </label>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
+        </div>
+    </form>
+</div>
+
+<div class="sp-card p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>@L["Number"]</th>
+                    <th>@(isIn ? L["Customer"].Value : L["Supplier"].Value)</th>
+                    <th>@L["Bank"]</th>
+                    <th>@L["Due date"]</th>
+                    <th class="col-num">@L["Amount"]</th>
+                    <th>@L["Status"]</th>
+                    <th class="col-num no-print">@L["Actions"]</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Result.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="7">
+                        <partial name="_EmptyState" model='(@L["No cheques"].Value, @L["Add a cheque or pay by cheque at the till."].Value)' />
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Result.Items)
+                {
+                    <tr class="@(item.IsOverdue ? "table-warning" : null)">
+                        <td class="fw-semibold">@item.Number</td>
+                        <td>@(isIn ? item.CustomerName : item.SupplierName)</td>
+                        <td>@(item.Bank ?? "—")</td>
+                        <td class="num">@item.DueDate.ToString("yyyy/MM/dd")</td>
+                        <td class="col-num font-monospace">@item.Amount.ToString("N2")</td>
+                        <td>
+                            <span class="sp-status @(item.Status switch {
+                                ChequeStatus.Pending => item.IsOverdue ? "sp-status-warn" : "sp-status-neutral",
+                                ChequeStatus.Collected or ChequeStatus.Paid => "sp-status-ok",
+                                ChequeStatus.Bounced => "sp-status-bad",
+                                _ => "sp-status-neutral"
+                            })">@item.Status</span>
+                        </td>
+                        <td class="col-num no-print">
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">@L["Open"]</a>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.Print)
+{
+    <script>window.addEventListener('load', function () { window.print(); });</script>
+}

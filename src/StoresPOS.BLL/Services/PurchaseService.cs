@@ -10,19 +10,23 @@ namespace StoresPOS.BLL.Services;
 public class PurchaseService : IPurchaseService
 {
     public const string MsgTreasuryRequired = "Choose a treasury to pay this purchase from.";
+    public const string MsgPayMethod = "Pay from a treasury or enter an outgoing cheque.";
 
     private readonly ApplicationDbContext _db;
     private readonly IInventoryService _inventoryService;
     private readonly ITreasuryService _treasuries;
+    private readonly IChequeService _cheques;
 
     public PurchaseService(
         ApplicationDbContext db,
         IInventoryService inventoryService,
-        ITreasuryService treasuries)
+        ITreasuryService treasuries,
+        IChequeService cheques)
     {
         _db = db;
         _inventoryService = inventoryService;
         _treasuries = treasuries;
+        _cheques = cheques;
     }
 
     public async Task<IReadOnlyList<PurchaseInvoiceListItemDto>> GetListAsync(
@@ -165,15 +169,11 @@ public class PurchaseService : IPurchaseService
         int id,
         int userId,
         int paidFromTreasuryId,
+        ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default)
     {
         return await ExecuteInTransactionAsync(async () =>
         {
-            if (paidFromTreasuryId <= 0)
-            {
-                throw new BusinessException(MsgTreasuryRequired);
-            }
-
             var entity = await _db.PurchaseInvoices
                 .Include(x => x.Items)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
@@ -194,10 +194,9 @@ public class PurchaseService : IPurchaseService
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
             entity.ConfirmedByUserId = userId;
-            entity.PaidFromTreasuryId = paidFromTreasuryId;
 
-            await _treasuries.RecordPurchasePaymentAsync(
-                paidFromTreasuryId, entity.SubTotal, entity.Id, userId, cancellationToken);
+            await SettlePurchasePaymentAsync(
+                entity, userId, paidFromTreasuryId, cheque, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return (await GetByIdAsync(entity.Id, cancellationToken))!;
         }, cancellationToken);
@@ -207,15 +206,11 @@ public class PurchaseService : IPurchaseService
         PurchaseInvoiceUpsertDto dto,
         int userId,
         int paidFromTreasuryId,
+        ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default)
     {
         return await ExecuteInTransactionAsync(async () =>
         {
-            if (paidFromTreasuryId <= 0)
-            {
-                throw new BusinessException(MsgTreasuryRequired);
-            }
-
             var entity = await BuildDraftEntityAsync(dto, userId, cancellationToken);
             _db.PurchaseInvoices.Add(entity);
             await _db.SaveChangesAsync(cancellationToken);
@@ -224,13 +219,41 @@ public class PurchaseService : IPurchaseService
             entity.Status = PurchaseInvoiceStatus.Confirmed;
             entity.ConfirmedAtUtc = DateTime.UtcNow;
             entity.ConfirmedByUserId = userId;
-            entity.PaidFromTreasuryId = paidFromTreasuryId;
 
-            await _treasuries.RecordPurchasePaymentAsync(
-                paidFromTreasuryId, entity.SubTotal, entity.Id, userId, cancellationToken);
+            await SettlePurchasePaymentAsync(
+                entity, userId, paidFromTreasuryId, cheque, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return (await GetByIdAsync(entity.Id, cancellationToken))!;
         }, cancellationToken);
+    }
+
+    private async Task SettlePurchasePaymentAsync(
+        PurchaseInvoice entity,
+        int userId,
+        int paidFromTreasuryId,
+        ChequeFormDto? cheque,
+        CancellationToken cancellationToken)
+    {
+        var payByCheque = cheque is not null && !string.IsNullOrWhiteSpace(cheque.Number);
+        if (payByCheque)
+        {
+            cheque!.Direction = ChequeDirection.Out;
+            cheque.SupplierId = entity.SupplierId;
+            cheque.Amount = entity.SubTotal;
+            cheque.PurchaseInvoiceId = entity.Id;
+            await _db.SaveChangesAsync(cancellationToken);
+            await _cheques.CreateForPurchaseAsync(cheque, entity.Id, userId, cancellationToken);
+            return;
+        }
+
+        if (paidFromTreasuryId <= 0)
+        {
+            throw new BusinessException(MsgPayMethod);
+        }
+
+        entity.PaidFromTreasuryId = paidFromTreasuryId;
+        await _treasuries.RecordPurchasePaymentAsync(
+            paidFromTreasuryId, entity.SubTotal, entity.Id, userId, cancellationToken);
     }
 
     private async Task<T> ExecuteInTransactionAsync<T>(

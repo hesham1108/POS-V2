@@ -123,6 +123,14 @@
                 {
                     <span class="app-sidebar__link is-disabled" title="@denied">@L["Treasuries"]</span>
                 }
+                @if (Can(AppPermissions.ChequesView))
+                {
+                    <a class="@NavClass(IsCtrl("Cheques"))" asp-controller="Cheques" asp-action="Index">@L["Cheques"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Cheques"]</span>
+                }
                 <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.UsersManage) ? soon : denied)">@L["Users and roles"]</span>
                 @if (Can(AppPermissions.PaymentMethodsManage))
                 {

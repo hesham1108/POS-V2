@@ -99,7 +99,7 @@ public class PurchasesController : Controller
             var dto = ToUpsert(model);
             var result = model.ConfirmOnSave
                 ? await _purchaseService.CreateAndConfirmAsync(
-                    dto, userId, model.PaidFromTreasuryId ?? 0, cancellationToken)
+                    dto, userId, model.PaidFromTreasuryId ?? 0, ToCheque(model), cancellationToken)
                 : await _purchaseService.CreateDraftAsync(dto, userId, cancellationToken);
 
             TempData["Success"] = model.ConfirmOnSave
@@ -156,7 +156,7 @@ public class PurchasesController : Controller
             if (model.ConfirmOnSave)
             {
                 var confirmed = await _purchaseService.ConfirmAsync(
-                    id, this.GetRequiredUserId(), model.PaidFromTreasuryId ?? 0, cancellationToken);
+                    id, this.GetRequiredUserId(), model.PaidFromTreasuryId ?? 0, ToCheque(model), cancellationToken);
                 TempData["Success"] = "Purchase confirmed. Stock and prices updated.";
                 return RedirectToAction(nameof(Details), new { id = confirmed.Id });
             }
@@ -174,12 +174,31 @@ public class PurchasesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Confirm(int id, int paidFromTreasuryId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Confirm(
+        int id,
+        int paidFromTreasuryId,
+        bool payByCheque,
+        string? chequeNumber,
+        string? chequeBank,
+        DateTime? chequeDueDate,
+        CancellationToken cancellationToken)
     {
         try
         {
+            ChequeFormDto? cheque = null;
+            if (payByCheque)
+            {
+                cheque = new ChequeFormDto
+                {
+                    Number = chequeNumber ?? "",
+                    Bank = chequeBank,
+                    DueDate = chequeDueDate ?? default,
+                    Direction = ChequeDirection.Out
+                };
+            }
+
             await _purchaseService.ConfirmAsync(
-                id, this.GetRequiredUserId(), paidFromTreasuryId, cancellationToken);
+                id, this.GetRequiredUserId(), paidFromTreasuryId, cheque, cancellationToken);
             TempData["Success"] = "Purchase confirmed. Stock and prices updated.";
         }
         catch (BusinessException ex)
@@ -189,6 +208,17 @@ public class PurchasesController : Controller
 
         return RedirectToAction(nameof(Details), new { id });
     }
+
+    private static ChequeFormDto? ToCheque(PurchaseFormViewModel model) =>
+        model.PayByCheque
+            ? new ChequeFormDto
+            {
+                Number = model.ChequeNumber ?? "",
+                Bank = model.ChequeBank,
+                DueDate = model.ChequeDueDate ?? default,
+                Direction = ChequeDirection.Out
+            }
+            : null;
 
     private async Task<PurchaseFormViewModel> BuildFormAsync(
         PurchaseInvoiceDetailDto? invoice,

@@ -254,15 +254,15 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 
 ### Phase 13 — Cheques (الشيكات)
 
-- [ ] `Cheque` (number, bank, due date, amount, direction In/Out, CustomerId **or** SupplierId, status, source invoice, notes) + `ChequeStatusHistory` (status, user, date, treasury, note).
-- [ ] Statuses: incoming — Pending → Collected / Bounced / Cancelled (Endorsed later if needed); outgoing — Pending → Paid / Cancelled.
-- [ ] Add cheque manually from the Cheques screen, from a customer / supplier page, or as the payment method at POS (Cheque kind) and on purchase invoices.
-- [ ] Collect / pay action asks for the treasury → writes the treasury ledger (rule 15); bounce reverses nothing in cash, flags the cheque and the party.
-- [ ] Cheques screen: tabs **لينا (receivable)** / **علينا (payable)**, filters status · party · due date range · overdue, totals per tab; print list.
-- [ ] Customer & supplier pages: their cheques + outstanding cheque total.
-- [ ] Dashboard: cheques due today / this week / overdue, in and out.
-- [ ] Reports: cheques by status and due date; included in the A4 invoice when paid by cheque.
-- [ ] Permissions `Cheques.View`, `Cheques.Manage`, `Cheques.ChangeStatus`.
+- [x] `Cheque` (number, bank, due date, amount, direction In/Out, CustomerId **or** SupplierId, status, source invoice, notes) + `ChequeStatusHistory` (status, user, date, treasury, note).
+- [x] Statuses: incoming — Pending → Collected / Bounced / Cancelled (Endorsed later if needed); outgoing — Pending → Paid / Cancelled.
+- [x] Add cheque manually from the Cheques screen, from a customer / supplier page, or as the payment method at POS (Cheque kind) and on purchase invoices.
+- [x] Collect / pay action asks for the treasury → writes the treasury ledger (rule 15); bounce reverses nothing in cash, flags the cheque and the party.
+- [x] Cheques screen: tabs **لينا (receivable)** / **علينا (payable)**, filters status · party · due date range · overdue, totals per tab; print list.
+- [x] Customer & supplier pages: their cheques + outstanding cheque total.
+- [x] Dashboard: cheques due today / this week / overdue, in and out.
+- [x] Reports: cheques by status and due date; included in the A4 invoice when paid by cheque.
+- [x] Permissions `Cheques.View`, `Cheques.Manage`, `Cheques.ChangeStatus`.
 
 ### Phase 14 — Warehouses (المخازن)
 

@@ -20,17 +20,20 @@ public class CustomersController : Controller
     private readonly ICustomerService _customers;
     private readonly ISalesService _sales;
     private readonly IReturnService _returns;
+    private readonly IChequeService _cheques;
     private readonly IStringLocalizer<SharedResource> _l;
 
     public CustomersController(
         ICustomerService customers,
         ISalesService sales,
         IReturnService returns,
+        IChequeService cheques,
         IStringLocalizer<SharedResource> localizer)
     {
         _customers = customers;
         _sales = sales;
         _returns = returns;
+        _cheques = cheques;
         _l = localizer;
     }
 
@@ -57,7 +60,9 @@ public class CustomersController : Controller
         {
             Customer = customer,
             Invoices = await _sales.GetInvoicesAsync(new SalesInvoiceFilterDto { CustomerId = id, Take = 200 }, cancellationToken),
-            Returns = await _returns.GetListAsync(new SalesReturnFilterDto { CustomerId = id, Take = 200 }, cancellationToken)
+            Returns = await _returns.GetListAsync(new SalesReturnFilterDto { CustomerId = id, Take = 200 }, cancellationToken),
+            Cheques = await _cheques.ListForCustomerAsync(id, cancellationToken),
+            OutstandingCheques = await _cheques.OutstandingTotalForCustomerAsync(id, cancellationToken)
         });
     }
 

@@ -105,6 +105,130 @@ namespace StoresPOS.DAL.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Cheque", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Bank")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Direction")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int?>("PurchaseInvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SalesInvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SettledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("SettledTreasuryId")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("Direction");
+
+                    b.HasIndex("DueDate");
+
+                    b.HasIndex("Number");
+
+                    b.HasIndex("PurchaseInvoiceId");
+
+                    b.HasIndex("SalesInvoiceId");
+
+                    b.HasIndex("SettledTreasuryId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("Cheques", (string)null);
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.ChequeStatusHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ChequeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int?>("TreasuryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TreasuryId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ChequeId", "CreatedAtUtc");
+
+                    b.ToTable("ChequeStatusHistory", (string)null);
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.Customer", b =>
                 {
                     b.Property<int>("Id")
@@ -1180,6 +1304,78 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("ParentCategory");
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Cheque", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StoresPOS.DAL.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany()
+                        .HasForeignKey("PurchaseInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StoresPOS.DAL.Entities.SalesInvoice", "SalesInvoice")
+                        .WithMany()
+                        .HasForeignKey("SalesInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StoresPOS.DAL.Entities.Treasury", "SettledTreasury")
+                        .WithMany()
+                        .HasForeignKey("SettledTreasuryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StoresPOS.DAL.Entities.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("PurchaseInvoice");
+
+                    b.Navigation("SalesInvoice");
+
+                    b.Navigation("SettledTreasury");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.ChequeStatusHistory", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.Cheque", "Cheque")
+                        .WithMany("StatusHistory")
+                        .HasForeignKey("ChequeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StoresPOS.DAL.Entities.Treasury", "Treasury")
+                        .WithMany()
+                        .HasForeignKey("TreasuryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StoresPOS.DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cheque");
+
+                    b.Navigation("Treasury");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.PaymentMethodDefinition", b =>
                 {
                     b.HasOne("StoresPOS.DAL.Entities.Treasury", "DefaultTreasury")
@@ -1473,6 +1669,11 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("Children");
 
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.Cheque", b =>
+                {
+                    b.Navigation("StatusHistory");
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.PurchaseInvoice", b =>

@@ -528,4 +528,51 @@
   <data name="Status" xml:space="preserve"><value>الحالة</value></data>
   <data name="Type" xml:space="preserve"><value>النوع</value></data>
   <data name="Cash" xml:space="preserve"><value>نقدي</value></data>
+  <data name="Cheques" xml:space="preserve"><value>الشيكات</value></data>
+  <data name="Add cheque" xml:space="preserve"><value>إضافة شيك</value></data>
+  <data name="Cheque {0}" xml:space="preserve"><value>شيك {0}</value></data>
+  <data name="Receivable (لينا)" xml:space="preserve"><value>لينا (تحصيل)</value></data>
+  <data name="Payable (علينا)" xml:space="preserve"><value>علينا (سداد)</value></data>
+  <data name="Track due dates, collect or pay into a treasury." xml:space="preserve"><value>متابعة الاستحقاق والتحصيل/السداد إلى الخزنة.</value></data>
+  <data name="No cheques" xml:space="preserve"><value>لا توجد شيكات</value></data>
+  <data name="Add a cheque or pay by cheque at the till." xml:space="preserve"><value>أضف شيكًا أو ادفع بشيك من نقطة البيع.</value></data>
+  <data name="Overdue" xml:space="preserve"><value>متأخر</value></data>
+  <data name="Overdue only" xml:space="preserve"><value>المتأخر فقط</value></data>
+  <data name="Pending" xml:space="preserve"><value>قيد الانتظار</value></data>
+  <data name="Collect" xml:space="preserve"><value>تحصيل</value></data>
+  <data name="Bounce" xml:space="preserve"><value>ارتجاع</value></data>
+  <data name="Pay" xml:space="preserve"><value>سداد</value></data>
+  <data name="Cancel cheque" xml:space="preserve"><value>إلغاء الشيك</value></data>
+  <data name="Change status" xml:space="preserve"><value>تغيير الحالة</value></data>
+  <data name="Status history" xml:space="preserve"><value>سجل الحالة</value></data>
+  <data name="Status updated." xml:space="preserve"><value>تم تحديث الحالة.</value></data>
+  <data name="Mark this cheque as bounced?" xml:space="preserve"><value>تعليمميز هذا الشيك كمرتجع؟</value></data>
+  <data name="Cancel this cheque?" xml:space="preserve"><value>إلغاء هذا الشيك؟</value></data>
+  <data name="Cheque number" xml:space="preserve"><value>رقم الشيك</value></data>
+  <data name="Bank (optional)" xml:space="preserve"><value>البنك (اختياري)</value></data>
+  <data name="Due date" xml:space="preserve"><value>تاريخ الاستحقاق</value></data>
+  <data name="Pick a customer (F4) before paying by cheque." xml:space="preserve"><value>اختر عميلًا (F4) قبل الدفع بشيك.</value></data>
+  <data name="Outstanding cheques" xml:space="preserve"><value>شيكات معلّقة</value></data>
+  <data name="Receivable overdue" xml:space="preserve"><value>لينا متأخر</value></data>
+  <data name="Receivable due today" xml:space="preserve"><value>لينا يستحق اليوم</value></data>
+  <data name="Receivable this week" xml:space="preserve"><value>لينا هذا الأسبوع</value></data>
+  <data name="Payable overdue" xml:space="preserve"><value>علينا متأخر</value></data>
+  <data name="Payable due today" xml:space="preserve"><value>علينا يستحق اليوم</value></data>
+  <data name="Payable this week" xml:space="preserve"><value>علينا هذا الأسبوع</value></data>
+  <data name="Cheques report" xml:space="preserve"><value>تقرير الشيكات</value></data>
+  <data name="By status and due date" xml:space="preserve"><value>حسب الحالة وتاريخ الاستحقاق</value></data>
+  <data name="By status" xml:space="preserve"><value>حسب الحالة</value></data>
+  <data name="Cheques due in this range appear here." xml:space="preserve"><value>الشيكات المستحقة في هذه الفترة تظهر هنا.</value></data>
+  <data name="{0} cheques" xml:space="preserve"><value>{0} شيكات</value></data>
+  <data name="Number" xml:space="preserve"><value>الرقم</value></data>
+  <data name="Party" xml:space="preserve"><value>الطرف</value></data>
+  <data name="Customer" xml:space="preserve"><value>العميل</value></data>
+  <data name="Supplier" xml:space="preserve"><value>المورد</value></data>
+  <data name="All" xml:space="preserve"><value>الكل</value></data>
+  <data name="Search" xml:space="preserve"><value>بحث</value></data>
+  <data name="From" xml:space="preserve"><value>من</value></data>
+  <data name="To" xml:space="preserve"><value>إلى</value></data>
+  <data name="Total" xml:space="preserve"><value>الإجمالي</value></data>
+  <data name="Notes" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="Treasury" xml:space="preserve"><value>الخزنة</value></data>
 </root>

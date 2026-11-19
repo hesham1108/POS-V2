@@ -68,6 +68,10 @@
             {
                 <div>@L["Amount paid"]: @f.Money(i.AmountPaid) · @L["Change"]: @f.Money(i.ChangeAmount)</div>
             }
+            else if (method?.Kind == PaymentMethodKind.Cheque && !string.IsNullOrEmpty(i.PaymentReference))
+            {
+                <div>@L["Cheque"]: @i.PaymentReference</div>
+            }
             else if (!string.IsNullOrEmpty(i.PaymentReference))
             {
                 <div>@L["Reference"]: @i.PaymentReference</div>

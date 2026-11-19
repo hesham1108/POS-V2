@@ -112,10 +112,30 @@
 
         <div class="mb-3">
             <label asp-for="PaidFromTreasuryId" class="form-label"></label>
-            <select asp-for="PaidFromTreasuryId" class="form-select" asp-items="treasuryItems">
+            <select asp-for="PaidFromTreasuryId" class="form-select" asp-items="treasuryItems" id="pay-treasury">
                 <option value="">— select treasury —</option>
             </select>
-            <div class="form-text">Required when confirming — pays the supplier from this treasury.</div>
+            <div class="form-text">Pay from treasury, or tick “Pay by cheque” instead.</div>
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="PayByCheque" class="form-check-input" id="pay-by-cheque" />
+            <label asp-for="PayByCheque" class="form-check-label"></label>
+        </div>
+        <div id="cheque-fields" class="mb-3 @(Model.PayByCheque ? null : "d-none")">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label asp-for="ChequeNumber" class="form-label"></label>
+                    <input asp-for="ChequeNumber" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ChequeBank" class="form-label"></label>
+                    <input asp-for="ChequeBank" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ChequeDueDate" class="form-label"></label>
+                    <input asp-for="ChequeDueDate" class="form-control" type="date" />
+                </div>
+            </div>
         </div>
 
         <div class="form-check mb-3">

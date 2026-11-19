@@ -16,7 +16,7 @@ public class InventoryServiceTests
         var (userId, supplierId, productId) = await SeedAsync(db);
         var inventory = new InventoryService(db);
         var treasuryId = await SeedTreasuryAsync(db);
-        var purchases = new PurchaseService(db, inventory, new TreasuryService(db, TimeProvider.System));
+        var purchases = new PurchaseService(db, inventory, new TreasuryService(db, TimeProvider.System), new ChequeService(db, new TreasuryService(db, TimeProvider.System), TimeProvider.System));
 
         await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
         {

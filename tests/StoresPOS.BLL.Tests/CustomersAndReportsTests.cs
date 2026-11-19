@@ -440,7 +440,7 @@ public class CustomersAndReportsTests
         var treasuries = new TreasuryService(db, clock);
         await treasuries.EnsureSeededAsync();
         var shifts = new ShiftService(db, treasuries, clock);
-        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, clock);
+        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, new ChequeService(db, treasuries, clock), clock);
         var cashOuts = new CashOutService(db, shifts, clock);
 
         await shifts.OpenAsync(100m, mona.Id);
@@ -455,7 +455,7 @@ public class CustomersAndReportsTests
             Returns = new ReturnService(db, inventory, permissions, paymentMethods, Options.Create(new StoreSettings()), clock),
             Customers = new CustomerService(db, clock),
             Reports = new ReportService(db, shifts, cashOuts, clock),
-            Dashboard = new DashboardService(db, shifts, sales, cashOuts, treasuries, clock),
+            Dashboard = new DashboardService(db, shifts, sales, cashOuts, treasuries, new ChequeService(db, treasuries, clock), clock),
             Clock = clock,
             Cashier = mona.Id,
             Manager = omar.Id,

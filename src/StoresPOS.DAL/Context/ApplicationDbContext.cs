@@ -30,6 +30,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<PaymentMethodDefinition> PaymentMethods => Set<PaymentMethodDefinition>();
     public DbSet<Treasury> Treasuries => Set<Treasury>();
     public DbSet<TreasuryTransaction> TreasuryTransactions => Set<TreasuryTransaction>();
+    public DbSet<Cheque> Cheques => Set<Cheque>();
+    public DbSet<ChequeStatusHistory> ChequeStatusHistory => Set<ChequeStatusHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

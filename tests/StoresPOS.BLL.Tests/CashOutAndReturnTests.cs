@@ -307,7 +307,7 @@ public class CashOutAndReturnTests
         var treasuries = new TreasuryService(db, clock);
         await treasuries.EnsureSeededAsync();
         var shifts = new ShiftService(db, treasuries, clock);
-        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, clock);
+        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, new ChequeService(db, treasuries, clock), clock);
 
         if (openShift)
         {

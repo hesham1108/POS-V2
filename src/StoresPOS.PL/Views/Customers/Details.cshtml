@@ -31,6 +31,10 @@
         <span class="sp-kpi__label">@L["Net total"]</span>
         <strong class="sp-kpi__value num">@c.NetTotal.ToString("N2")</strong>
     </div>
+    <div class="sp-kpi @(Model.OutstandingCheques > 0 ? "sp-kpi--warn" : null)">
+        <span class="sp-kpi__label">@L["Outstanding cheques"]</span>
+        <strong class="sp-kpi__value num">@Model.OutstandingCheques.ToString("N2")</strong>
+    </div>
 </div>
 
 <div class="report-grid">
@@ -105,3 +109,35 @@
         <partial name="_ReturnsTable" model="Model.Returns" />
     </section>
 }
+
+<section class="sp-card p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="shift-section-title mb-0">@L["Cheques"]</h2>
+        @if (User.HasClaim(AppPermissions.ClaimType, AppPermissions.ChequesManage))
+        {
+            <a class="btn btn-sm sp-btn-secondary" asp-controller="Cheques" asp-action="Create"
+               asp-route-direction="@((int)ChequeDirection.In)" asp-route-customerId="@c.Id">@L["Add cheque"]</a>
+        }
+    </div>
+    @if (Model.Cheques.Count == 0)
+    {
+        <p class="text-muted mb-0">@L["No cheques"]</p>
+    }
+    else
+    {
+        <table class="table align-middle mb-0">
+            <thead><tr><th>@L["Number"]</th><th>@L["Due date"]</th><th class="text-end">@L["Amount"]</th><th>@L["Status"]</th></tr></thead>
+            <tbody>
+            @foreach (var ch in Model.Cheques)
+            {
+                <tr>
+                    <td><a asp-controller="Cheques" asp-action="Details" asp-route-id="@ch.Id">@ch.Number</a></td>
+                    <td class="num">@ch.DueDate.ToString("yyyy/MM/dd")</td>
+                    <td class="text-end num">@ch.Amount.ToString("N2")</td>
+                    <td>@ch.Status</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

@@ -165,12 +165,23 @@ public class PosController : Controller
         byte method,
         decimal? amountPaid,
         string? reference,
+        string? chequeNumber,
+        string? chequeBank,
+        DateTime? chequeDueDate,
         CancellationToken cancellationToken) =>
         await Run(async userId =>
         {
             var sale = await _sales.CompleteAsync(
                 userId,
-                new PaymentDto { Method = (PaymentMethod)method, AmountPaid = amountPaid, Reference = reference },
+                new PaymentDto
+                {
+                    Method = (PaymentMethod)method,
+                    AmountPaid = amountPaid,
+                    Reference = reference,
+                    ChequeNumber = chequeNumber,
+                    ChequeBank = chequeBank,
+                    ChequeDueDate = chequeDueDate
+                },
                 cancellationToken);
 
             var isCash = await _paymentMethods.IsCashAsync((byte)sale.PaymentMethod, cancellationToken);

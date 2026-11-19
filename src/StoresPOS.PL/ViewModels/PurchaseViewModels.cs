@@ -47,6 +47,21 @@ public class PurchaseFormViewModel
     [Display(Name = "Pay from treasury")]
     public int? PaidFromTreasuryId { get; set; }
 
+    [Display(Name = "Pay by cheque")]
+    public bool PayByCheque { get; set; }
+
+    [Display(Name = "Cheque number")]
+    [StringLength(60)]
+    public string? ChequeNumber { get; set; }
+
+    [Display(Name = "Bank (optional)")]
+    [StringLength(120)]
+    public string? ChequeBank { get; set; }
+
+    [Display(Name = "Due date")]
+    [DataType(DataType.Date)]
+    public DateTime? ChequeDueDate { get; set; }
+
     public IReadOnlyList<SupplierOptionViewModel> SupplierOptions { get; set; } = [];
     public IReadOnlyList<ProductOptionViewModel> ProductOptions { get; set; } = [];
     public IReadOnlyList<TreasuryListItemDto> TreasuryOptions { get; set; } = [];

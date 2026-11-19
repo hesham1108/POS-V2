@@ -19,17 +19,20 @@ public class ReportsController : Controller
     private const int MaxRangeDays = 366;
 
     private readonly IReportService _reports;
+    private readonly IChequeService _cheques;
     private readonly ICategoryService _categories;
     private readonly ISupplierService _suppliers;
     private readonly TimeProvider _time;
 
     public ReportsController(
         IReportService reports,
+        IChequeService cheques,
         ICategoryService categories,
         ISupplierService suppliers,
         TimeProvider time)
     {
         _reports = reports;
+        _cheques = cheques;
         _categories = categories;
         _suppliers = suppliers;
         _time = time;
@@ -160,6 +163,31 @@ public class ReportsController : Controller
                 FromUtc = ToUtc(f),
                 ToUtc = ToUtc(t.AddDays(1)),
                 UserId = userId
+            }, cancellationToken)
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Cheques(
+        DateTime? from,
+        DateTime? to,
+        ChequeDirection? direction,
+        ChequeStatus? status,
+        CancellationToken cancellationToken)
+    {
+        var (f, t) = Range(from, to);
+        return View(new ChequesReportViewModel
+        {
+            From = f,
+            To = t,
+            Direction = direction,
+            Status = status,
+            Report = await _cheques.GetReportAsync(new ChequesReportFilterDto
+            {
+                DueFrom = f,
+                DueTo = t,
+                Direction = direction,
+                Status = status
             }, cancellationToken)
         });
     }

@@ -12,4 +12,12 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/purchase-form.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            var cb = document.getElementById('pay-by-cheque');
+            var box = document.getElementById('cheque-fields');
+            if (!cb || !box) return;
+            cb.addEventListener('change', function () { box.classList.toggle('d-none', !cb.checked); });
+        })();
+    </script>
 }

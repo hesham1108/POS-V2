@@ -89,6 +89,11 @@ public class PaymentDto
     public decimal? AmountPaid { get; set; }
 
     public string? Reference { get; set; }
+
+    /// <summary>Required when Method kind is Cheque (Phase 13).</summary>
+    public string? ChequeNumber { get; set; }
+    public string? ChequeBank { get; set; }
+    public DateTime? ChequeDueDate { get; set; }
 }
 
 public class CompletedSaleDto

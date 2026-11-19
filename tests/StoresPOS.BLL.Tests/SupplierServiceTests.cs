@@ -39,7 +39,7 @@ public class SupplierServiceTests
         });
         await db.SaveChangesAsync();
         var treasuryId = db.Treasuries.Single().Id;
-        var purchases = new PurchaseService(db, new InventoryService(db), new TreasuryService(db, TimeProvider.System));
+        var purchases = new PurchaseService(db, new InventoryService(db), new TreasuryService(db, TimeProvider.System), new ChequeService(db, new TreasuryService(db, TimeProvider.System), TimeProvider.System));
         var suppliers = new SupplierService(db);
 
         await purchases.CreateDraftAsync(new PurchaseInvoiceUpsertDto

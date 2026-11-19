@@ -21,9 +21,16 @@
         <a class="btn sp-btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
         <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
               onsubmit="return confirm('Confirm this purchase? Stock and selling prices will update.');"
-              class="d-inline-flex align-items-center gap-2">
+              class="d-inline-flex flex-wrap align-items-center gap-2">
             @Html.AntiForgeryToken()
-            <select name="paidFromTreasuryId" class="form-select form-select-sm" asp-items="treasuryItems" required></select>
+            <select name="paidFromTreasuryId" class="form-select form-select-sm" asp-items="treasuryItems"></select>
+            <label class="form-check form-check-inline mb-0">
+                <input type="checkbox" class="form-check-input" name="payByCheque" value="true" id="confirm-pay-cheque" />
+                <span class="form-check-label">Cheque</span>
+            </label>
+            <input name="chequeNumber" class="form-control form-control-sm" style="width:8rem" placeholder="No." />
+            <input name="chequeBank" class="form-control form-control-sm" style="width:8rem" placeholder="Bank" />
+            <input name="chequeDueDate" type="date" class="form-control form-control-sm" style="width:10rem" />
             <button type="submit" class="btn sp-btn-primary">Confirm</button>
         </form>
     }

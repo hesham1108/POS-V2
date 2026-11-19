@@ -55,6 +55,13 @@ public class CashOutsReportViewModel : ReportPageViewModel
     public CashOutsReportDto Report { get; set; } = new();
 }
 
+public class ChequesReportViewModel : ReportPageViewModel
+{
+    public ChequeDirection? Direction { get; set; }
+    public ChequeStatus? Status { get; set; }
+    public ChequesReportDto Report { get; set; } = new();
+}
+
 public class ShiftHistoryViewModel
 {
     public DateTime? From { get; set; }

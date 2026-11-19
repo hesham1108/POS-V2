@@ -37,6 +37,9 @@ public class SalesService : ISalesService
     public const string MsgCustomerNotFound = "That customer is not available. Pick another one.";
 
     public const string MsgInvalidPaymentMethod = "That payment method is not available.";
+    public const string MsgChequeNeedsCustomer = "Pick a customer before paying by cheque.";
+    public const string MsgChequeNumberRequired = "Cheque number is required.";
+    public const string MsgChequeDueRequired = "Cheque due date is required.";
 
     private readonly ApplicationDbContext _db;
     private readonly IShiftService _shifts;
@@ -44,6 +47,7 @@ public class SalesService : ISalesService
     private readonly IPermissionService _permissions;
     private readonly IPaymentMethodService _paymentMethods;
     private readonly ITreasuryService _treasuries;
+    private readonly IChequeService _cheques;
     private readonly TimeProvider _time;
 
     public SalesService(
@@ -53,6 +57,7 @@ public class SalesService : ISalesService
         IPermissionService permissions,
         IPaymentMethodService paymentMethods,
         ITreasuryService treasuries,
+        IChequeService cheques,
         TimeProvider time)
     {
         _db = db;
@@ -61,6 +66,7 @@ public class SalesService : ISalesService
         _permissions = permissions;
         _paymentMethods = paymentMethods;
         _treasuries = treasuries;
+        _cheques = cheques;
         _time = time;
     }
 
@@ -561,21 +567,54 @@ public class SalesService : ISalesService
             draft.CompletedAtUtc = Now;
             draft.UpdatedAtUtc = Now;
 
-            // Non-cash (except cheque) settles into the method's default treasury when set (Phase 12).
-            if (!isCash
-                && methodDef.Kind != PaymentMethodKind.Cheque
-                && methodDef.DefaultTreasuryId is int settleTreasuryId)
+            if (methodDef.Kind == PaymentMethodKind.Cheque)
             {
-                await _treasuries.RecordSaleSettlementAsync(
-                    settleTreasuryId,
-                    draft.Total,
-                    draft.Id,
-                    userId,
-                    note: draft.InvoiceNumber,
-                    cancellationToken);
-            }
+                if (draft.CustomerId is null or <= 0)
+                {
+                    throw new BusinessException(MsgChequeNeedsCustomer);
+                }
 
-            await _db.SaveChangesAsync(cancellationToken);
+                if (string.IsNullOrWhiteSpace(payment.ChequeNumber) && string.IsNullOrWhiteSpace(payment.Reference))
+                {
+                    throw new BusinessException(MsgChequeNumberRequired);
+                }
+
+                if (!payment.ChequeDueDate.HasValue)
+                {
+                    throw new BusinessException(MsgChequeDueRequired);
+                }
+
+                var chequeNumber = (payment.ChequeNumber ?? payment.Reference)!.Trim();
+                draft.PaymentReference = chequeNumber;
+                await _db.SaveChangesAsync(cancellationToken);
+
+                await _cheques.CreateForSaleAsync(new ChequeFormDto
+                {
+                    Number = chequeNumber,
+                    Bank = payment.ChequeBank,
+                    DueDate = payment.ChequeDueDate.Value.Date,
+                    Amount = draft.Total,
+                    Direction = ChequeDirection.In,
+                    CustomerId = draft.CustomerId,
+                    Notes = draft.InvoiceNumber
+                }, draft.Id, userId, cancellationToken);
+            }
+            else
+            {
+                // Non-cash settles into the method's default treasury when set (Phase 12).
+                if (!isCash && methodDef.DefaultTreasuryId is int settleTreasuryId)
+                {
+                    await _treasuries.RecordSaleSettlementAsync(
+                        settleTreasuryId,
+                        draft.Total,
+                        draft.Id,
+                        userId,
+                        note: draft.InvoiceNumber,
+                        cancellationToken);
+                }
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
             if (tx is not null)
             {
                 await tx.CommitAsync(cancellationToken);

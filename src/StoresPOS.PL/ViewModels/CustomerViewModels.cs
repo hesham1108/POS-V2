@@ -44,4 +44,6 @@ public class CustomerDetailsViewModel
     public CustomerDto Customer { get; set; } = null!;
     public IReadOnlyList<SalesInvoiceListItemDto> Invoices { get; set; } = [];
     public IReadOnlyList<SalesReturnListItemDto> Returns { get; set; } = [];
+    public IReadOnlyList<ChequeListItemDto> Cheques { get; set; } = [];
+    public decimal OutstandingCheques { get; set; }
 }

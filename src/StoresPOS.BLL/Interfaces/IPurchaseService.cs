@@ -24,6 +24,7 @@ public interface IPurchaseService
         int id,
         int userId,
         int paidFromTreasuryId,
+        ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Create draft and confirm in one transaction.</summary>
@@ -31,5 +32,6 @@ public interface IPurchaseService
         PurchaseInvoiceUpsertDto dto,
         int userId,
         int paidFromTreasuryId,
+        ChequeFormDto? cheque = null,
         CancellationToken cancellationToken = default);
 }

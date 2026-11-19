@@ -12,10 +12,12 @@ namespace StoresPOS.PL.Controllers;
 public class SuppliersController : Controller
 {
     private readonly ISupplierService _supplierService;
+    private readonly IChequeService _cheques;
 
-    public SuppliersController(ISupplierService supplierService)
+    public SuppliersController(ISupplierService supplierService, IChequeService cheques)
     {
         _supplierService = supplierService;
+        _cheques = cheques;
     }
 
     [HttpGet]
@@ -56,6 +58,8 @@ public class SuppliersController : Controller
             return NotFound();
         }
 
+        ViewBag.Cheques = await _cheques.ListForSupplierAsync(id, cancellationToken);
+        ViewBag.OutstandingCheques = await _cheques.OutstandingTotalForSupplierAsync(id, cancellationToken);
         return View(supplier);
     }
 

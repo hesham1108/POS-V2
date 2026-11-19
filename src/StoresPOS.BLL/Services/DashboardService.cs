@@ -15,6 +15,7 @@ public class DashboardService : IDashboardService
     private readonly ISalesService _sales;
     private readonly ICashOutService _cashOuts;
     private readonly ITreasuryService _treasuries;
+    private readonly IChequeService _cheques;
     private readonly TimeProvider _time;
 
     public DashboardService(
@@ -23,6 +24,7 @@ public class DashboardService : IDashboardService
         ISalesService sales,
         ICashOutService cashOuts,
         ITreasuryService treasuries,
+        IChequeService cheques,
         TimeProvider time)
     {
         _db = db;
@@ -30,6 +32,7 @@ public class DashboardService : IDashboardService
         _sales = sales;
         _cashOuts = cashOuts;
         _treasuries = treasuries;
+        _cheques = cheques;
         _time = time;
     }
 
@@ -112,7 +115,8 @@ public class DashboardService : IDashboardService
                     Total = x.SubTotal
                 })
                 .ToListAsync(cancellationToken),
-            Treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken)
+            Treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken),
+            Cheques = await _cheques.GetDashboardAsync(cancellationToken)
         };
     }
 }

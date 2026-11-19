@@ -459,6 +459,42 @@ public class TreasuryService : ITreasuryService
             allowZero: false,
             cancellationToken);
 
+    public Task RecordChequeCollectedAsync(
+        int treasuryId,
+        decimal amount,
+        int chequeId,
+        int userId,
+        string? note = null,
+        CancellationToken cancellationToken = default) =>
+        PostSystemAsync(
+            treasuryId,
+            TreasuryTransactionDirection.In,
+            amount,
+            TreasuryTransactionSourceType.Cheque,
+            chequeId,
+            userId,
+            note ?? $"Cheque #{chequeId} collected",
+            allowZero: false,
+            cancellationToken);
+
+    public Task RecordChequePaidAsync(
+        int treasuryId,
+        decimal amount,
+        int chequeId,
+        int userId,
+        string? note = null,
+        CancellationToken cancellationToken = default) =>
+        PostSystemAsync(
+            treasuryId,
+            TreasuryTransactionDirection.Out,
+            amount,
+            TreasuryTransactionSourceType.Cheque,
+            chequeId,
+            userId,
+            note ?? $"Cheque #{chequeId} paid",
+            allowZero: false,
+            cancellationToken);
+
     private async Task PostSystemAsync(
         int treasuryId,
         TreasuryTransactionDirection direction,

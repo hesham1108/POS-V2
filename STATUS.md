@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 12 complete** — next is **Phase 13 (Cheques)**
-- Overall progress: Phases 1–12 verified
+- Current phase: **Phase 13 complete** — next is **Phase 14 (Warehouses)**
+- Overall progress: Phases 1–13 verified
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -113,16 +113,28 @@
 - Tests: BLL 93/93, PL 12/12
 - **Re-login required** after deploy so JWT picks up treasury permissions
 
+### Phase 13 — Cheques (الشيكات)
+
+- `Cheque` + `ChequeStatusHistory`: number, bank, due date, amount, In/Out, customer XOR supplier, optional sale/purchase link; status log with user + treasury
+- Incoming: Pending → Collected (treasury In) / Bounced / Cancelled; outgoing: Pending → Paid (treasury Out) / Cancelled — no money on bounce/cancel (rule 15)
+- Manual add from Cheques screen; customer/supplier pages; POS Cheque pay (needs customer + number + due date); purchase confirm pay-by-cheque
+- Cheques UI: لينا / علينا tabs, filters, totals, print; collect/pay/bounce/cancel actions
+- Dashboard due today / week / overdue (in + out); Reports → Cheques; A4 shows cheque number
+- Permissions `Cheques.View` / `Manage` / `ChangeStatus` (Admin + Manager)
+- Migration `Cheques` applied
+- Tests: BLL 97/97, PL 12/12
+- **Re-login required** after deploy so JWT picks up cheque permissions
+
 ## Pending Tasks
 - Returns: no in-line manager approval for cashiers yet (manager makes the return) — confirm with client
 - Silent printing on the real thermal printer not tested (no printer here) — follow `docs/printing.md` on the store PC
-- Apply migrations through `Treasuries` on every store SQL; full POS click-through (en + ar)
+- Apply migrations through `Cheques` on every store SQL; full POS click-through (en + ar)
 - Profit uses the purchase price saved on each sale line (last purchase price), not weighted average cost — open decision "Profit costing"
 - Customers screens use Reports.View (Admin/Manager); cashiers add customers only from the POS (F4) — confirm with client
 - Minus signs in the existing `_ShiftSummary` render after the number in Arabic (e.g. "0.00-") — cosmetic
 - Client to confirm the POS open decisions applied as defaults (split tender, zero stock, held at close, tax)
 - Error messages that name a product use the English name even in Arabic UI
-- A4 logo upload deferred to Settings (Phase 15); cheque payment details on A4 when Phase 13 lands
+- A4 logo upload deferred to Settings (Phase 15)
 - POS "Reprint last" still defaults to 80 mm (A4 available from Sales)
 - Non-cash settlement into default treasury — confirm with client (applied as default)
 
@@ -131,13 +143,13 @@
 | Command | Result |
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 93/93 |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 97/97 |
 | `dotnet test tests/StoresPOS.PL.Tests` | Passed 12/12 |
-| `dotnet ef database update` | Applied through `Treasuries` |
+| `dotnet ef database update` | Applied through `Cheques` |
 
 ## Next Recommended Task
 
-Phase 13 — Cheques (الشيكات). Then 14 warehouses, 15 settings & delivery
+Phase 14 — Warehouses (المخازن). Then 15 settings & delivery
 
 ## Design System Note (2026-11-19)
 
@@ -168,6 +180,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | UI parity pass: tokens, shell, shared components, Inventory→Products→rest; RTL logical props |
 | 2026-11-19 | Phase 11 payment methods table (+ Cheque) + manage screen + A4 landscape invoices |
 | 2026-11-19 | Phase 12 treasuries ledger, shift handover, purchase pay-from, statement + dashboard |
+| 2026-11-19 | Phase 13 cheques (لينا/علينا), collect/pay → treasury, POS + purchase + reports |
 
 ## Local Dev Login
 
