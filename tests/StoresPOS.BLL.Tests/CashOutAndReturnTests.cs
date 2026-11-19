@@ -309,7 +309,7 @@ public class CashOutAndReturnTests
         var treasuries = new TreasuryService(db, clock);
         await treasuries.EnsureSeededAsync();
         var shifts = new ShiftService(db, treasuries, clock);
-        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, new ChequeService(db, treasuries, clock), warehouses, clock);
+        var sales = new SalesService(db, shifts, inventory, permissions, paymentMethods, treasuries, new ChequeService(db, treasuries, clock), warehouses, TestFactories.StoreMonitor(), clock);
 
         if (openShift)
         {
@@ -323,7 +323,7 @@ public class CashOutAndReturnTests
             Shifts = shifts,
             Sales = sales,
             CashOuts = new CashOutService(db, shifts, clock),
-            Returns = new ReturnService(db, inventory, permissions, paymentMethods, warehouses, Options.Create(new StoreSettings()), clock),
+            Returns = new ReturnService(db, inventory, permissions, paymentMethods, warehouses, TestFactories.StoreMonitor(), clock),
             Clock = clock,
             Cashier = mona.Id,
             Manager = omar.Id,

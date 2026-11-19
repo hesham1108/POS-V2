@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.BLL.Models;
 using StoresPOS.BLL.Services;
 using StoresPOS.DAL.Entities;
 using StoresPOS.PL.Extensions;
@@ -23,6 +25,7 @@ public class PosController : Controller
     private readonly IShiftService _shifts;
     private readonly ICustomerService _customers;
     private readonly IPaymentMethodService _paymentMethods;
+    private readonly IOptionsMonitor<StoreSettings> _store;
     private readonly IStringLocalizer<SharedResource> _l;
 
     public PosController(
@@ -30,12 +33,14 @@ public class PosController : Controller
         IShiftService shifts,
         ICustomerService customers,
         IPaymentMethodService paymentMethods,
+        IOptionsMonitor<StoreSettings> store,
         IStringLocalizer<SharedResource> localizer)
     {
         _sales = sales;
         _shifts = shifts;
         _customers = customers;
         _paymentMethods = paymentMethods;
+        _store = store;
         _l = localizer;
     }
 
@@ -189,8 +194,9 @@ public class PosController : Controller
                 ? string.Format(_l["Payment received. Invoice {0}. Change: {1} EGP. Receipt sent to printer."].Value, sale.InvoiceNumber, sale.ChangeAmount.ToString("N2"))
                 : string.Format(_l["Payment received. Invoice {0}. Receipt sent to printer."].Value, sale.InvoiceNumber);
 
-            var receiptUrl = Url.Action("Sale", "Receipts", new { id = sale.InvoiceId });
+            var receipt80Url = Url.Action("Sale", "Receipts", new { id = sale.InvoiceId });
             var receiptA4Url = Url.Action("SaleA4", "Receipts", new { id = sale.InvoiceId });
+            var receiptUrl = _store.CurrentValue.PrefersA4Receipt ? receiptA4Url : receipt80Url;
             return Json(new
             {
                 ok = true,

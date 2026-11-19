@@ -7,6 +7,9 @@ namespace StoresPOS.BLL.Tests;
 
 internal static class TestFactories
 {
+    public static IOptionsMonitor<StoreSettings> StoreMonitor(StoreSettings? settings = null) =>
+        new TestOptionsMonitor<StoreSettings>(settings ?? new StoreSettings());
+
     public static InventoryService Inventory(ApplicationDbContext db) => new(db);
 
     public static WarehouseService Warehouses(ApplicationDbContext db, TimeProvider? time = null)
@@ -15,7 +18,7 @@ internal static class TestFactories
         return new WarehouseService(
             db,
             inventory,
-            Options.Create(new StoreSettings()),
+            StoreMonitor(),
             time ?? TimeProvider.System);
     }
 
@@ -24,13 +27,21 @@ internal static class TestFactories
         var inventory = Inventory(db);
         var treasuries = new TreasuryService(db, time ?? TimeProvider.System);
         var warehouses = new WarehouseService(
-            db, inventory, Options.Create(new StoreSettings()), time ?? TimeProvider.System);
+            db, inventory, StoreMonitor(), time ?? TimeProvider.System);
         return new PurchaseService(
             db,
             inventory,
             treasuries,
             new ChequeService(db, treasuries, time ?? TimeProvider.System),
             warehouses);
+    }
+
+    private sealed class TestOptionsMonitor<T> : IOptionsMonitor<T>
+    {
+        public TestOptionsMonitor(T current) => CurrentValue = current;
+        public T CurrentValue { get; }
+        public T Get(string? name) => CurrentValue;
+        public IDisposable? OnChange(Action<T, string?> listener) => null;
     }
 
     public static async Task<int> DefaultWarehouseIdAsync(ApplicationDbContext db)

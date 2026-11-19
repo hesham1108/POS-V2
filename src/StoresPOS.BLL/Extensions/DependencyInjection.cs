@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<AdminSeedSettings>(configuration.GetSection(AdminSeedSettings.SectionName));
         services.Configure<StoreSettings>(configuration.GetSection(StoreSettings.SectionName));
+        services.Configure<LicenseOptions>(configuration.GetSection(LicenseOptions.SectionName));
 
         services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -38,6 +39,9 @@ public static class DependencyInjection
         services.AddScoped<ITreasuryService, TreasuryService>();
         services.AddScoped<IChequeService, ChequeService>();
         services.AddScoped<IWarehouseService, WarehouseService>();
+        services.AddSingleton<IStoreSettingsService, StoreSettingsService>();
+        services.AddScoped<IBackupService, BackupService>();
+        services.AddSingleton<ILicenseService, LicenseService>();
 
         return services;
     }

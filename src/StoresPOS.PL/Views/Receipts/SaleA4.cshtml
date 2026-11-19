@@ -21,6 +21,10 @@
 <article class="a4-invoice">
     <header class="a4-invoice__header">
         <div class="a4-invoice__store">
+            @if (!string.IsNullOrWhiteSpace(f.Settings.LogoRelativePath))
+            {
+                <img class="a4-invoice__logo" src="~/@f.Settings.LogoRelativePath" alt="" style="max-height:72px;margin-bottom:.5rem" />
+            }
             <h1>@f.Settings.NameFor(lang)</h1>
             @if (!string.IsNullOrWhiteSpace(f.Settings.AddressFor(lang)))
             {

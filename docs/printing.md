@@ -23,18 +23,21 @@ chrome.exe --kiosk-printing --app=http://127.0.0.1:5188
 4. اعمل اختصار على سطح المكتب بالأمر ده للكاشير.
 5. أول مرة من غير `--kiosk-printing`: اطبع إيصال تجربة، وفي نافذة الطباعة اختار الطابعة، Margins = None، وألغِ Headers and footers. Chrome بيفتكر الاختيارات دي.
 
-## الإعدادات (`appsettings.json` → `Store`) لحد شاشة الإعدادات في Phase 11
+## الإعدادات (Phase 15)
+
+من **الإعدادات → الطباعة / ملف المتجر** (أو `App_Data/store-settings.json`):
 
 | المفتاح | المعنى |
 | --- | --- |
-| `NameAr` / `NameEn`, `AddressAr` / `AddressEn`, `Phone`, `TaxNumber` | هيدر الإيصال |
-| `ReceiptFooterAr` / `ReceiptFooterEn` | رسالة آخر الإيصال |
-| `ReceiptLanguage` | `ar` أو `en` — لغة الإيصال (لغة المتجر، مش لغة واجهة الكاشير) |
-| `ReceiptDigits` | `western` (123) أو `arabic` (١٢٣) على الإيصال فقط |
-| `PricesIncludeVat`, `VatPercent` | سطر «شامل ضريبة القيمة المضافة 14٪» (قرار مفتوح — الافتراضي 14٪ شامل) |
-| `PaperWidthMm` | عرض الرول (80 افتراضي؛ 58 للطابعات الصغيرة) |
+| اسم/عنوان/هاتف/ضريبي/شعار | هيدر الإيصال و A4 |
+| `ReceiptFooter*` | رسالة آخر الإيصال |
+| `ReceiptLanguage` | `ar` أو `en` |
+| `ReceiptDigits` | `western` أو `arabic` على الإيصال فقط |
+| `PricesIncludeVat`, `VatPercent` | سطر الضريبة المضمنة |
+| `PaperWidthMm` | 80 أو 58 |
+| `DefaultReceiptFormat` | `80mm` أو `A4` — افتراضي بعد الدفع في POS |
 
-بعد تعديل الملف: أعد تشغيل التطبيق.
+التعديل من الشاشة يتطبق فورًا (ملف الإعدادات يعيد التحميل).
 
 ## لو الطباعة مش شغالة
 

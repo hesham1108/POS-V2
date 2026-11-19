@@ -1,12 +1,31 @@
 using Microsoft.EntityFrameworkCore;
 using StoresPOS.BLL.Extensions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.BLL.Models;
 using StoresPOS.DAL.Context;
 using StoresPOS.DAL.Extensions;
 using StoresPOS.PL;
 using StoresPOS.PL.Extensions;
+using StoresPOS.PL.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var appData = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
+Directory.CreateDirectory(appData);
+var storeSettingsPath = Path.Combine(appData, "store-settings.json");
+var licensePath = Path.Combine(appData, "license.json");
+if (!File.Exists(storeSettingsPath))
+{
+    await File.WriteAllTextAsync(storeSettingsPath, "{}\n");
+}
+
+builder.Configuration.AddJsonFile(storeSettingsPath, optional: true, reloadOnChange: true);
+
+builder.Services.Configure<StoreSettingsPersistenceOptions>(options =>
+{
+    options.FilePath = storeSettingsPath;
+    options.LicenseFilePath = licensePath;
+});
 
 builder.Services.AddControllersWithViews()
     .AddDataAnnotationsLocalization(options =>
@@ -15,6 +34,7 @@ builder.Services.AddStoresPosDal(builder.Configuration);
 builder.Services.AddStoresPosBll(builder.Configuration);
 builder.Services.AddStoresPosAuthentication(builder.Configuration);
 builder.Services.AddStoresPosLocalization();
+builder.Services.AddHostedService<DailyBackupHostedService>();
 
 var app = builder.Build();
 

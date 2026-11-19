@@ -22,18 +22,18 @@ public class WarehouseService : IWarehouseService
 
     private readonly ApplicationDbContext _db;
     private readonly IInventoryService _inventory;
-    private readonly StoreSettings _store;
+    private readonly IOptionsMonitor<StoreSettings> _store;
     private readonly TimeProvider _time;
 
     public WarehouseService(
         ApplicationDbContext db,
         IInventoryService inventory,
-        IOptions<StoreSettings> store,
+        IOptionsMonitor<StoreSettings> store,
         TimeProvider time)
     {
         _db = db;
         _inventory = inventory;
-        _store = store.Value;
+        _store = store;
         _time = time;
     }
 
@@ -43,10 +43,11 @@ public class WarehouseService : IWarehouseService
     public async Task<int> GetSellingWarehouseIdAsync(CancellationToken cancellationToken = default)
     {
         await EnsureSeededAsync(cancellationToken);
-        if (_store.SellingWarehouseId > 0)
+        var sellingId = _store.CurrentValue.SellingWarehouseId;
+        if (sellingId > 0)
         {
             var configured = await _db.Warehouses.AsNoTracking()
-                .Where(x => x.Id == _store.SellingWarehouseId && x.IsActive)
+                .Where(x => x.Id == sellingId && x.IsActive)
                 .Select(x => (int?)x.Id)
                 .FirstOrDefaultAsync(cancellationToken);
             if (configured.HasValue)

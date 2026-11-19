@@ -22,7 +22,7 @@ public class ReceiptsController : Controller
     private readonly IShiftService _shifts;
     private readonly IReturnService _returns;
     private readonly IPurchaseService _purchases;
-    private readonly StoreSettings _store;
+    private readonly IOptionsMonitor<StoreSettings> _store;
     private readonly TimeProvider _time;
 
     public ReceiptsController(
@@ -30,16 +30,18 @@ public class ReceiptsController : Controller
         IShiftService shifts,
         IReturnService returns,
         IPurchaseService purchases,
-        IOptions<StoreSettings> store,
+        IOptionsMonitor<StoreSettings> store,
         TimeProvider time)
     {
         _sales = sales;
         _shifts = shifts;
         _returns = returns;
         _purchases = purchases;
-        _store = store.Value;
+        _store = store;
         _time = time;
     }
+
+    private StoreSettings Store => _store.CurrentValue;
 
     [HttpGet]
     public async Task<IActionResult> Sale(int id, bool autoprint, CancellationToken cancellationToken)
@@ -65,7 +67,7 @@ public class ReceiptsController : Controller
         return View(new SaleReceiptViewModel
         {
             Invoice = invoice,
-            Format = new ReceiptFormat(_store),
+            Format = new ReceiptFormat(Store),
             BarcodeSvg = Code128.ToSvg(invoice.InvoiceNumber),
             AutoPrint = autoprint,
             Returns = await _returns.GetListAsync(new SalesReturnFilterDto { InvoiceId = id }, cancellationToken)
@@ -96,7 +98,7 @@ public class ReceiptsController : Controller
         return View(new SaleReceiptViewModel
         {
             Invoice = invoice,
-            Format = new ReceiptFormat(_store),
+            Format = new ReceiptFormat(Store),
             BarcodeSvg = Code128.ToSvg(invoice.InvoiceNumber),
             AutoPrint = autoprint,
             Returns = await _returns.GetListAsync(new SalesReturnFilterDto { InvoiceId = id }, cancellationToken)
@@ -126,7 +128,7 @@ public class ReceiptsController : Controller
         return View(new ReturnReceiptViewModel
         {
             Return = ret,
-            Format = new ReceiptFormat(_store),
+            Format = new ReceiptFormat(Store),
             BarcodeSvg = Code128.ToSvg(ret.ReturnNumber),
             AutoPrint = autoprint
         });
@@ -154,7 +156,7 @@ public class ReceiptsController : Controller
         return View(new ReturnReceiptViewModel
         {
             Return = ret,
-            Format = new ReceiptFormat(_store),
+            Format = new ReceiptFormat(Store),
             BarcodeSvg = Code128.ToSvg(ret.ReturnNumber),
             AutoPrint = autoprint
         });
@@ -174,7 +176,7 @@ public class ReceiptsController : Controller
         return View(new PurchaseA4ViewModel
         {
             Purchase = purchase,
-            Format = new ReceiptFormat(_store),
+            Format = new ReceiptFormat(Store),
             AutoPrint = autoprint
         });
     }
@@ -196,7 +198,7 @@ public class ReceiptsController : Controller
         return View(new ShiftReportViewModel
         {
             Shift = shift,
-            Format = new ReceiptFormat(_store),
+            Format = new ReceiptFormat(Store),
             PrintedAtUtc = _time.GetUtcNow().UtcDateTime,
             AutoPrint = autoprint
         });

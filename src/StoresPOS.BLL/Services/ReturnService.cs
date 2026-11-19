@@ -34,7 +34,7 @@ public class ReturnService : IReturnService
     private readonly IPermissionService _permissions;
     private readonly IPaymentMethodService _paymentMethods;
     private readonly IWarehouseService _warehouses;
-    private readonly StoreSettings _store;
+    private readonly IOptionsMonitor<StoreSettings> _store;
     private readonly TimeProvider _time;
 
     public ReturnService(
@@ -43,7 +43,7 @@ public class ReturnService : IReturnService
         IPermissionService permissions,
         IPaymentMethodService paymentMethods,
         IWarehouseService warehouses,
-        IOptions<StoreSettings> store,
+        IOptionsMonitor<StoreSettings> store,
         TimeProvider time)
     {
         _db = db;
@@ -51,14 +51,16 @@ public class ReturnService : IReturnService
         _permissions = permissions;
         _paymentMethods = paymentMethods;
         _warehouses = warehouses;
-        _store = store.Value;
+        _store = store;
         _time = time;
     }
 
     private DateTime Now => _time.GetUtcNow().UtcDateTime;
+    private StoreSettings Store => _store.CurrentValue;
 
-    public static string FormatReturnNumber(int sequence) =>
-        "R-" + sequence.ToString("D6", CultureInfo.InvariantCulture);
+    public string FormatReturnNumber(int sequence) =>
+        (string.IsNullOrWhiteSpace(Store.ReturnNumberPrefix) ? "R-" : Store.ReturnNumberPrefix)
+        + sequence.ToString("D6", CultureInfo.InvariantCulture);
 
     public async Task<int?> FindInvoiceIdAsync(string invoiceNumber, CancellationToken cancellationToken = default)
     {
@@ -125,7 +127,7 @@ public class ReturnService : IReturnService
                 })
                 .ToList(),
             PreviousReturns = previous,
-            ReturnWindowDays = _store.ReturnWindowDays,
+            ReturnWindowDays = Store.ReturnWindowDays,
             IsWithinWindow = IsWithinWindow(invoice.CompletedAtUtc!.Value),
             HasOpenShift = await _db.Shifts.AnyAsync(x => x.Status == ShiftStatus.Open, cancellationToken)
         };
@@ -194,7 +196,7 @@ public class ReturnService : IReturnService
 
             if (!IsWithinWindow(invoice.CompletedAtUtc!.Value))
             {
-                throw new BusinessException(MsgOutsideWindow, _store.ReturnWindowDays);
+                throw new BusinessException(MsgOutsideWindow, Store.ReturnWindowDays);
             }
 
             var method = dto.RefundMethod;
@@ -422,7 +424,7 @@ public class ReturnService : IReturnService
     // ---------------------------------------------------------------- helpers
 
     private bool IsWithinWindow(DateTime completedAtUtc) =>
-        _store.ReturnWindowDays <= 0 || completedAtUtc.AddDays(_store.ReturnWindowDays) >= Now;
+        Store.ReturnWindowDays <= 0 || completedAtUtc.AddDays(Store.ReturnWindowDays) >= Now;
 
     /// <summary>Share of each line that was actually paid after the invoice discount (Total / Subtotal).</summary>
     private static decimal DiscountFactor(SalesInvoice invoice) =>

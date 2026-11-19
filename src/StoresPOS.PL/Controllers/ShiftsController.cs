@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.BLL.Models;
 using StoresPOS.PL.Extensions;
 using StoresPOS.PL.ViewModels;
 
@@ -22,6 +24,7 @@ public class ShiftsController : Controller
     private readonly IReturnService _returns;
     private readonly IReportService _reports;
     private readonly ITreasuryService _treasuries;
+    private readonly IOptionsMonitor<StoreSettings> _store;
     private readonly IStringLocalizer<SharedResource> _l;
 
     public ShiftsController(
@@ -31,6 +34,7 @@ public class ShiftsController : Controller
         IReturnService returns,
         IReportService reports,
         ITreasuryService treasuries,
+        IOptionsMonitor<StoreSettings> store,
         IStringLocalizer<SharedResource> localizer)
     {
         _shifts = shifts;
@@ -38,6 +42,7 @@ public class ShiftsController : Controller
         _cashOuts = cashOuts;
         _returns = returns;
         _reports = reports;
+        _store = store;
         _treasuries = treasuries;
         _l = localizer;
     }
@@ -182,7 +187,11 @@ public class ShiftsController : Controller
         }
 
         var treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken);
-        var defaultTreasury = treasuries.FirstOrDefault(x => x.IsDefault) ?? treasuries.FirstOrDefault();
+        var preferredId = _store.CurrentValue.DefaultTreasuryId;
+        var defaultTreasury = preferredId > 0
+            ? treasuries.FirstOrDefault(x => x.Id == preferredId)
+            : null;
+        defaultTreasury ??= treasuries.FirstOrDefault(x => x.IsDefault) ?? treasuries.FirstOrDefault();
         return View(new ShiftCloseViewModel
         {
             Summary = summary,

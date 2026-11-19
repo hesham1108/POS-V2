@@ -1,10 +1,12 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Options;
 using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.BLL.Models;
 using StoresPOS.DAL.Context;
 using StoresPOS.DAL.Entities;
 
@@ -49,6 +51,7 @@ public class SalesService : ISalesService
     private readonly ITreasuryService _treasuries;
     private readonly IChequeService _cheques;
     private readonly IWarehouseService _warehouses;
+    private readonly IOptionsMonitor<StoreSettings> _store;
     private readonly TimeProvider _time;
 
     public SalesService(
@@ -60,6 +63,7 @@ public class SalesService : ISalesService
         ITreasuryService treasuries,
         IChequeService cheques,
         IWarehouseService warehouses,
+        IOptionsMonitor<StoreSettings> store,
         TimeProvider time)
     {
         _db = db;
@@ -70,6 +74,7 @@ public class SalesService : ISalesService
         _treasuries = treasuries;
         _cheques = cheques;
         _warehouses = warehouses;
+        _store = store;
         _time = time;
     }
 
@@ -577,7 +582,7 @@ public class SalesService : ISalesService
 
             var sequence = (await _db.SalesInvoices.MaxAsync(x => x.InvoiceSequence, cancellationToken) ?? 0) + 1;
             draft.InvoiceSequence = sequence;
-            draft.InvoiceNumber = FormatInvoiceNumber(sequence);
+            draft.InvoiceNumber = FormatInvoiceNumber(sequence, _store.CurrentValue.InvoiceNumberPrefix);
             draft.Status = SalesInvoiceStatus.Completed;
             draft.PaymentMethod = method;
             draft.AmountPaid = paid;
@@ -662,8 +667,9 @@ public class SalesService : ISalesService
         }
     }
 
-    public static string FormatInvoiceNumber(int sequence) =>
-        "S-" + sequence.ToString("D6", CultureInfo.InvariantCulture);
+    public static string FormatInvoiceNumber(int sequence, string? prefix = null) =>
+        (string.IsNullOrWhiteSpace(prefix) ? "S-" : prefix)
+        + sequence.ToString("D6", CultureInfo.InvariantCulture);
 
     // ---------------------------------------------------------------- invoices
 
@@ -938,13 +944,18 @@ public class SalesService : ISalesService
         return qty;
     }
 
-    /// <summary>Zero-stock rule checked per selling warehouse (open decision: default block).</summary>
+    /// <summary>Zero-stock rule checked per selling warehouse (open decision: default block; Settings can allow).</summary>
     private async Task EnsureSellingStockAsync(
         Product product,
         decimal quantity,
         CancellationToken cancellationToken,
         int? sellingWarehouseId = null)
     {
+        if (_store.CurrentValue.AllowSellAtZeroStock)
+        {
+            return;
+        }
+
         var warehouseId = sellingWarehouseId
             ?? await _warehouses.GetSellingWarehouseIdAsync(cancellationToken);
         var available = await _inventory.GetWarehouseQuantityAsync(warehouseId, product.Id, cancellationToken);

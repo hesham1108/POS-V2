@@ -22,13 +22,19 @@ public class ShiftService : IShiftService
 
     private readonly ApplicationDbContext _db;
     private readonly ITreasuryService _treasuries;
+    private readonly IBackupService? _backups;
     private readonly TimeProvider _time;
 
-    public ShiftService(ApplicationDbContext db, ITreasuryService treasuries, TimeProvider time)
+    public ShiftService(
+        ApplicationDbContext db,
+        ITreasuryService treasuries,
+        TimeProvider time,
+        IBackupService? backups = null)
     {
         _db = db;
         _treasuries = treasuries;
         _time = time;
+        _backups = backups;
     }
 
     public async Task<ShiftGateDto> GetGateAsync(int userId, CancellationToken cancellationToken = default)
@@ -313,6 +319,11 @@ public class ShiftService : IShiftService
         catch (DbUpdateConcurrencyException)
         {
             throw new BusinessException(MsgConcurrentClose);
+        }
+
+        if (_backups is not null)
+        {
+            await _backups.TryBackupAsync("shift-close", cancellationToken);
         }
 
         return (await GetSummaryAsync(shift.Id, cancellationToken))!;

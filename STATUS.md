@@ -4,8 +4,8 @@
 
 - Project name: StoresPOS
 - Master plan: `plan.md` (source of truth)
-- Current phase: **Phase 14 complete** — next is **Phase 15 (Settings & Delivery)**
-- Overall progress: Phases 1–14 verified
+- Current phase: **Phase 15 complete** — master plan Phases 1–15 delivered
+- Overall progress: Phases 1–15 verified
 - Latest verified build result: Succeeded
 - Last update date: 2026-11-19
 
@@ -137,16 +137,25 @@
 - Tests: BLL 101/101, PL 12/12
 - **Re-login required** after deploy so JWT picks up warehouse permissions
 
+### Phase 15 — Settings & Delivery
+
+- Settings screen (Admin): store profile · sales/tax · numbering · printing · language · backup · license; persists to `App_Data/store-settings.json`
+- Selling warehouse, default treasury, default receipt 80 mm/A4, logo upload for A4, allow-sell-at-zero toggle
+- Backup now / list / restore (SQL `.bak`); backup on shift close + daily hosted job
+- Offline license: device-bound HMAC file; `tools/issue-license.ps1` to issue
+- Docs: `docs/installation.md`, `docs/deployment.md`, `docs/e2e-checklist.md`; printing.md updated
+- Tests: BLL 103/103, PL 12/12
+
 ## Pending Tasks
 - Returns: no in-line manager approval for cashiers yet (manager makes the return) — confirm with client
 - Silent printing on the real thermal printer not tested (no printer here) — follow `docs/printing.md` on the store PC
-- Apply migrations through `Warehouses` on every store SQL; full POS click-through (en + ar)
+- Run `docs/e2e-checklist.md` on a store PC; apply migrations through latest on every store SQL
 - Profit uses the purchase price saved on each sale line (last purchase price), not weighted average cost — open decision "Profit costing"
 - Customers screens use Reports.View (Admin/Manager); cashiers add customers only from the POS (F4) — confirm with client
 - Minus signs in the existing `_ShiftSummary` render after the number in Arabic (e.g. "0.00-") — cosmetic
 - Client to confirm the POS open decisions applied as defaults (split tender, zero stock, held at close, tax)
 - Error messages that name a product use the English name even in Arabic UI
-- A4 logo upload deferred to Settings (Phase 15)
+- Users & roles management screen still deferred (permissions matrix is live; Admin seeds roles)
 - POS "Reprint last" still defaults to 80 mm (A4 available from Sales)
 - Non-cash settlement into default treasury — confirm with client (applied as default)
 
@@ -155,13 +164,13 @@
 | Command | Result |
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
-| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 101/101 |
+| `dotnet test tests/StoresPOS.BLL.Tests` | Passed 103/103 |
 | `dotnet test tests/StoresPOS.PL.Tests` | Passed 12/12 |
 | `dotnet ef database update` | Applied through `Warehouses` |
 
 ## Next Recommended Task
 
-Phase 15 — Settings & Delivery
+Run the E2E checklist on a store PC (`docs/e2e-checklist.md`) and hand off install docs (`docs/installation.md`).
 
 ## Design System Note (2026-11-19)
 
@@ -194,6 +203,7 @@ Canonical per-page layout/components for every sidebar tab: [`docs/page-composit
 | 2026-11-19 | Phase 12 treasuries ledger, shift handover, purchase pay-from, statement + dashboard |
 | 2026-11-19 | Phase 13 cheques (لينا/علينا), collect/pay → treasury, POS + purchase + reports |
 | 2026-11-19 | Phase 14 warehouses, stock transfers, per-warehouse inventory + POS selling warehouse |
+| 2026-11-19 | Phase 15 settings UI, backup/restore, offline license, install/deploy docs + E2E checklist |
 
 ## Local Dev Login
 

@@ -611,4 +611,32 @@
   <data name="Add line" xml:space="preserve"><value>إضافة بند</value></data>
   <data name="Receive into warehouse" xml:space="preserve"><value>الاستلام في المخزن</value></data>
   <data name="— select —" xml:space="preserve"><value>— اختر —</value></data>
+  <data name="Settings" xml:space="preserve"><value>الإعدادات</value></data>
+  <data name="Store profile, printing, backup, and license." xml:space="preserve"><value>ملف المتجر والطباعة والنسخ الاحتياطي والترخيص.</value></data>
+  <data name="Store profile" xml:space="preserve"><value>ملف المتجر</value></data>
+  <data name="Sales and tax" xml:space="preserve"><value>المبيعات والضريبة</value></data>
+  <data name="Numbering" xml:space="preserve"><value>الترقيم</value></data>
+  <data name="Printing" xml:space="preserve"><value>الطباعة</value></data>
+  <data name="Language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Database and backup" xml:space="preserve"><value>قاعدة البيانات والنسخ</value></data>
+  <data name="License" xml:space="preserve"><value>الترخيص</value></data>
+  <data name="Settings saved." xml:space="preserve"><value>تم حفظ الإعدادات.</value></data>
+  <data name="A4 logo" xml:space="preserve"><value>شعار A4</value></data>
+  <data name="Default warehouse" xml:space="preserve"><value>المخزن الافتراضي</value></data>
+  <data name="Default treasury" xml:space="preserve"><value>الخزنة الافتراضية</value></data>
+  <data name="0 = no limit" xml:space="preserve"><value>0 = بدون حد</value></data>
+  <data name="Applies to new browsers; the language toggle still wins after the first visit." xml:space="preserve"><value>ينطبق على المتصفحات الجديدة؛ زر اللغة يبقى الأقوى بعد أول زيارة.</value></data>
+  <data name="Folder must be writable by the SQL Server service account." xml:space="preserve"><value>المجلد لازم يكون قابلًا للكتابة من حساب خدمة SQL Server.</value></data>
+  <data name="Backup now" xml:space="preserve"><value>نسخ احتياطي الآن</value></data>
+  <data name="No backups yet" xml:space="preserve"><value>لا توجد نسخ بعد</value></data>
+  <data name="Run Backup now or wait for the daily job." xml:space="preserve"><value>شغّل «نسخ الآن» أو انتظر المهمة اليومية.</value></data>
+  <data name="File" xml:space="preserve"><value>الملف</value></data>
+  <data name="Size" xml:space="preserve"><value>الحجم</value></data>
+  <data name="Restore" xml:space="preserve"><value>استعادة</value></data>
+  <data name="Restore this backup? All current data will be replaced. Stop other users first." xml:space="preserve"><value>استعادة هذه النسخة؟ كل البيانات الحالية هتتنسخ فوقها. أوقف المستخدمين الآخرين أولًا.</value></data>
+  <data name="Device ID" xml:space="preserve"><value>معرّف الجهاز</value></data>
+  <data name="Licensed to" xml:space="preserve"><value>مرخّص لـ</value></data>
+  <data name="Activate" xml:space="preserve"><value>تفعيل</value></data>
+  <data name="License activated." xml:space="preserve"><value>تم تفعيل الترخيص.</value></data>
+  <data name="Paste the signature from the license file we issued for this Device ID." xml:space="preserve"><value>الصق التوقيع من ملف الترخيص الصادر لهذا الجهاز.</value></data>
 </root>

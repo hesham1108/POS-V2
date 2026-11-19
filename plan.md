@@ -277,12 +277,12 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 
 ### Phase 15 — Settings & Delivery
 
-- [ ] Store profile, language, tax, numbering, printing (default receipt: 80 mm or A4; selling warehouse; default treasury).
-- [ ] Database backup / restore.
-- [ ] Offline license activation.
-- [ ] Offline installer / deployment.
-- [ ] End-to-end functional testing.
-- [ ] Installation instructions.
+- [x] Store profile, language, tax, numbering, printing (default receipt: 80 mm or A4; selling warehouse; default treasury).
+- [x] Database backup / restore.
+- [x] Offline license activation.
+- [x] Offline installer / deployment.
+- [x] End-to-end functional testing.
+- [x] Installation instructions.
 
 ---
 

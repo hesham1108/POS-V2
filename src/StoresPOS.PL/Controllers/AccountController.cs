@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.BLL.Models;
+using StoresPOS.PL.Extensions;
 using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
@@ -10,16 +14,42 @@ namespace StoresPOS.PL.Controllers;
 public class AccountController : Controller
 {
     private readonly IAuthService _authService;
+    private readonly IOptionsMonitor<StoreSettings> _store;
+    private readonly IWebHostEnvironment _env;
 
-    public AccountController(IAuthService authService)
+    public AccountController(
+        IAuthService authService,
+        IOptionsMonitor<StoreSettings> store,
+        IWebHostEnvironment env)
     {
         _authService = authService;
+        _store = store;
+        _env = env;
     }
 
     [HttpGet]
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
+        // Production only: seed UI language cookie from Settings when the browser has none.
+        // Dev / integration tests keep English as the framework default.
+        if (_env.IsProduction()
+            && !Request.Cookies.ContainsKey(CookieRequestCultureProvider.DefaultCookieName))
+        {
+            var ui = string.Equals(_store.CurrentValue.DefaultUiLanguage, "en", StringComparison.OrdinalIgnoreCase)
+                ? "en"
+                : "ar";
+            Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                LocalizationExtensions.MakeCultureCookieValue(ui),
+                new CookieOptions
+                {
+                    IsEssential = true,
+                    Expires = DateTimeOffset.UtcNow.AddYears(1),
+                    SameSite = SameSiteMode.Lax
+                });
+        }
+
         if (User.Identity?.IsAuthenticated == true)
         {
             return RedirectToLocal(returnUrl);
