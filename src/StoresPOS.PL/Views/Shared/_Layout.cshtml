@@ -33,48 +33,48 @@
             </a>
 
             <nav class="app-sidebar__nav">
+                @* Order: page-composition.md §24.3. POS/Shifts/Cash-outs open for all roles once Phase 6+ lands. *@
                 <a class="@NavClass(IsCtrl("Home"))" asp-controller="Home" asp-action="Index">Dashboard</a>
 
-                <span class="app-sidebar__link is-disabled" title="Coming in a later phase">POS</span>
+                <span class="app-sidebar__link is-disabled" title="Coming in Phase 7 (opens the shift gate)">POS</span>
+                <span class="app-sidebar__link is-disabled" title="Coming in Phase 6">Shifts</span>
+
+                <span class="app-sidebar__link is-disabled" title="@(canManage ? "Coming in Phase 7" : "No access")">Sales invoices</span>
+                <span class="app-sidebar__link is-disabled" title="Coming in Phase 9">Returns</span>
+                <span class="app-sidebar__link is-disabled" title="Coming in Phase 9">Cash-outs</span>
 
                 @if (canManage)
                 {
                     <a class="@NavClass(IsCtrl("Products", "Categories", "Inventory"))"
                        asp-controller="Products" asp-action="Index">Products and categories</a>
 
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Sales invoices</span>
-
                     <a class="@NavClass(IsCtrl("Purchases"))"
                        asp-controller="Purchases" asp-action="Index">Purchase invoices</a>
-
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Returns</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Customers</span>
 
                     <a class="@NavClass(IsCtrl("Suppliers"))"
                        asp-controller="Suppliers" asp-action="Index">Suppliers</a>
 
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Reports</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in Phase 10">Customers</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in Phase 10">Reports</span>
                 }
                 else
                 {
                     <span class="app-sidebar__link is-disabled" title="No access">Products and categories</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Sales invoices</span>
                     <span class="app-sidebar__link is-disabled" title="No access">Purchase invoices</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Returns</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Customers</span>
                     <span class="app-sidebar__link is-disabled" title="No access">Suppliers</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Reports</span>
+                    <span class="app-sidebar__link is-disabled" title="No access">Customers</span>
+                    <span class="app-sidebar__link is-disabled" title="No access">Reports</span>
                 }
 
                 @if (User.IsInRole(AppRoles.Admin))
                 {
                     <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Users and roles</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Configuration</span>
+                    <span class="app-sidebar__link is-disabled" title="Coming in Phase 11">Settings</span>
                 }
                 else
                 {
                     <span class="app-sidebar__link is-disabled" title="No access">Users and roles</span>
-                    <span class="app-sidebar__link is-disabled" title="No access">Configuration</span>
+                    <span class="app-sidebar__link is-disabled" title="No access">Settings</span>
                 }
             </nav>
 
