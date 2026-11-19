@@ -1,0 +1,84 @@
+@model ShiftGateViewModel
+@{
+    ViewData["Section"] = L["Shifts"].Value;
+    ViewData["Title"] = L["Shift"].Value;
+    var gate = Model.Gate;
+}
+
+<partial name="_Flash" />
+
+<div class="shift-gate">
+    @if (gate.State == ShiftGateState.NoOpenShift)
+    {
+        @* Journey A *@
+        <div class="sp-card shift-gate__card">
+            <span class="sp-status sp-status-neutral">@L["No open shift"]</span>
+            <h1 class="shift-gate__title">@L["Open a shift to start selling"]</h1>
+            <p class="shift-gate__lead">@L["There is no open shift. Enter the cash in the drawer, or leave it empty to start at 0.00."]</p>
+
+            <form asp-action="Open" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-4">
+                    <label asp-for="OpeningAmount" class="form-label">@L["Opening amount (optional)"]</label>
+                    <input asp-for="OpeningAmount" class="form-control form-control-lg num" inputmode="decimal"
+                           step="0.01" min="0" placeholder="0.00" autofocus />
+                    <div class="form-text">@L["Leave empty to start at 0.00 EGP."]</div>
+                    <span asp-validation-for="OpeningAmount" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn sp-btn-primary shift-gate__primary">@L["Open shift and start selling"]</button>
+            </form>
+        </div>
+    }
+    else
+    {
+        var summary = gate.Shift!;
+        var isOld = gate.State == ShiftGateState.OldOpenShift;
+
+        <div class="shift-gate__card shift-gate__card--wide">
+            @if (isOld)
+            {
+                @* Journey C *@
+                <div class="alert alert-warning" role="alert">
+                    @string.Format(L["Shift #{0} has been open since {1}. Resume it or close it before starting a new one."].Value,
+                        summary.Id, summary.OpenedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm"))
+                </div>
+            }
+            else
+            {
+                @* Journey B *@
+                <h1 class="shift-gate__title">@L["A shift is already open"]</h1>
+                <p class="shift-gate__lead">@L["Resume to join it. Your sales will be tracked under your name."]</p>
+            }
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <partial name="_ShiftSummary" model="summary" />
+
+            <div class="shift-gate__actions">
+                <form asp-action="Resume" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn sp-btn-primary shift-gate__primary" autofocus>
+                        @(gate.IsParticipant ? L["Resume shift"] : L["Resume and join shift"])
+                    </button>
+                </form>
+
+                @if (isOld)
+                {
+                    if (Model.CanClose)
+                    {
+                        <a class="btn sp-btn-secondary shift-gate__secondary" asp-action="Close" asp-route-returnTo="gate">@L["Close this shift"]</a>
+                    }
+                    else
+                    {
+                        <p class="shift-gate__hint">@L["Ask a manager to close this shift."]</p>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

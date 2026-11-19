@@ -1,0 +1,14 @@
+@model ShiftSummaryDto
+@{
+    var (css, text) = Model.Status == ShiftStatus.Open
+        ? ("sp-status-ok", L["Shift open"].Value)
+        : Model.Reconciliation switch
+        {
+            ShiftReconciliation.Matched => ("sp-status-ok", L["Matched"].Value),
+            ShiftReconciliation.Surplus => ("sp-status-warn", L["Surplus"].Value),
+            ShiftReconciliation.Shortage => ("sp-status-bad", L["Shortage"].Value),
+            ShiftReconciliation.NotReconciled => ("sp-status-neutral", L["Not reconciled"].Value),
+            _ => ("sp-status-neutral", L["Closed"].Value)
+        };
+}
+<span class="sp-status @css">@text</span>

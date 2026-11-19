@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using StoresPOS.BLL.Interfaces;
 using StoresPOS.BLL.Models;
 using StoresPOS.BLL.Services;
@@ -23,6 +24,8 @@ public static class DependencyInjection
         services.AddScoped<ISupplierService, SupplierService>();
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<IPurchaseService, PurchaseService>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<IShiftService, ShiftService>();
 
         return services;
     }

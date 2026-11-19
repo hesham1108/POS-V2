@@ -3,18 +3,20 @@
     bool IsCtrl(params string[] names) =>
         names.Any(n => string.Equals(controller, n, StringComparison.OrdinalIgnoreCase));
     string NavClass(bool active) => active ? "app-sidebar__link is-active" : "app-sidebar__link";
-    var canManage = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Manager);
+    bool Can(string permission) => User.HasClaim(AppPermissions.ClaimType, permission);
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
     var sectionLabel = ViewData["Section"] as string
         ?? ViewData["Breadcrumb"] as string
         ?? "StoresPOS";
 }
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="@(isRtl ? "ar" : "en")" dir="@(isRtl ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - StoresPOS</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="@(isRtl ? "~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" : "~/lib/bootstrap/dist/css/bootstrap.min.css")" />
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
@@ -33,49 +35,54 @@
             </a>
 
             <nav class="app-sidebar__nav">
-                @* Order: page-composition.md §24.3. POS/Shifts/Cash-outs open for all roles once Phase 6+ lands. *@
-                <a class="@NavClass(IsCtrl("Home"))" asp-controller="Home" asp-action="Index">Dashboard</a>
+                @* Order: docs/page-composition.md §24.3. Visibility follows permissions (plan.md roles matrix). *@
+                @{
+                    var soon = L["Coming in a later phase"].Value;
+                    var denied = L["No access"].Value;
+                }
+                @if (Can(AppPermissions.DashboardView))
+                {
+                    <a class="@NavClass(IsCtrl("Home"))" asp-controller="Home" asp-action="Index">@L["Dashboard"]</a>
+                }
 
-                <span class="app-sidebar__link is-disabled" title="Coming in Phase 7 (opens the shift gate)">POS</span>
-                <span class="app-sidebar__link is-disabled" title="Coming in Phase 6">Shifts</span>
+                <span class="app-sidebar__link is-disabled" title="@soon">@L["POS"]</span>
 
-                <span class="app-sidebar__link is-disabled" title="@(canManage ? "Coming in Phase 7" : "No access")">Sales invoices</span>
-                <span class="app-sidebar__link is-disabled" title="Coming in Phase 9">Returns</span>
-                <span class="app-sidebar__link is-disabled" title="Coming in Phase 9">Cash-outs</span>
+                @if (Can(AppPermissions.ShiftsOpenResume))
+                {
+                    <a class="@NavClass(IsCtrl("Shifts"))" asp-controller="Shifts" asp-action="Current">@L["Shifts"]</a>
+                }
 
-                @if (canManage)
+                <span class="app-sidebar__link is-disabled" title="@soon">@L["Sales invoices"]</span>
+                <span class="app-sidebar__link is-disabled" title="@soon">@L["Returns"]</span>
+                <span class="app-sidebar__link is-disabled" title="@soon">@L["Cash-outs"]</span>
+
+                @if (Can(AppPermissions.CatalogManage))
                 {
                     <a class="@NavClass(IsCtrl("Products", "Categories", "Inventory"))"
-                       asp-controller="Products" asp-action="Index">Products and categories</a>
+                       asp-controller="Products" asp-action="Index">@L["Products and categories"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Products and categories"]</span>
+                }
 
+                @if (Can(AppPermissions.PurchasesManage))
+                {
                     <a class="@NavClass(IsCtrl("Purchases"))"
-                       asp-controller="Purchases" asp-action="Index">Purchase invoices</a>
-
+                       asp-controller="Purchases" asp-action="Index">@L["Purchase invoices"]</a>
                     <a class="@NavClass(IsCtrl("Suppliers"))"
-                       asp-controller="Suppliers" asp-action="Index">Suppliers</a>
-
-                    <span class="app-sidebar__link is-disabled" title="Coming in Phase 10">Customers</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in Phase 10">Reports</span>
+                       asp-controller="Suppliers" asp-action="Index">@L["Suppliers"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="No access">Products and categories</span>
-                    <span class="app-sidebar__link is-disabled" title="No access">Purchase invoices</span>
-                    <span class="app-sidebar__link is-disabled" title="No access">Suppliers</span>
-                    <span class="app-sidebar__link is-disabled" title="No access">Customers</span>
-                    <span class="app-sidebar__link is-disabled" title="No access">Reports</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Purchase invoices"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Suppliers"]</span>
                 }
 
-                @if (User.IsInRole(AppRoles.Admin))
-                {
-                    <span class="app-sidebar__link is-disabled" title="Coming in a later phase">Users and roles</span>
-                    <span class="app-sidebar__link is-disabled" title="Coming in Phase 11">Settings</span>
-                }
-                else
-                {
-                    <span class="app-sidebar__link is-disabled" title="No access">Users and roles</span>
-                    <span class="app-sidebar__link is-disabled" title="No access">Settings</span>
-                }
+                <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.ReportsView) ? soon : denied)">@L["Customers"]</span>
+                <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.ReportsView) ? soon : denied)">@L["Reports"]</span>
+                <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.UsersManage) ? soon : denied)">@L["Users and roles"]</span>
+                <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.SettingsManage) ? soon : denied)">@L["Settings"]</span>
             </nav>
 
             <div class="app-sidebar__footer">
@@ -85,9 +92,15 @@
                         @User.Identity?.Name
                     </span>
                 </div>
+                <form asp-controller="Culture" asp-action="Set" method="post" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ui" value="@(isRtl ? "en" : "ar")" />
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="app-sidebar__logout">@(isRtl ? "English" : "العربية")</button>
+                </form>
                 <form asp-controller="Account" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="app-sidebar__logout">Logout</button>
+                    <button type="submit" class="app-sidebar__logout">@L["Logout"]</button>
                 </form>
             </div>
         </aside>
@@ -117,7 +130,7 @@
                 @RenderBody()
             </main>
             <footer class="app-footer">
-                StoresPOS · Local offline installation
+                @L["StoresPOS · Local offline installation"]
             </footer>
         </div>
     </div>

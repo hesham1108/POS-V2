@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Arabic UI strings. Keys are the English text (missing key = English fallback). -->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name=", " xml:space="preserve"><value>، </value></data>
+  <data name="A shift is already open" xml:space="preserve"><value>توجد وردية مفتوحة بالفعل</value></data>
+  <data name="A shift is already open." xml:space="preserve"><value>توجد وردية مفتوحة بالفعل.</value></data>
+  <data name="Actual cash" xml:space="preserve"><value>النقدية الفعلية</value></data>
+  <data name="Actual cash in drawer (optional)" xml:space="preserve"><value>النقدية الفعلية في الدرج (اختياري)</value></data>
+  <data name="Actual cash must be zero or more." xml:space="preserve"><value>يجب أن تكون النقدية الفعلية صفرًا أو أكثر.</value></data>
+  <data name="Another user is closing the shift. Refresh and try again." xml:space="preserve"><value>مستخدم آخر يغلق الوردية الآن. حدّث الصفحة وحاول مرة أخرى.</value></data>
+  <data name="Ask a manager to close this shift." xml:space="preserve"><value>اطلب من المدير إغلاق هذه الوردية.</value></data>
+  <data name="Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Cash refunds" xml:space="preserve"><value>مرتجعات نقدية</value></data>
+  <data name="Cash sales" xml:space="preserve"><value>مبيعات نقدية</value></data>
+  <data name="Cash-outs" xml:space="preserve"><value>المصروفات النقدية</value></data>
+  <data name="Cash-outs ({0})" xml:space="preserve"><value>مصروفات ({0})</value></data>
+  <data name="Cash-outs arrive in Phase 9. They will appear here and reduce expected cash." xml:space="preserve"><value>المصروفات النقدية تُضاف في المرحلة 9، وستظهر هنا وتُخصم من النقدية المتوقعة.</value></data>
+  <data name="Close shift" xml:space="preserve"><value>إغلاق الوردية</value></data>
+  <data name="Close this shift" xml:space="preserve"><value>إغلاق هذه الوردية</value></data>
+  <data name="Close this shift now? This cannot be undone." xml:space="preserve"><value>إغلاق الوردية الآن؟ لا يمكن التراجع عن ذلك.</value></data>
+  <data name="Closed" xml:space="preserve"><value>مغلقة</value></data>
+  <data name="Coming in a later phase" xml:space="preserve"><value>قريبًا في مرحلة لاحقة</value></data>
+  <data name="Confirm and close shift" xml:space="preserve"><value>تأكيد وإغلاق الوردية</value></data>
+  <data name="Current shift" xml:space="preserve"><value>الوردية الحالية</value></data>
+  <data name="Customers" xml:space="preserve"><value>العملاء</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>الرئيسية</value></data>
+  <data name="Difference" xml:space="preserve"><value>الفرق</value></data>
+  <data name="EGP" xml:space="preserve"><value>ج.م</value></data>
+  <data name="Expected in drawer" xml:space="preserve"><value>المتوقع في الدرج</value></data>
+  <data name="If another cashier is mid-sale, the close will wait for that sale to finish or be held." xml:space="preserve"><value>إذا كان كاشير آخر في منتصف عملية بيع، ينتظر الإغلاق حتى تكتمل الفاتورة أو تُعلَّق.</value></data>
+  <data name="InstaPay" xml:space="preserve"><value>إنستاباي</value></data>
+  <data name="Join shift" xml:space="preserve"><value>الانضمام للوردية</value></data>
+  <data name="Joined shift #{0}." xml:space="preserve"><value>تم الانضمام للوردية #{0}.</value></data>
+  <data name="Leave empty if not counted" xml:space="preserve"><value>اتركه فارغًا إذا لم يتم العدّ</value></data>
+  <data name="Leave empty to start at 0.00 EGP." xml:space="preserve"><value>اتركه فارغًا للبدء من 0.00 ج.م.</value></data>
+  <data name="Left empty, the shift is recorded as Not reconciled — never as 0 counted." xml:space="preserve"><value>إذا تُرك فارغًا تُسجَّل الوردية «غير مُسوّاة» — وليس «صفر معدود».</value></data>
+  <data name="Live drawer totals · cash only counts toward the drawer" xml:space="preserve"><value>إجماليات الدرج لحظيًا · النقدي فقط يدخل الدرج</value></data>
+  <data name="Logout" xml:space="preserve"><value>تسجيل الخروج</value></data>
+  <data name="Matched" xml:space="preserve"><value>مطابق</value></data>
+  <data name="No access" xml:space="preserve"><value>لا توجد صلاحية</value></data>
+  <data name="No cash-outs yet" xml:space="preserve"><value>لا توجد مصروفات بعد</value></data>
+  <data name="No open shift" xml:space="preserve"><value>لا توجد وردية مفتوحة</value></data>
+  <data name="Non-cash sales · not in drawer" xml:space="preserve"><value>مبيعات غير نقدية · لا تدخل الدرج</value></data>
+  <data name="Not counted" xml:space="preserve"><value>لم يتم العدّ</value></data>
+  <data name="Not reconciled" xml:space="preserve"><value>غير مُسوّاة</value></data>
+  <data name="Notes (optional)" xml:space="preserve"><value>ملاحظات (اختياري)</value></data>
+  <data name="Open a shift to start selling" xml:space="preserve"><value>افتح وردية لبدء البيع</value></data>
+  <data name="Open shift and start selling" xml:space="preserve"><value>فتح وردية والبدء في البيع</value></data>
+  <data name="Open, resume or close the store shift" xml:space="preserve"><value>فتح أو استئناف أو إغلاق وردية المتجر</value></data>
+  <data name="Opened" xml:space="preserve"><value>فُتحت</value></data>
+  <data name="Opening amount" xml:space="preserve"><value>مبلغ الافتتاح</value></data>
+  <data name="Opening amount (optional)" xml:space="preserve"><value>مبلغ الافتتاح (اختياري)</value></data>
+  <data name="Opening amount must be zero or more." xml:space="preserve"><value>يجب أن يكون مبلغ الافتتاح صفرًا أو أكثر.</value></data>
+  <data name="POS" xml:space="preserve"><value>نقطة البيع</value></data>
+  <data name="Participants" xml:space="preserve"><value>المشاركون</value></data>
+  <data name="Products and categories" xml:space="preserve"><value>المنتجات والتصنيفات</value></data>
+  <data name="Purchase invoices" xml:space="preserve"><value>فواتير الشراء</value></data>
+  <data name="Reports" xml:space="preserve"><value>التقارير</value></data>
+  <data name="Resume and join shift" xml:space="preserve"><value>استئناف والانضمام للوردية</value></data>
+  <data name="Resume shift" xml:space="preserve"><value>استئناف الوردية</value></data>
+  <data name="Resume to join it. Your sales will be tracked under your name." xml:space="preserve"><value>استأنف للانضمام إليها. ستُسجَّل مبيعاتك باسمك.</value></data>
+  <data name="Returns" xml:space="preserve"><value>المرتجعات</value></data>
+  <data name="Review the summary · counting cash is optional" xml:space="preserve"><value>راجع الملخص · عدّ النقدية اختياري</value></data>
+  <data name="Sales invoices" xml:space="preserve"><value>فواتير البيع</value></data>
+  <data name="Settings" xml:space="preserve"><value>الإعدادات</value></data>
+  <data name="Shift" xml:space="preserve"><value>الوردية</value></data>
+  <data name="Shift #{0}" xml:space="preserve"><value>الوردية #{0}</value></data>
+  <data name="Shift #{0} closed." xml:space="preserve"><value>تم إغلاق الوردية #{0}.</value></data>
+  <data name="Shift #{0} has been open since {1}. Resume it or close it before starting a new one." xml:space="preserve"><value>الوردية #{0} مفتوحة منذ {1}. استأنفها أو أغلقها قبل بدء وردية جديدة.</value></data>
+  <data name="Shift #{0} opened." xml:space="preserve"><value>تم فتح الوردية #{0}.</value></data>
+  <data name="Shift open" xml:space="preserve"><value>وردية مفتوحة</value></data>
+  <data name="Shift summary" xml:space="preserve"><value>ملخص الوردية</value></data>
+  <data name="Shifts" xml:space="preserve"><value>الورديات</value></data>
+  <data name="Shortage" xml:space="preserve"><value>عجز</value></data>
+  <data name="StoresPOS · Local offline installation" xml:space="preserve"><value>StoresPOS · تثبيت محلي بدون إنترنت</value></data>
+  <data name="Suppliers" xml:space="preserve"><value>الموردون</value></data>
+  <data name="Surplus" xml:space="preserve"><value>زيادة</value></data>
+  <data name="The value '{0}' is not valid for {1}." xml:space="preserve"><value>القيمة '{0}' غير صالحة لـ {1}.</value></data>
+  <data name="There is no open shift." xml:space="preserve"><value>لا توجد وردية مفتوحة.</value></data>
+  <data name="There is no open shift. Enter the cash in the drawer, or leave it empty to start at 0.00." xml:space="preserve"><value>لا توجد وردية مفتوحة. أدخل النقدية الموجودة في الدرج، أو اتركها فارغة للبدء من 0.00.</value></data>
+  <data name="This shift is already closed." xml:space="preserve"><value>هذه الوردية مغلقة بالفعل.</value></data>
+  <data name="User not found or inactive." xml:space="preserve"><value>المستخدم غير موجود أو غير مفعّل.</value></data>
+  <data name="Users and roles" xml:space="preserve"><value>المستخدمون والصلاحيات</value></data>
+  <data name="Visa / Card" xml:space="preserve"><value>فيزا / كارت</value></data>
+  <data name="Vodafone Cash" xml:space="preserve"><value>فودافون كاش</value></data>
+</root>

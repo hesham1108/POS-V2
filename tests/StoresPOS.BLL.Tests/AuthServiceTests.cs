@@ -35,6 +35,35 @@ public class AuthServiceTests
         Assert.Equal(AppRoles.Admin, result.Role);
         Assert.True(jwt.ValidateToken(result.AccessToken!, out var principal));
         Assert.True(principal!.IsInRole(AppRoles.Admin));
+        Assert.True(principal.HasClaim(AppPermissions.ClaimType, AppPermissions.ShiftsClose));
+        Assert.True(principal.HasClaim(AppPermissions.ClaimType, AppPermissions.SettingsManage));
+    }
+
+    [Fact]
+    public async Task Seed_GrantsDefaultMatrix_CashierOptionalPermissionsOff()
+    {
+        await using var db = CreateDbContext();
+        var auth = new AuthService(db, new Pbkdf2PasswordHasher(), CreateJwtService(), Options.Create(new AdminSeedSettings
+        {
+            Username = "admin",
+            Password = "Admin@12345",
+            DisplayName = "System Admin"
+        }));
+
+        await auth.EnsureSeedDataAsync();
+        await auth.EnsureSeedDataAsync(); // idempotent
+
+        var cashier = await db.RolePermissions
+            .Where(x => x.Role.Name == AppRoles.Cashier)
+            .Select(x => x.Permission)
+            .ToListAsync();
+        Assert.Contains(AppPermissions.PosUse, cashier);
+        Assert.Contains(AppPermissions.ShiftsOpenResume, cashier);
+        Assert.DoesNotContain(AppPermissions.ShiftsClose, cashier);
+        Assert.DoesNotContain(AppPermissions.CatalogManage, cashier);
+
+        var adminCount = await db.RolePermissions.CountAsync(x => x.Role.Name == AppRoles.Admin);
+        Assert.Equal(AppPermissions.All.Length, adminCount);
     }
 
     [Fact]

@@ -15,4 +15,7 @@ public static class ControllerExtensions
 
         return userId;
     }
+
+    public static bool HasPermission(this ClaimsPrincipal user, string permission) =>
+        user.HasClaim(StoresPOS.BLL.Constants.AppPermissions.ClaimType, permission);
 }

@@ -149,24 +149,24 @@ Each phase is built, tested, and demoed before the next starts.
 - [x] Authorized stock adjustments.
 - [x] Track user performing adjustments.
 
-### Phase 6 — Shifts ← next
+### Phase 6 — Shifts ✅ (2 items carried into Phase 7)
 
-- [ ] Permission-based authorization: `RolePermissions` table + seed from the default matrix + one policy per permission (e.g. `Shifts.Close`, `Sales.PriceOverride`, `Sales.Discount`, `Returns.Create`).
-- [ ] Localization groundwork: `IStringLocalizer` + resx (ar/en) for the layout/sidebar and all new Phase 6+ screens.
-- [ ] Shift entity + ShiftParticipant entity.
-- [ ] Enforce one open shift in the database (unique filtered index on open status) + transaction.
-- [ ] After login: Cashier → shift gate; Admin/Manager → Dashboard (POS link goes through the gate).
-- [ ] Open shift with optional opening amount.
-- [ ] Detect existing open shift.
-- [ ] Resume without closing; register participants.
-- [ ] Attribute cashier activities to the shift.
-- [ ] Close with optional actual cash; compute surplus/shortage when provided.
-- [ ] Support Not Reconciled status when count skipped.
-- [ ] Close old open shift then open a new one.
-- [ ] Prevent conflicting concurrent open/close operations.
-- [ ] If another cashier is mid-sale, wait until complete or held before close.
+- [x] Permission-based authorization: `RolePermissions` table + seed from the default matrix + one policy per permission (e.g. `Shifts.Close`, `Sales.PriceOverride`, `Sales.Discount`, `Returns.Create`).
+- [x] Localization groundwork: `IStringLocalizer` + resx (ar/en) for the layout/sidebar and all new Phase 6+ screens.
+- [x] Shift entity + ShiftParticipant entity.
+- [x] Enforce one open shift in the database (unique filtered index on open status) + transaction.
+- [x] After login: Cashier → shift gate; Admin/Manager → Dashboard (POS link goes through the gate).
+- [x] Open shift with optional opening amount.
+- [x] Detect existing open shift.
+- [x] Resume without closing; register participants.
+- [ ] Attribute cashier activities to the shift. → hook ready (`IShiftService.GetActiveShiftIdForUserAsync`); wired when sales exist in Phase 7.
+- [x] Close with optional actual cash; compute surplus/shortage when provided.
+- [x] Support Not Reconciled status when count skipped.
+- [x] Close old open shift then open a new one.
+- [x] Prevent conflicting concurrent open/close operations.
+- [ ] If another cashier is mid-sale, wait until complete or held before close. → needs the Phase 7 `Draft` invoice; TODO marked in `ShiftService.CloseAsync`.
 
-### Phase 7 — POS & Sales
+### Phase 7 — POS & Sales ← next
 
 - [ ] Product search and barcode scanning.
 - [ ] Retail / wholesale mode toggle.

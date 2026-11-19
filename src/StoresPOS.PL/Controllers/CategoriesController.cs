@@ -8,7 +8,7 @@ using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
+[Authorize(Policy = AppPermissions.CatalogManage)]
 public class CategoriesController : Controller
 {
     private readonly ICategoryService _categoryService;

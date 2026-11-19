@@ -9,7 +9,7 @@ using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
+[Authorize(Policy = AppPermissions.CatalogManage)]
 public class InventoryController : Controller
 {
     private readonly IInventoryService _inventoryService;
@@ -113,6 +113,7 @@ public class InventoryController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = AppPermissions.InventoryAdjust)]
     public async Task<IActionResult> Adjust(int? productId, CancellationToken cancellationToken = default)
     {
         return View(new StockAdjustmentFormViewModel
@@ -123,6 +124,7 @@ public class InventoryController : Controller
     }
 
     [HttpPost]
+    [Authorize(Policy = AppPermissions.InventoryAdjust)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Adjust(StockAdjustmentFormViewModel model, CancellationToken cancellationToken)
     {

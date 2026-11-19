@@ -72,6 +72,10 @@
       }
     });
 
+    // Share the choice with the server (UI language for the app; formatting stays en-US).
+    document.cookie = ".AspNetCore.Culture=" + encodeURIComponent("c=en-US|uic=" + t.lang)
+      + "; path=/; max-age=31536000; samesite=strict";
+
     try {
       localStorage.setItem(STORAGE_KEY, locale);
     } catch {

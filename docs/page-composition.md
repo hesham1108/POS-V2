@@ -79,10 +79,10 @@ flowchart TD
 
 | # | الصفحة | Route | Flows | Phase | Roles | الحالة |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3 | تسجيل الدخول | `Account/Login` | A B C H | 2 | الكل | ✅ (ناقص توجيه ما بعد الدخول → بوابة الوردية) |
-| 4 | بوابة الوردية | `Shifts/Gate` | A B C | 6 | الكل | ⬜ |
-| 5 | إغلاق الوردية | `Shifts/Close` | C H | 6 (+ طباعة 8) | Admin · Manager · Cashier (اختياري) | ⬜ |
-| 6 | الورديات (الحالية + السجل + التفاصيل) | `Shifts/Current` · `Shifts/Index` · `Shifts/Details/{id}` | E H | 6 / 10 | الحالية: الكل · السجل: Admin · Manager | ⬜ |
+| 3 | تسجيل الدخول | `Account/Login` | A B C H | 2 | الكل | ✅ |
+| 4 | بوابة الوردية | `Shifts/Gate` | A B C | 6 | الكل | ✅ |
+| 5 | إغلاق الوردية | `Shifts/Close` | C H | 6 (+ طباعة 8) | Admin · Manager · Cashier (اختياري) | 🟡 (ناقص الطباعة + انتظار البيع الجاري) |
+| 6 | الورديات (الحالية + السجل + التفاصيل) | `Shifts/Current` · `Shifts/Index` · `Shifts/Details/{id}` | E H | 6 / 10 | الحالية: الكل · السجل: Admin · Manager | 🟡 (الحالية ✅ · السجل والتفاصيل Phase 10) |
 | 7 | نقطة البيع POS | `POS/Index` | A B C D E G | 7 | الكل (بوردية مفتوحة) | ⬜ |
 | 8 | لوحة الدفع | جزء من POS (modal) | D | 8 | الكل | ⬜ |
 | 9 | الإيصال 80مم + تقرير الوردية | `Receipts/Sale/{id}` · `Receipts/Shift/{id}` | D H | 8 | الكل | ⬜ |
@@ -125,7 +125,7 @@ flowchart TD
 
 ---
 
-## 4) بوابة الوردية — `Shifts/Gate` · ⬜ Phase 6
+## 4) بوابة الوردية — `Shifts/Gate` · ✅ Phase 6
 
 **مش تاب سايدبار؛ خطوة إلزامية قبل POS.** Action واحد يقرأ حالة الوردية ويعرض واحدة من 3 حالات.
 **القواعد:** R1 · R2 · R3 · R10.
@@ -159,7 +159,7 @@ flowchart TD
 
 ---
 
-## 5) إغلاق الوردية — `Shifts/Close` · ⬜ Phase 6 (+ الطباعة في 8)
+## 5) إغلاق الوردية — `Shifts/Close` · 🟡 Phase 6 (+ الطباعة في 8)
 
 **Flows:** H، وجزء من C. **القواعد:** R4 · R5 · R7.
 
@@ -477,11 +477,11 @@ view منفصل بـ print CSS (عرض 80mm، بدون layout)، بلغة الم
 | `_CatalogTabs` | ✅ | منتجات/تصنيفات/مخزون |
 | `_PosLayout` (بدون سايدبار، full screen) | ⬜ | POS، البوابة |
 | `_PrintLayout` (80mm) | ⬜ | الإيصال، تقرير الوردية |
-| `_ShiftSummary` (ملخص الدرج + غير النقدي) | ⬜ | البوابة C · الإغلاق · الوردية الحالية · التفاصيل · Dashboard |
+| `_ShiftSummary` (ملخص الدرج + غير النقدي) | ✅ | البوابة C · الإغلاق · الوردية الحالية · التفاصيل · Dashboard |
 | `_StatusChip` (Shift open · Matched · Surplus · Shortage · Not reconciled · Closed · Low stock · Out of stock · Held · طرق الدفع) | ⬜ | كل مكان |
 | `_MoneyText` / tag helper للفلوس (EGP، خانتين، tabular) | ⬜ | كل مكان |
 | `_ConfirmDialog` | ⬜ | الإغلاق، تأكيد الشراء، التعطيل، المرتجع |
-| `_Toast` (رسائل confirm/error) | ⬜ | كل الـ POST |
+| `_Flash` (رسائل TempData) — toast لاحقاً | ✅ | كل الـ POST |
 | `_CashOutModal` | ⬜ | POS · الوردية الحالية |
 | `_DateRangeFilter` | ⬜ | كل القوائم والتقارير |
 
@@ -493,11 +493,11 @@ view منفصل بـ print CSS (عرض 80mm، بدون layout)، بلغة الم
 
 ### أ) فجوات في الكود الحالي
 
-1. **الصلاحيات «الاختيارية» للكاشير مش ممكنة حالياً.** كل الـ controllers بتستخدم `[Authorize(Roles=…)]`. تعديل السعر/الخصم/المرتجع/إغلاق الوردية محتاجين **permission-based policies** (جدول `RolePermissions` + claims في الـ JWT + `[Authorize(Policy="Shifts.Close")]`). **اقتراح:** نقل جزء «الصلاحيات» من صفحة Users (§21) لبداية Phase 6 لأن الإغلاق أول حاجة هتحتاجه. صفحة إدارة المستخدمين نفسها ممكن تفضل لاحقاً.
-2. **التوجيه بعد الدخول:** حالياً الكل يروح `Home/Index`. لازم الكاشير يروح `Shifts/Gate` (Phase 6).
+1. ✅ *(اتنفّذ في Phase 6)* **الصلاحيات «الاختيارية» للكاشير.** كل الـ controllers بتستخدم `[Authorize(Roles=…)]`. تعديل السعر/الخصم/المرتجع/إغلاق الوردية محتاجين **permission-based policies** (جدول `RolePermissions` + claims في الـ JWT + `[Authorize(Policy="Shifts.Close")]`). **اقتراح:** نقل جزء «الصلاحيات» من صفحة Users (§21) لبداية Phase 6 لأن الإغلاق أول حاجة هتحتاجه. صفحة إدارة المستخدمين نفسها ممكن تفضل لاحقاً.
+2. ✅ *(Phase 6)* **التوجيه بعد الدخول:** حالياً الكل يروح `Home/Index`. لازم الكاشير يروح `Shifts/Gate` (Phase 6).
 3. ✅ *(اتطبّق 2026-11-19 — الروابط لسه disabled لحد مراحلها)* **السايدبار:** كان ناقصه **الورديات** و**المصروفات**؛ و«Configuration» لازم تبقى «Settings» زي الـ proposal؛ و«POS» لازم يفتح البوابة. ترتيب مقترح: الرئيسية · نقطة البيع · الورديات · فواتير البيع · المرتجعات · المصروفات · المنتجات والتصنيفات · المشتريات · الموردون · العملاء · التقارير · المستخدمون · الإعدادات.
-4. **الترجمة:** نصوص السايدبار والصفحات English hard-coded وفولدر `Resources/` فاضي. **اقتراح:** ندخل `IStringLocalizer` + resx الآن قبل ما صفحات POS تتبني، بدل ما نرجع نترجم 15 صفحة بعدين.
-5. **منع ورديتين مفتوحتين:** لازم unique filtered index في DB + transaction، مش check في الكود بس.
+4. 🟡 *(البنية + السايدبار + شاشات الوردية اتعملت في Phase 6؛ باقي الصفحات القديمة لسه English)* **الترجمة:** نصوص السايدبار والصفحات English hard-coded وفولدر `Resources/` فاضي. **اقتراح:** ندخل `IStringLocalizer` + resx الآن قبل ما صفحات POS تتبني، بدل ما نرجع نترجم 15 صفحة بعدين.
+5. ✅ *(Phase 6)* **منع ورديتين مفتوحتين:** لازم unique filtered index في DB + transaction، مش check في الكود بس.
 
 ### ب) قواعد محتاجة قرار تقني
 

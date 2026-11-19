@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.Interfaces;
 using StoresPOS.BLL.Models;
 using StoresPOS.DAL.Entities;
@@ -37,7 +38,7 @@ public class JwtTokenService : IJwtTokenService
         };
     }
 
-    public (string Token, DateTime ExpiresAtUtc) CreateToken(User user)
+    public (string Token, DateTime ExpiresAtUtc) CreateToken(User user, IEnumerable<string> permissions)
     {
         var expiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpirationMinutes);
         var claims = new List<Claim>
@@ -50,6 +51,7 @@ public class JwtTokenService : IJwtTokenService
             new(ClaimTypes.Role, user.Role.Name),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
         };
+        claims.AddRange(permissions.Distinct().Select(p => new Claim(AppPermissions.ClaimType, p)));
 
         var credentials = new SigningCredentials(
             _validationParameters.IssuerSigningKey,
