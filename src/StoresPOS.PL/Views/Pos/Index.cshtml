@@ -12,7 +12,9 @@
      data-msg-confirm-clear="@L["Clear all items from this invoice?"]"
      data-msg-customer="@L["Customer records arrive in Phase 10. Sales use the walk-in customer for now."]"
      data-msg-need-amount="@L["Enter a valid amount paid."]"
-     data-msg-error="@L["Something went wrong. Try again."]">
+     data-msg-error="@L["Something went wrong. Try again."]"
+     data-flash="@(TempData["Success"] as string)"
+     data-flash-error="@(TempData["Error"] as string)">
     @Html.AntiForgeryToken()
 
     <section class="pos-catalog" aria-label="@L["Products"]">

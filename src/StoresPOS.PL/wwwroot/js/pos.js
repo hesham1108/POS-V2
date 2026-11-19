@@ -367,7 +367,7 @@
   function anyModalOpen() { return document.querySelector(".modal.show") !== null; }
 
   document.addEventListener("keydown", (e) => {
-    const inField = e.target.matches("input, textarea, select");
+    const inField = e.target instanceof Element && e.target.matches("input, textarea, select");
     const key = e.key;
 
     if (["F2", "F4", "F6", "F7", "F8", "F9"].includes(key)) {
@@ -409,4 +409,8 @@
 
   renderCart(cartEl.innerHTML);
   focusSearch();
+
+  // Messages from the previous page (e.g. "Shift #3 opened.") — shown here so they don't leak to the next page.
+  if (msg.flashError) toast(msg.flashError, "error");
+  else if (msg.flash) toast(msg.flash, "ok");
 })();
