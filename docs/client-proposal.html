@@ -1,0 +1,1060 @@
+<title>StoresPOS Product Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky section index on the left, one reading column on the right; mirrors the app's sidebar + workspace. */
+:root {
+  --primary: #0f6751;
+  --primary-hover: #0c5543;
+  --primary-soft: #e7f4ef;
+  --primary-border: #b7ddd1;
+  --ink-panel: #1a1d26;
+  --ink-panel-text: #e8eaed;
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-muted: #f8f9fa;
+  --text: #1f2937;
+  --text-strong: #111827;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --warning: #b45309;
+  --warning-soft: #fdf3e2;
+  --danger: #c62828;
+  --danger-soft: #fdecec;
+  --info: #2563eb;
+  --info-soft: #e8effd;
+  --neutral-soft: #eef0f3;
+  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 12px 32px -8px rgba(17, 24, 39, 0.10);
+  --hero-bg: #0d1412;
+  --hero-text: #eef4f1;
+  --hero-muted: #93a59e;
+  --hero-line: rgba(255, 255, 255, 0.10);
+  --display: "Manrope", "Inter", "Segoe UI", sans-serif;
+  --font: "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-ar: "IBM Plex Sans Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #3fae8c; --primary-hover: #56c19f; --primary-soft: #143a30; --primary-border: #24624f;
+    --ink-panel: #0b0e13; --ink-panel-text: #e8eaed;
+    --bg: #0f1317; --surface: #171c21; --surface-muted: #1d2329;
+    --text: #d9dee3; --text-strong: #f3f5f7; --text-muted: #9aa3ad;
+    --border: #2a3138; --border-strong: #38414a;
+    --warning: #f0a648; --warning-soft: #3a2c15; --danger: #f17373; --danger-soft: #3d1d1d;
+    --info: #7aa7ff; --info-soft: #1b2741; --neutral-soft: #242b32;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --primary: #3fae8c; --primary-hover: #56c19f; --primary-soft: #143a30; --primary-border: #24624f;
+  --ink-panel: #0b0e13; --ink-panel-text: #e8eaed;
+  --bg: #0f1317; --surface: #171c21; --surface-muted: #1d2329;
+  --text: #d9dee3; --text-strong: #f3f5f7; --text-muted: #9aa3ad;
+  --border: #2a3138; --border-strong: #38414a;
+  --warning: #f0a648; --warning-soft: #3a2c15; --danger: #f17373; --danger-soft: #3d1d1d;
+  --info: #7aa7ff; --info-soft: #1b2741; --neutral-soft: #242b32;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: 15px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+[lang="ar"], .ar { font-family: var(--font-ar); }
+h1, h2, h3, h4 { color: var(--text-strong); text-wrap: balance; margin: 0; line-height: 1.2; font-family: var(--display); letter-spacing: -0.01em; }
+p { margin: 0; }
+a { color: var(--primary); }
+.num { font-variant-numeric: tabular-nums; }
+code, .mono { font-family: var(--mono); font-size: 0.82em; }
+
+.shell {
+  display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px;
+  max-width: 1240px; margin: 0 auto;
+  padding-block: 40px 80px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; }
+.toc .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.logo {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--primary);
+  display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 14px; letter-spacing: -0.02em;
+}
+.toc .brand b { color: var(--text-strong); font-size: 15px; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s; }
+.toc li a {
+  display: flex; gap: 10px; text-decoration: none; color: var(--text-muted);
+  padding: 6px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500;
+}
+.toc li a::before { counter-increment: s; content: counter(s, decimal-leading-zero); font-family: var(--mono); font-size: 11px; padding-top: 2px; opacity: .7; }
+.toc li a:hover { background: var(--surface); color: var(--text-strong); }
+.toc li a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+main { display: grid; gap: 72px; min-width: 0; }
+section { display: grid; gap: 22px; min-width: 0; scroll-margin-top: 24px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--primary); }
+h2 { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; }
+h3 { font-size: 17px; font-weight: 750; }
+.lead { font-size: 16.5px; color: var(--text-muted); max-width: 68ch; }
+.sec-head { display: grid; gap: 8px; }
+
+/* Hero */
+.hero {
+  display: grid; gap: 22px; padding: clamp(28px, 5vw, 56px); border-radius: 24px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(63, 174, 140, 0.28), transparent 55%),
+    radial-gradient(80% 70% at 0% 100%, rgba(15, 103, 81, 0.35), transparent 60%),
+    var(--hero-bg);
+  color: var(--hero-text); border: 1px solid var(--hero-line); overflow: hidden; position: relative;
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(var(--hero-line) 1px, transparent 1px), linear-gradient(90deg, var(--hero-line) 1px, transparent 1px);
+  background-size: 48px 48px; mask-image: linear-gradient(180deg, rgba(0,0,0,.5), transparent 75%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.5), transparent 75%);
+}
+.hero > * { position: relative; z-index: 1; }
+.hero .eyebrow { color: #7fd6b8; }
+.hero h1 { font-size: clamp(34px, 5.4vw, 60px); font-weight: 800; letter-spacing: -0.045em; line-height: 1.04; color: var(--hero-text); max-width: 18ch; }
+.hero h1 span { background: linear-gradient(90deg, #7fd6b8, #3fae8c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .lead { color: var(--hero-muted); }
+.hero .chip { background: rgba(255,255,255,0.06); border-color: var(--hero-line); color: var(--hero-text); backdrop-filter: blur(6px); }
+.hero .chip .dot { background: #3fae8c; box-shadow: 0 0 0 3px rgba(63,174,140,.25); }
+.hero-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--hero-line); padding-top: 22px; margin-top: 6px; }
+.hero-stats div { display: grid; gap: 2px; padding-inline-end: 16px; }
+.hero-stats b { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; color: var(--hero-text); }
+.hero-stats span { font-size: 12.5px; color: var(--hero-muted); }
+@media (max-width: 760px) { .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; } }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border); font-size: 12.5px; font-weight: 600; color: var(--text);
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+
+/* Generic blocks */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px; min-width: 0; box-shadow: var(--shadow); }
+.rule, .mod, .flow, .ph, .dec, .state, .sw { border-radius: 16px !important; transition: border-color .2s, transform .2s; }
+.mod:hover, .rule:hover { border-color: var(--primary-border); transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .mod:hover, .rule:hover { transform: none; } }
+.btn.primary { background: linear-gradient(180deg, var(--primary-hover), var(--primary)); box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 6px 16px -6px var(--primary); }
+.pos-frame { border-radius: 22px !important; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.facts div { padding: 18px 20px; display: grid; gap: 4px; border-inline-end: 1px solid var(--border); }
+.facts div:last-child { border-inline-end: 0; }
+.facts small { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.facts b { color: var(--text-strong); font-size: 15px; }
+
+ul.clean { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+ul.clean li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; }
+ul.clean li::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--primary); margin-top: 8px; }
+ul.no li::before { background: var(--danger); border-radius: 50%; }
+
+.rule { display: grid; gap: 6px; padding: 16px 18px; border: 1px solid var(--border); background: var(--surface); border-radius: 12px; }
+.rule h4 { font-size: 14.5px; }
+.rule p { font-size: 13.5px; color: var(--text-muted); }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: start; padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); background: var(--surface-muted); font-weight: 650; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.c, th.c { text-align: center; }
+.yes { color: var(--primary); font-weight: 800; }
+.cfg { color: var(--warning); font-weight: 700; font-size: 12px; }
+.noo { color: var(--text-muted); opacity: .55; }
+
+/* Module list */
+.modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.mod { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 6px; align-content: start; }
+.mod header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.mod h4 { font-size: 14.5px; }
+.mod .ar { color: var(--text-muted); font-size: 13px; }
+.mod p { font-size: 13px; color: var(--text-muted); }
+.src { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+.src.m { background: var(--primary-soft); color: var(--primary); }
+.src.d { background: var(--info-soft); color: var(--info); }
+.src.p { background: var(--neutral-soft); color: var(--text-muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-muted); align-items: center; }
+
+/* Flows */
+.flows { display: grid; gap: 10px; }
+.flow { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.flow h4 { font-size: 14px; display: flex; gap: 8px; align-items: center; }
+.flow h4 .k { font-family: var(--mono); font-size: 11px; background: var(--ink-panel); color: var(--ink-panel-text); border-radius: 5px; padding: 1px 6px; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+.steps span { padding: 4px 9px; border-radius: 7px; background: var(--surface-muted); border: 1px solid var(--border); white-space: nowrap; }
+.steps span.end { background: var(--primary-soft); border-color: var(--primary-border); color: var(--primary); font-weight: 600; }
+.steps i { color: var(--text-muted); font-style: normal; }
+
+/* Design system */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.sw { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.sw .c { height: 64px; }
+.sw div:last-child { padding: 10px 12px; display: grid; gap: 1px; }
+.sw b { font-size: 13px; color: var(--text-strong); }
+.sw code { color: var(--text-muted); font-size: 11px; }
+.sw small { font-size: 11.5px; color: var(--text-muted); }
+
+.type-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.type-row:last-child { border-bottom: 0; }
+.type-row code { color: var(--text-muted); font-size: 11px; }
+.type-row [lang="ar"] { text-align: right; }
+
+.tokens-strip { display: flex; flex-wrap: wrap; gap: 20px; align-items: end; }
+.tok { display: grid; gap: 6px; justify-items: start; font-size: 12px; color: var(--text-muted); }
+.tok .box { background: var(--primary-soft); border: 1.5px solid var(--primary-border); }
+
+/* Component previews */
+.btn {
+  font: inherit; font-weight: 600; font-size: 14px; border-radius: 10px; padding: 10px 16px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-strong);
+  display: inline-flex; align-items: center; gap: 8px; min-height: 42px;
+}
+.btn:hover { background: var(--surface-muted); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.primary:hover { background: var(--primary-hover); }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.xl { width: 100%; justify-content: center; min-height: 54px; font-size: 17px; border-radius: 12px; }
+kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 5px; border: 1px solid currentColor; opacity: .8; }
+
+.status { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 650; }
+.status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.s-ok { background: var(--primary-soft); color: var(--primary); }
+.s-warn { background: var(--warning-soft); color: var(--warning); }
+.s-bad { background: var(--danger-soft); color: var(--danger); }
+.s-info { background: var(--info-soft); color: var(--info); }
+.s-neutral { background: var(--neutral-soft); color: var(--text-muted); }
+
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.input {
+  font: inherit; width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-strong);
+}
+.input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.hint { font-size: 12px; color: var(--text-muted); }
+.err { font-size: 12px; color: var(--danger); }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+.seg button { font: inherit; font-weight: 600; font-size: 14px; border: 0; background: transparent; color: var(--text-muted); padding: 9px; border-radius: 9px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* Mini POS */
+.pos-frame { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow); }
+.pos-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.pos-top .l { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pos-top b { color: var(--text-strong); }
+.pos-body { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; padding: 14px; }
+.pos-left { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.search { border: 2px solid var(--primary); border-radius: 12px; padding: 11px 14px; background: var(--surface); color: var(--text-muted); font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+.cats { display: flex; gap: 6px; flex-wrap: wrap; }
+.cats span { padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 600; }
+.cats span.on { background: var(--ink-panel); color: var(--ink-panel-text); border-color: var(--ink-panel); }
+.prods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.prod { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: grid; gap: 6px; cursor: pointer; text-align: start; font: inherit; color: inherit; }
+.prod:hover { border-color: var(--primary-border); }
+.prod b { font-size: 13.5px; color: var(--text-strong); font-weight: 650; }
+.prod .pr { color: var(--primary); font-weight: 750; font-size: 17px; }
+.prod .pr small { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.prod .st { font-size: 11.5px; color: var(--text-muted); }
+.prod .st.low { color: var(--warning); font-weight: 600; }
+.pos-right { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.cust { display: flex; justify-content: space-between; gap: 8px; border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 13px; }
+.cust a { font-weight: 650; text-decoration: none; }
+.inv-h { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.line { display: grid; grid-template-columns: minmax(0, 1fr) auto 64px; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.line b { font-size: 13px; color: var(--text-strong); display: block; }
+.line small { font-size: 11.5px; color: var(--text-muted); }
+.edited { background: var(--warning-soft); color: var(--warning); font-weight: 650; padding: 0 5px; border-radius: 4px; font-size: 10.5px; margin-inline-start: 4px; }
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty button { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-strong); font: inherit; font-weight: 700; cursor: pointer; }
+.qty span { min-width: 16px; text-align: center; font-weight: 650; }
+.line .lt { text-align: end; font-weight: 700; color: var(--text-strong); font-size: 13.5px; }
+.totals { display: grid; gap: 4px; font-size: 13px; padding-top: 4px; }
+.totals div { display: flex; justify-content: space-between; color: var(--text-muted); }
+.totals .grand { color: var(--text-strong); align-items: baseline; margin-top: 4px; }
+.totals .grand b { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.act3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.act3 .btn { justify-content: center; padding: 8px; font-size: 13px; min-height: 40px; }
+.empty-cart { padding: 26px 10px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* Shift close demo */
+.recon { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+.ledger { display: grid; gap: 0; font-size: 14px; }
+.ledger div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--border); }
+.ledger div.sum { border-bottom: 0; border-top: 2px solid var(--text-strong); margin-top: 4px; font-weight: 750; color: var(--text-strong); font-size: 15.5px; }
+.ledger .neg { color: var(--danger); }
+.ledger .muted { color: var(--text-muted); }
+.nc { margin-top: 14px; padding: 12px; border-radius: 10px; background: var(--surface-muted); border: 1px solid var(--border); font-size: 13px; display: grid; gap: 4px; }
+.nc div { display: flex; justify-content: space-between; }
+.result-box { border-radius: 12px; padding: 16px; display: grid; gap: 6px; border: 1px solid var(--border); background: var(--surface-muted); }
+.result-box b { font-size: 26px; font-weight: 800; color: var(--text-strong); }
+
+/* Pricing demo */
+.price-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.price-col { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-muted); align-content: start; }
+.price-col h4 { font-size: 13.5px; }
+.profit { font-size: 13px; color: var(--primary); font-weight: 650; }
+
+/* States */
+.states { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.state { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 16px; display: grid; gap: 8px; align-content: start; font-size: 13px; }
+.state h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); }
+.skel { height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--neutral-soft), var(--surface-muted), var(--neutral-soft)); background-size: 200% 100%; animation: sh 1.4s infinite linear; }
+@keyframes sh { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+.toast { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; font-size: 13px; }
+.toast.ok { background: var(--primary-soft); color: var(--primary); }
+.toast.bad { background: var(--danger-soft); color: var(--danger); }
+
+/* Receipt */
+.receipt-wrap { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.receipt { background: #fff; color: #111; font-family: var(--font-ar); width: 100%; max-width: 300px; padding: 18px 16px 24px; border-radius: 4px; box-shadow: var(--shadow); font-size: 12px; direction: rtl; border: 1px solid var(--border); }
+.receipt .ctr { text-align: center; }
+.receipt hr { border: 0; border-top: 1px dashed #999; margin: 8px 0; }
+.receipt table { font-size: 11.5px; }
+.receipt th, .receipt td { padding: 3px 2px; border: 0; background: none; color: #111; text-transform: none; letter-spacing: 0; font-size: 11.5px; text-align: right; }
+.receipt th { font-weight: 700; border-bottom: 1px solid #111; }
+.receipt .row { display: flex; justify-content: space-between; }
+.receipt .big { font-size: 15px; font-weight: 700; }
+.barcode { height: 38px; margin: 10px auto 4px; width: 80%; background: repeating-linear-gradient(90deg, #111 0 2px, #fff 2px 3px, #111 3px 4px, #fff 4px 7px, #111 7px 10px, #fff 10px 11px); }
+
+/* Roadmap */
+.road { display: grid; gap: 8px; }
+.ph { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 13px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.ph .n { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+.ph h4 { font-size: 14.5px; }
+.ph p { font-size: 12.5px; color: var(--text-muted); }
+.ph.done { background: var(--primary-soft); border-color: var(--primary-border); }
+.ph.done .n { color: var(--primary); }
+
+/* Decisions */
+.decisions { counter-reset: d; display: grid; gap: 10px; }
+.dec { display: grid; grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; font-size: 13.5px; }
+.dec::before { counter-increment: d; content: counter(d); width: 26px; height: 26px; border-radius: 50%; background: var(--warning-soft); color: var(--warning); display: grid; place-items: center; font-weight: 750; font-size: 12.5px; }
+.dec b { color: var(--text-strong); display: block; margin-bottom: 2px; }
+.dec .rec { color: var(--text-muted); }
+.dec .rec em { font-style: normal; font-weight: 650; color: var(--primary); }
+
+footer { color: var(--text-muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 20px; }
+
+@media (max-width: 1000px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  nav.toc { position: static; }
+  .toc ol { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .states, .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .grid2, .grid3, .recon, .receipt-wrap, .price-grid, .pos-body { grid-template-columns: minmax(0, 1fr); }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .facts div:nth-child(2) { border-inline-end: 0; }
+  .facts div:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .flow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .type-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .type-row [lang="ar"] { text-align: start; }
+  .dec { grid-template-columns: 34px minmax(0, 1fr); }
+  .dec .rec { grid-column: 2; }
+  .prods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h2 { font-size: 24px; }
+}
+@media (max-width: 440px) {
+  .states, .grid4 { grid-template-columns: minmax(0, 1fr); }
+  .ph { grid-template-columns: 40px minmax(0, 1fr); }
+  .ph .status { grid-column: 2; justify-self: start; }
+}
+</style>
+
+<div class="shell">
+  <nav class="toc" aria-label="Sections">
+    <div class="brand"><div class="logo">SP</div><b>StoresPOS</b></div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#rules">Confirmed rules</a></li>
+      <li><a href="#modules">Modules</a></li>
+      <li><a href="#flows">User journeys</a></li>
+      <li><a href="#roles">Roles &amp; permissions</a></li>
+      <li><a href="#design">Design system</a></li>
+      <li><a href="#components">Components</a></li>
+      <li><a href="#pos">POS preview</a></li>
+      <li><a href="#shift">Shift closing</a></li>
+      <li><a href="#states">Screen states</a></li>
+      <li><a href="#receipt">Receipt</a></li>
+      <li><a href="#roadmap">Delivery plan</a></li>
+      <li><a href="#decisions">Decisions needed</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- HERO -->
+    <header class="hero">
+      <div class="eyebrow">Product plan &amp; design system · v1.0</div>
+      <h1>A fast, offline cashier and store system, <span>built for one shop floor.</span></h1>
+      <p class="lead">This document brings together the original UI mockups, the technical spec, and the detailed functional blueprint into one plan. It covers what the system does, how cashiers and managers move through it, how it looks, and the order we will deliver it in.</p>
+      <div class="meta-row">
+        <span class="chip"><span class="dot"></span>18 November 2026</span>
+        <span class="chip">Prepared by Hesham &amp; Joo</span>
+        <span class="chip">Arabic · English</span>
+        <span class="chip">Works without internet</span>
+      </div>
+      <div class="hero-stats">
+        <div><b>17</b><span>modules</span></div>
+        <div><b>8</b><span>core user journeys</span></div>
+        <div><b>4</b><span>payment methods</span></div>
+        <div><b>2/11</b><span>phases delivered</span></div>
+      </div>
+    </header>
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <div class="sec-head">
+        <div class="eyebrow">01 · Overview</div>
+        <h2>What we are building</h2>
+        <p class="lead">StoresPOS runs on a computer inside the store. Cashiers sell from a single fast screen; owners and managers handle stock, purchases, suppliers, customers, shifts and reports from the same app. Nothing depends on the internet.</p>
+      </div>
+      <div class="facts">
+        <div><small>Runs on</small><b>Store PC, local network</b></div>
+        <div><small>Database</small><b>SQL Server (local)</b></div>
+        <div><small>Users</small><b>Admin · Manager · Cashier</b></div>
+        <div><small>Currency</small><b>EGP, 2 decimals</b></div>
+      </div>
+      <div class="grid3">
+        <div class="panel">
+          <h3>Faster checkout</h3>
+          <p class="hint" style="font-size:13.5px;margin-top:6px">Barcode or search, one-key shortcuts (F2, F4, F8, F9), and payment plus printing in a single step.</p>
+        </div>
+        <div class="panel">
+          <h3>Drawer you can trust</h3>
+          <p class="hint" style="font-size:13.5px;margin-top:6px">Every sale, refund and cash-out lands on the open shift. Expected cash is always visible, and cash is kept separate from card and wallet payments.</p>
+        </div>
+        <div class="panel">
+          <h3>Accurate stock and prices</h3>
+          <p class="hint" style="font-size:13.5px;margin-top:6px">Purchases raise stock and refresh selling prices from your markup. Old invoices keep the prices they were sold at.</p>
+        </div>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>Technology</h3>
+        <p style="font-size:13.5px;color:var(--text-muted)">ASP.NET Core MVC with Razor views, a three-layer structure (screens → business rules → data), Entity Framework Core on SQL Server, and secure sign-in with hashed passwords and role-based access. All fonts, scripts and styles ship with the installation, so the app never calls out to the web.</p>
+      </div>
+    </section>
+
+    <!-- RULES -->
+    <section id="rules">
+      <div class="sec-head">
+        <div class="eyebrow">02 · Confirmed rules</div>
+        <h2>Business rules agreed so far</h2>
+        <p class="lead">These came from the mockups and our discussions. The design and the code both follow them; changing any of them is a scope change.</p>
+      </div>
+      <div class="grid2">
+        <div class="rule"><h4>One open shift, many cashiers</h4><p>The store has one open shift at a time. A second cashier who logs in joins it as a participant. Each cashier's sales and cash-outs are still tracked individually.</p></div>
+        <div class="rule"><h4>Shifts never close on their own</h4><p>Logging out does not close a shift, and an old shift is never closed because of its date. Closing is a deliberate action by a permitted user.</p></div>
+        <div class="rule"><h4>Opening amount is optional</h4><p>Leave it blank and it counts as 0. The cashier just confirms and starts selling.</p></div>
+        <div class="rule"><h4>Counting cash at close is optional</h4><p>If an actual amount is entered, the system shows surplus, shortage or matched. If it is left blank, the shift is marked <b>Not Reconciled</b>, never "0 counted".</p></div>
+        <div class="rule"><h4>Only cash counts toward the drawer</h4><p>Visa/Card, InstaPay and Vodafone Cash appear in sales and reports but are not part of expected drawer cash.</p></div>
+        <div class="rule"><h4>Price edits stay on the invoice</h4><p>Changing a price at the till affects that invoice line only. The catalog price stays the same. Both prices and the user who changed it are saved.</p></div>
+        <div class="rule"><h4>Cash-out = amount + reason</h4><p>No separate vault. A cash-out is linked to the open shift and the user, and lowers expected drawer cash.</p></div>
+        <div class="rule"><h4>Markup drives selling prices</h4><p>Enter a price and the markup is calculated, or the other way round. A new purchase cost recalculates retail and wholesale prices from their stored markups.</p></div>
+      </div>
+    </section>
+
+    <!-- MODULES -->
+    <section id="modules">
+      <div class="sec-head">
+        <div class="eyebrow">03 · Modules</div>
+        <h2>Everything in the system</h2>
+        <p class="lead">Seventeen areas, each with its main screens. Tags show where each one comes from, so you can see what is in the original mockups and what we have designed to complete the picture.</p>
+      </div>
+      <div class="legend">
+        <span class="src m">Mockup</span> shown in the supplied mockups
+        <span class="src d">Discussed</span> confirmed in our meetings
+        <span class="src p">Proposed</span> designed by us to complete the system
+      </div>
+      <div class="modules">
+        <div class="mod"><header><h4>Sign in</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">تسجيل الدخول</span><p>Username, password, language. Then the shift step for cashiers.</p></div>
+        <div class="mod"><header><h4>Point of sale</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">نقطة البيع</span><p>Search and scan, retail/wholesale, cart, price edit, discount, hold, return, pay and print.</p></div>
+        <div class="mod"><header><h4>Shifts</h4><span class="src d">Discussed</span></header><span class="ar" lang="ar">الورديات</span><p>Open, resume, current shift, close with reconciliation, history and details per cashier.</p></div>
+        <div class="mod"><header><h4>Cash-outs</h4><span class="src d">Discussed</span></header><span class="ar" lang="ar">المصروفات النقدية</span><p>Quick amount + reason from the till; full history with filters.</p></div>
+        <div class="mod"><header><h4>Products</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">المنتجات</span><p>List, create, edit, details. Arabic/English names, barcode, unit, low-stock alert, markup pricing.</p></div>
+        <div class="mod"><header><h4>Categories</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">التصنيفات</span><p>Unlimited nesting with drag to reorder or move.</p></div>
+        <div class="mod"><header><h4>Inventory</h4><span class="src p">Proposed</span></header><span class="ar" lang="ar">المخزون</span><p>Stock levels, low-stock list, movement history, authorized adjustments.</p></div>
+        <div class="mod"><header><h4>Purchases</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">فواتير الشراء</span><p>Supplier invoices that raise stock and refresh selling prices.</p></div>
+        <div class="mod"><header><h4>Sales invoices</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">فواتير البيع</span><p>Search, view, reprint, and start a return from any invoice.</p></div>
+        <div class="mod"><header><h4>Returns</h4><span class="src p">Proposed</span></header><span class="ar" lang="ar">المرتجعات</span><p>Pick the original invoice, choose items and quantities, refund at the original price.</p></div>
+        <div class="mod"><header><h4>Customers</h4><span class="src p">Proposed</span></header><span class="ar" lang="ar">العملاء</span><p>Contacts and purchase history. Walk-in customer is the default at the till.</p></div>
+        <div class="mod"><header><h4>Suppliers</h4><span class="src p">Proposed</span></header><span class="ar" lang="ar">الموردون</span><p>Contacts, purchase history and totals per supplier.</p></div>
+        <div class="mod"><header><h4>Dashboard</h4><span class="src p">Proposed</span></header><span class="ar" lang="ar">الرئيسية</span><p>Today's sales, cash vs non-cash, stock alerts, shift status, recent activity.</p></div>
+        <div class="mod"><header><h4>Reports</h4><span class="src p">Proposed</span></header><span class="ar" lang="ar">التقارير</span><p>Sales, purchases, inventory and shift reports with filters and print.</p></div>
+        <div class="mod"><header><h4>Users &amp; roles</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">المستخدمون والصلاحيات</span><p>Users, activation, and per-role permission switches.</p></div>
+        <div class="mod"><header><h4>Settings</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">الإعدادات</span><p>Store profile, sales &amp; tax, numbering, printing, database, backup, license, language.</p></div>
+        <div class="mod"><header><h4>Receipts</h4><span class="src m">Mockup</span></header><span class="ar" lang="ar">الإيصالات</span><p>80 mm thermal sale receipt and printable shift report.</p></div>
+      </div>
+    </section>
+
+    <!-- FLOWS -->
+    <section id="flows">
+      <div class="sec-head">
+        <div class="eyebrow">04 · User journeys</div>
+        <h2>How people move through it</h2>
+        <p class="lead">The eight journeys we design and test against. Each one ends in a clear, saved state.</p>
+      </div>
+      <div class="flows">
+        <div class="flow"><h4><span class="k">A</span>First cashier of the day</h4><div class="steps"><span>Login</span><i>→</i><span>No open shift</span><i>→</i><span>Open shift (amount optional)</span><i>→</i><span>Sell</span><i>→</i><span>Close shift</span><i>→</i><span class="end">Back to login</span></div></div>
+        <div class="flow"><h4><span class="k">B</span>Second cashier joins</h4><div class="steps"><span>Login</span><i>→</i><span>Shift already open</span><i>→</i><span>Resume</span><i>→</i><span>Added as participant</span><i>→</i><span class="end">POS</span></div></div>
+        <div class="flow"><h4><span class="k">C</span>Shift left open overnight</h4><div class="steps"><span>Login</span><i>→</i><span>Old shift summary</span><i>→</i><span>Resume or close it</span><i>→</i><span>Open new if closed</span><i>→</i><span class="end">POS</span></div></div>
+        <div class="flow"><h4><span class="k">D</span>Retail sale</h4><div class="steps"><span>Scan / search</span><i>→</i><span>Adjust qty or price</span><i>→</i><span>Pay · F9</span><i>→</i><span>Choose method</span><i>→</i><span class="end">Saved + receipt</span></div></div>
+        <div class="flow"><h4><span class="k">E</span>Cash-out</h4><div class="steps"><span>POS or shift page</span><i>→</i><span>Amount + reason</span><i>→</i><span class="end">Expected cash updated</span></div></div>
+        <div class="flow"><h4><span class="k">F</span>Purchase from supplier</h4><div class="steps"><span>New purchase</span><i>→</i><span>Items + costs</span><i>→</i><span>Save</span><i>→</i><span>Stock up</span><i>→</i><span class="end">Prices recalculated</span></div></div>
+        <div class="flow"><h4><span class="k">G</span>Customer return</h4><div class="steps"><span>Find invoice</span><i>→</i><span>Pick items + qty</span><i>→</i><span>Refund method</span><i>→</i><span class="end">Stock + shift updated</span></div></div>
+        <div class="flow"><h4><span class="k">H</span>Closing the shift</h4><div class="steps"><span>Review summary</span><i>→</i><span>Count cash (optional)</span><i>→</i><span>Confirm</span><i>→</i><span>Print report</span><i>→</i><span class="end">Login</span></div></div>
+      </div>
+    </section>
+
+    <!-- ROLES -->
+    <section id="roles">
+      <div class="sec-head">
+        <div class="eyebrow">05 · Roles &amp; permissions</div>
+        <h2>Who can do what, by default</h2>
+        <p class="lead">Three starting roles. The admin can switch any permission on or off per role from the Roles screen; this table is the starting point we propose.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Permission</th><th class="c">Admin</th><th class="c">Manager</th><th class="c">Cashier</th></tr></thead>
+          <tbody>
+            <tr><td>Use the POS</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+            <tr><td>Open / resume a shift</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+            <tr><td>Close a shift</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">Optional</td></tr>
+            <tr><td>Change price on an invoice</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">Optional</td></tr>
+            <tr><td>Apply discounts</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">Optional</td></tr>
+            <tr><td>Cash-outs</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+            <tr><td>Returns</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">Optional</td></tr>
+            <tr><td>Products &amp; categories</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>Purchases &amp; suppliers</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>Stock adjustments</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>Reports</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>Users &amp; permissions</td><td class="c yes">✓</td><td class="c noo">—</td><td class="c noo">—</td></tr>
+            <tr><td>Settings, backup, license</td><td class="c yes">✓</td><td class="c noo">—</td><td class="c noo">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">Admins and managers can open the back-office screens without opening a shift. A shift is only required to sell.</p>
+    </section>
+
+    <!-- DESIGN SYSTEM -->
+    <section id="design">
+      <div class="sec-head">
+        <div class="eyebrow">06 · Design system</div>
+        <h2>Look and feel</h2>
+        <p class="lead">Modern, premium and sleek, built on the mockups' deep green. Quiet surfaces with fine hairline borders, soft layered depth, a confident geometric display face for headings and totals, and a dark mode for evening shifts. The polish comes from precise spacing and type rather than decoration, so the till stays fast and calm all day.</p>
+      </div>
+      <div class="grid4">
+        <div class="rule"><h4>Sleek</h4><p>Hairline 1 px borders, generous whitespace, no heavy boxes or clutter.</p></div>
+        <div class="rule"><h4>Premium</h4><p>Layered soft shadows, 16–24 px rounded corners, subtle gradient on primary actions.</p></div>
+        <div class="rule"><h4>Modern</h4><p>Manrope display type, light and dark themes, smooth 150–200 ms transitions.</p></div>
+        <div class="rule"><h4>Still practical</h4><p>High contrast for money and status. Effects never slow the till down.</p></div>
+      </div>
+
+      <div class="grid4">
+        <div class="rule"><h4>Speed first</h4><p>The keyboard and scanner can do everything at the till. The mouse is optional.</p></div>
+        <div class="rule"><h4>Money is the loudest thing</h4><p>Totals and prices get the biggest, boldest type on every screen.</p></div>
+        <div class="rule"><h4>One accent</h4><p>Green means "do this" or "all good". Everything else stays neutral.</p></div>
+        <div class="rule"><h4>Same app, both directions</h4><p>Every screen is built to mirror cleanly between Arabic (RTL) and English (LTR).</p></div>
+      </div>
+
+      <h3>Colour</h3>
+      <div class="swatches">
+        <div class="sw"><div class="c" style="background:#0f6751"></div><div><b>Primary</b><code>#0F6751</code><small>Actions, prices, confirmed</small></div></div>
+        <div class="sw"><div class="c" style="background:#e7f4ef"></div><div><b>Primary soft</b><code>#E7F4EF</code><small>Selected, success fill</small></div></div>
+        <div class="sw"><div class="c" style="background:#1a1d26"></div><div><b>Ink</b><code>#1A1D26</code><small>Sidebar, active chips</small></div></div>
+        <div class="sw"><div class="c" style="background:#f5f7fa"></div><div><b>Background</b><code>#F5F7FA</code><small>App canvas</small></div></div>
+        <div class="sw"><div class="c" style="background:#ffffff"></div><div><b>Surface</b><code>#FFFFFF</code><small>Cards, panels, inputs</small></div></div>
+        <div class="sw"><div class="c" style="background:#1f2937"></div><div><b>Text</b><code>#1F2937</code><small>Body text</small></div></div>
+        <div class="sw"><div class="c" style="background:#6b7280"></div><div><b>Muted</b><code>#6B7280</code><small>Labels, hints</small></div></div>
+        <div class="sw"><div class="c" style="background:#e5e7eb"></div><div><b>Border</b><code>#E5E7EB</code><small>Dividers, outlines</small></div></div>
+      </div>
+      <div class="swatches">
+        <div class="sw"><div class="c" style="background:#d97706"></div><div><b>Warning</b><code>#D97706</code><small>Low stock, price edited, surplus</small></div></div>
+        <div class="sw"><div class="c" style="background:#dc2626"></div><div><b>Danger</b><code>#DC2626</code><small>Shortage, errors, delete</small></div></div>
+        <div class="sw"><div class="c" style="background:#2563eb"></div><div><b>Info</b><code>#2563EB</code><small>Non-cash payments, notes</small></div></div>
+        <div class="sw"><div class="c" style="background:#eef0f3"></div><div><b>Neutral</b><code>#EEF0F3</code><small>Not reconciled, inactive</small></div></div>
+      </div>
+
+      <h3>Typography</h3>
+      <div class="panel" style="padding:8px 22px">
+        <div class="type-row"><code>Display · 32/800</code><span style="font-family:var(--display);font-size:32px;font-weight:800;letter-spacing:-.03em;color:var(--text-strong)" class="num">356.00 EGP</span><span lang="ar" style="font-size:30px;font-weight:700;color:var(--text-strong)">٣٥٦٫٠٠ ج.م</span></div>
+        <div class="type-row"><code>Heading · 22/700</code><span style="font-size:22px;font-weight:700;color:var(--text-strong)">Close shift</span><span lang="ar" style="font-size:22px;font-weight:700;color:var(--text-strong)">إغلاق الوردية</span></div>
+        <div class="type-row"><code>Title · 16/650</code><span style="font-size:16px;font-weight:650;color:var(--text-strong)">Sunflower oil 1 L</span><span lang="ar" style="font-size:16px;font-weight:600;color:var(--text-strong)">زيت عباد الشمس ١ لتر</span></div>
+        <div class="type-row"><code>Body · 15/400</code><span style="font-size:15px">Scan a barcode or search by name.</span><span lang="ar" style="font-size:15px">امسح الباركود أو ابحث بالاسم.</span></div>
+        <div class="type-row"><code>Label · 13/600</code><span style="font-size:13px;font-weight:600;color:var(--text-muted)">Opening amount (optional)</span><span lang="ar" style="font-size:13px;font-weight:600;color:var(--text-muted)">مبلغ الافتتاح (اختياري)</span></div>
+      </div>
+      <p class="hint">Headings and totals: <b>Manrope</b>. Body: <b>Inter</b>. Arabic: <b>IBM Plex Sans Arabic</b>. Both are bundled inside the installation. All money uses tabular figures so columns line up. Arabic-Indic or Western digits is a setting (see decisions).</p>
+
+      <h3>Spacing, corners, depth</h3>
+      <div class="panel tokens-strip">
+        <div class="tok"><div class="box" style="width:4px;height:40px"></div>4</div>
+        <div class="tok"><div class="box" style="width:8px;height:40px"></div>8</div>
+        <div class="tok"><div class="box" style="width:12px;height:40px"></div>12</div>
+        <div class="tok"><div class="box" style="width:16px;height:40px"></div>16</div>
+        <div class="tok"><div class="box" style="width:24px;height:40px"></div>24</div>
+        <div class="tok"><div class="box" style="width:32px;height:40px"></div>32 px</div>
+        <div style="width:1px;height:48px;background:var(--border)"></div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:8px"></div>8 · inputs</div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:12px"></div>12 · cards</div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:16px"></div>16 · panels</div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:999px"></div>pill · chips</div>
+      </div>
+      <p class="hint">Touch targets are at least 44 px tall; the main Pay button is 56 px. Layouts are designed for 1366×768 and up (the usual till screen) and adapt down to tablets.</p>
+    </section>
+
+    <!-- COMPONENTS -->
+    <section id="components">
+      <div class="sec-head">
+        <div class="eyebrow">07 · Components</div>
+        <h2>The building blocks</h2>
+        <p class="lead">A small, consistent kit used across every screen. These are live: try the toggle and the price calculator.</p>
+      </div>
+      <div class="grid2">
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <h3>Buttons</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <button class="btn primary" type="button">Save product</button>
+            <button class="btn" type="button">Cancel</button>
+            <button class="btn" type="button">Hold <kbd>F8</kbd></button>
+            <button class="btn danger" type="button">Delete</button>
+          </div>
+          <button class="btn primary xl" type="button">Pay and print · F9</button>
+        </div>
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <h3>Status chips</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span class="status s-ok">Shift open</span>
+            <span class="status s-ok">Matched</span>
+            <span class="status s-warn">Surplus</span>
+            <span class="status s-bad">Shortage</span>
+            <span class="status s-neutral">Not reconciled</span>
+            <span class="status s-neutral">Closed</span>
+            <span class="status s-warn">Low stock</span>
+            <span class="status s-bad">Out of stock</span>
+            <span class="status s-info">InstaPay</span>
+            <span class="status s-info">Held</span>
+          </div>
+          <h3 style="margin-top:4px">Segmented switch</h3>
+          <div class="seg" role="group" aria-label="Price mode">
+            <button type="button" aria-pressed="true" data-seg>Retail</button>
+            <button type="button" aria-pressed="false" data-seg>Wholesale</button>
+          </div>
+        </div>
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <h3>Inputs &amp; validation</h3>
+          <div class="field">
+            <label for="f-open">Opening amount (optional)</label>
+            <input class="input num" id="f-open" placeholder="0.00" inputmode="decimal">
+            <span class="hint">Leave empty to start at 0.00 EGP.</span>
+          </div>
+          <div class="field">
+            <label for="f-co">Cash-out reason</label>
+            <input class="input" id="f-co" style="border-color:var(--danger)" aria-invalid="true">
+            <span class="err">Add a reason, for example "Cleaning supplies".</span>
+          </div>
+        </div>
+        <div class="panel" style="display:grid;gap:12px;align-content:start">
+          <h3>Keyboard shortcuts at the till</h3>
+          <div class="table-wrap" style="border:0">
+            <table>
+              <tbody>
+                <tr><td><kbd>F2</kbd></td><td>Focus search / scanner</td><td><span class="src m">Mockup</span></td></tr>
+                <tr><td><kbd>F4</kbd></td><td>Choose customer</td><td><span class="src m">Mockup</span></td></tr>
+                <tr><td><kbd>F8</kbd></td><td>Hold invoice</td><td><span class="src m">Mockup</span></td></tr>
+                <tr><td><kbd>F9</kbd></td><td>Pay and print</td><td><span class="src m">Mockup</span></td></tr>
+                <tr><td><kbd>F6</kbd></td><td>Discount</td><td><span class="src p">Proposed</span></td></tr>
+                <tr><td><kbd>F7</kbd></td><td>Resume held invoice</td><td><span class="src p">Proposed</span></td></tr>
+                <tr><td><kbd>+</kbd> <kbd>−</kbd> <kbd>Del</kbd></td><td>Quantity up/down, remove line</td><td><span class="src p">Proposed</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="display:grid;gap:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <h3>Pricing block (product form)</h3>
+          <span class="hint">Type a price or a markup. The other updates.</span>
+        </div>
+        <div class="price-grid">
+          <div class="price-col">
+            <h4>Purchase price</h4>
+            <div class="field"><label for="pp">Cost (EGP)</label><input class="input num" id="pp" value="65.00" inputmode="decimal"></div>
+          </div>
+          <div class="price-col">
+            <h4>Retail <span lang="ar" class="hint">قطاعي</span></h4>
+            <div class="grid2" style="gap:8px">
+              <div class="field"><label for="rm">Markup %</label><input class="input num" id="rm" inputmode="decimal"></div>
+              <div class="field"><label for="rp">Price</label><input class="input num" id="rp" inputmode="decimal"></div>
+            </div>
+            <span class="profit num" id="rprof"></span>
+          </div>
+          <div class="price-col">
+            <h4>Wholesale <span lang="ar" class="hint">جملة</span></h4>
+            <div class="grid2" style="gap:8px">
+              <div class="field"><label for="wm">Markup %</label><input class="input num" id="wm" inputmode="decimal"></div>
+              <div class="field"><label for="wp">Price</label><input class="input num" id="wp" inputmode="decimal"></div>
+            </div>
+            <span class="profit num" id="wprof"></span>
+          </div>
+        </div>
+        <p class="hint">When a purchase invoice brings a new cost, both selling prices are recalculated from the saved markups. Retail and wholesale are independent.</p>
+      </div>
+    </section>
+
+    <!-- POS PREVIEW -->
+    <section id="pos">
+      <div class="sec-head">
+        <div class="eyebrow">08 · POS preview</div>
+        <h2>The cashier's screen</h2>
+        <p class="lead">Based directly on the supplied mockup. Click products to add them and use + / − to change quantities. Switch the language to see the full right-to-left layout.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="seg" role="group" aria-label="Preview language" style="width:220px">
+          <button type="button" aria-pressed="true" id="lang-en">English</button>
+          <button type="button" aria-pressed="false" id="lang-ar" class="ar">العربية</button>
+        </div>
+      </div>
+      <div class="pos-frame" id="posFrame" dir="ltr">
+        <div class="pos-top">
+          <div class="l"><b data-t="store">Al Noor Market</b><span class="status s-ok" data-t="shift">Shift open · #142</span></div>
+          <div class="l"><span class="hint" data-t="cashier">Cashier: Mona</span><button class="btn" type="button" data-t="close" style="min-height:34px;padding:6px 12px;font-size:13px">Close shift</button></div>
+        </div>
+        <div class="pos-body">
+          <div class="pos-left">
+            <div class="search"><span data-t="search">Barcode, name or code</span><kbd>F2</kbd></div>
+            <div class="cats"><span class="on" data-t="all">All</span><span data-t="c1">Grocery</span><span data-t="c2">Drinks</span><span data-t="c3">Dairy</span><span data-t="c4">Cleaning</span></div>
+            <div class="prods" id="prods"></div>
+          </div>
+          <div class="pos-right">
+            <div class="seg"><button type="button" aria-pressed="true" data-t="retail">Retail</button><button type="button" aria-pressed="false" data-t="wholesale">Wholesale</button></div>
+            <div class="cust"><span><span class="hint" data-t="cust">Customer · F4</span> <b data-t="walkin">Walk-in customer</b></span><a href="#pos" data-t="change">Change</a></div>
+            <div class="inv-h"><span data-t="inv">Invoice S-000318</span><span id="itemCount"></span></div>
+            <div id="lines"></div>
+            <div class="totals">
+              <div><span data-t="sub">Subtotal</span><span class="num" id="sub"></span></div>
+              <div><span data-t="disc">Discount</span><span class="num">0.00</span></div>
+              <div class="grand"><span data-t="total">Total</span><span><b class="num" id="tot"></b> <span class="hint" data-t="egp">EGP</span></span></div>
+            </div>
+            <div class="act3"><button class="btn" type="button" data-t="bdisc">Discount</button><button class="btn" type="button" data-t="bhold">Hold · F8</button><button class="btn" type="button" data-t="bret">Return</button></div>
+            <button class="btn primary xl" type="button" data-t="pay">Pay and print · F9</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHIFT -->
+    <section id="shift">
+      <div class="sec-head">
+        <div class="eyebrow">09 · Shift closing</div>
+        <h2>Closing a shared shift</h2>
+        <p class="lead">The summary shows what should be in the drawer. Counting is optional: type an amount to see the result, or clear it to see how an uncounted shift is recorded.</p>
+      </div>
+      <div class="recon">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <h3>Shift #142 · Mona, Ahmed</h3><span class="status s-ok">Open</span>
+          </div>
+          <div class="ledger num">
+            <div><span>Opening amount</span><span>500.00</span></div>
+            <div><span>Cash sales</span><span>4,820.00</span></div>
+            <div><span>Cash refunds</span><span class="neg">−120.00</span></div>
+            <div><span>Cash-outs (2)</span><span class="neg">−350.00</span></div>
+            <div class="sum"><span>Expected in drawer</span><span>4,850.00 EGP</span></div>
+          </div>
+          <div class="nc num">
+            <b style="color:var(--text-strong)">Non-cash sales · not in drawer</b>
+            <div><span>Visa / Card</span><span>1,240.00</span></div>
+            <div><span>InstaPay</span><span>610.00</span></div>
+            <div><span>Vodafone Cash</span><span>300.00</span></div>
+          </div>
+        </div>
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <div class="field">
+            <label for="actual">Actual cash in drawer (optional)</label>
+            <input class="input num" id="actual" value="4830" inputmode="decimal" placeholder="Leave empty if not counted">
+          </div>
+          <div class="result-box" id="resBox">
+            <span id="resChip"></span>
+            <b class="num" id="resAmt"></b>
+            <span class="hint" id="resTxt"></span>
+          </div>
+          <button class="btn primary xl" type="button">Confirm and close shift</button>
+          <p class="hint">If another cashier is mid-sale when closing starts, the close waits for that sale to finish or be held, so no invoice is left half-saved.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATES -->
+    <section id="states">
+      <div class="sec-head">
+        <div class="eyebrow">10 · Screen states</div>
+        <h2>Every screen has five states</h2>
+        <p class="lead">Normal, empty, loading, error and confirmation. Messages say what happened and what to do next.</p>
+      </div>
+      <div class="states">
+        <div class="state"><h4>Empty</h4><b style="color:var(--text-strong)">No products match "zaatar"</b><span class="hint">Check the spelling or scan the barcode instead.</span><button class="btn" type="button" style="justify-self:start">Clear search</button></div>
+        <div class="state"><h4>Loading</h4><div class="skel" style="width:70%"></div><div class="skel"></div><div class="skel" style="width:85%"></div><div class="skel" style="width:50%"></div></div>
+        <div class="state"><h4>Error</h4><div class="toast bad"><span>Only 3 left of "Sugar 1 kg". Lower the quantity to 3 or less.</span></div><div class="toast bad"><span>Paid 300.00 is less than the total 356.00.</span></div></div>
+        <div class="state"><h4>Confirmation</h4><div class="toast ok"><span>Payment received. Change: 44.00 EGP. Receipt sent to printer.</span></div><div class="toast ok"><span>Product saved.</span></div></div>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>Messages we cover</h3>
+        <p style="font-size:13.5px;color:var(--text-muted)">Wrong username or password · no open shift · a shift is already open · shift already closed · invalid opening amount · invalid or negative price · not enough stock · empty invoice · cash paid is too low · no permission to change price · invalid cash-out amount · missing cash-out reason · invoice could not be saved · another user is closing the shift · cannot reach the database · nothing found · saved · paid · printing started.</p>
+      </div>
+    </section>
+
+    <!-- RECEIPT -->
+    <section id="receipt">
+      <div class="sec-head">
+        <div class="eyebrow">11 · Receipt</div>
+        <h2>80 mm thermal receipt</h2>
+      </div>
+      <div class="receipt-wrap">
+        <div class="receipt">
+          <div class="ctr"><b style="font-size:15px">سوبر ماركت النور</b><br>١٢ شارع التحرير، الدقي<br>هاتف ٠١٠٠٠٠٠٠٠٠٠ · الرقم الضريبي ٢٠٠-٠٠٠-٠٠٠</div>
+          <hr>
+          <div class="row"><span>فاتورة بيع (قطاعي)</span><span>S-000318</span></div>
+          <div class="row"><span>التاريخ</span><span>2026/11/18 14:32</span></div>
+          <div class="row"><span>الكاشير</span><span>منى</span></div>
+          <div class="row"><span>العميل</span><span>عميل نقدي</span></div>
+          <hr>
+          <table><thead><tr><th>الصنف</th><th>كمية</th><th>سعر</th><th>إجمالي</th></tr></thead>
+            <tbody>
+              <tr><td>زيت عباد الشمس ١ لتر</td><td>2</td><td>78.00</td><td>156.00</td></tr>
+              <tr><td>شاي أسود ٢٥٠ جم</td><td>1</td><td>62.00</td><td>62.00</td></tr>
+              <tr><td>جبنة بيضاء ٥٠٠ جم</td><td>3</td><td>46.00</td><td>138.00</td></tr>
+            </tbody></table>
+          <hr>
+          <div class="row"><span>عدد القطع</span><span>6</span></div>
+          <div class="row"><span>الإجمالي قبل الخصم</span><span>356.00</span></div>
+          <div class="row"><span>الخصم</span><span>0.00</span></div>
+          <div class="row big"><span>الإجمالي</span><span>356.00 ج.م</span></div>
+          <div class="row"><span>المدفوع نقدًا</span><span>400.00</span></div>
+          <div class="row"><span>الباقي</span><span>44.00</span></div>
+          <hr>
+          <div class="ctr">شكرًا لزيارتكم</div>
+          <div class="barcode"></div>
+          <div class="ctr" style="font-family:var(--mono);font-size:11px">S-000318</div>
+        </div>
+        <div style="display:grid;gap:14px;align-content:start;min-width:0">
+          <p class="lead">Printed in the store's default language. Header, footer, logo and paper width come from Settings → Printing. Reprints are available from the sales list.</p>
+          <ul class="clean" style="font-size:14px">
+            <li><span>Store name, address, phone and tax number</span></li>
+            <li><span>Invoice number, date, cashier, customer and sale type (retail / wholesale)</span></li>
+            <li><span>Items with the actual price charged, including edited prices</span></li>
+            <li><span>Subtotal, discount, total, paid, change and payment method</span></li>
+            <li><span>Footer message and an invoice barcode for quick returns</span></li>
+          </ul>
+          <p class="hint">The shift report prints in the same format: times, users, participants, sales by method and by cashier, cash-outs, expected and actual cash, and the reconciliation result.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section id="roadmap">
+      <div class="sec-head">
+        <div class="eyebrow">12 · Delivery plan</div>
+        <h2>Order of delivery</h2>
+        <p class="lead">Each phase is built, tested and shown before the next one starts. The first two are already done.</p>
+      </div>
+      <div class="road">
+        <div class="ph done"><span class="n">P0</span><div><h4>Foundation</h4><p>Solution structure, local database connection, base layout, offline assets.</p></div><span class="status s-ok">Done</span></div>
+        <div class="ph done"><span class="n">P1</span><div><h4>Sign-in &amp; roles</h4><p>Secure login, hashed passwords, Admin / Manager / Cashier roles, protected screens.</p></div><span class="status s-ok">Done</span></div>
+        <div class="ph"><span class="n">P2</span><div><h4>Products &amp; categories</h4><p>Nested categories, bilingual products, barcode, unit, markup pricing, low-stock alerts.</p></div><span class="status s-info">Next</span></div>
+        <div class="ph"><span class="n">P3</span><div><h4>Suppliers &amp; purchases</h4><p>Supplier records, purchase invoices, stock increase, automatic price refresh.</p></div><span class="status s-neutral">Planned</span></div>
+        <div class="ph"><span class="n">P4</span><div><h4>Inventory</h4><p>Stock movements, balances, low-stock list, authorized adjustments.</p></div><span class="status s-neutral">Planned</span></div>
+        <div class="ph"><span class="n">P5</span><div><h4>Shifts</h4><p>Open, resume, shared participants, close with optional count, Not Reconciled.</p></div><span class="status s-neutral">Planned</span></div>
+        <div class="ph"><span class="n">P6</span><div><h4>POS &amp; sales</h4><p>Search and scan, retail/wholesale, cart, price edits, discounts, hold, stock deduction.</p></div><span class="status s-neutral">Planned</span></div>
+        <div class="ph"><span class="n">P7</span><div><h4>Payments &amp; printing</h4><p>Cash with change, card, InstaPay, wallet; Arabic thermal receipts.</p></div><span class="status s-neutral">Planned</span></div>
+        <div class="ph"><span class="n">P8</span><div><h4>Cash-outs &amp; returns</h4><p>Cash-outs on the shift, returns linked to invoices, refunds and restock.</p></div><span class="status s-neutral">Planned</span></div>
+        <div class="ph"><span class="n">P9</span><div><h4>Customers, dashboard &amp; reports</h4><p>Customer records, dashboard, sales / purchase / stock / shift reports.</p></div><span class="status s-neutral">Planned</span></div>
+        <div class="ph"><span class="n">P10</span><div><h4>Settings &amp; handover</h4><p>Store profile, language, tax, printing, backup and restore, installation, final testing.</p></div><span class="status s-neutral">Planned</span></div>
+      </div>
+    </section>
+
+    <!-- DECISIONS -->
+    <section id="decisions">
+      <div class="sec-head">
+        <div class="eyebrow">13 · Decisions needed</div>
+        <h2>What we need from you</h2>
+        <p class="lead">These choices change how parts of the system behave. Each has our suggestion; we only need a yes or an alternative.</p>
+      </div>
+      <div class="decisions">
+        <div class="dec"><div><b>Cash drawers</b>One drawer for the whole store, or one per till?</div><div class="rec">Suggested: <em>one shared drawer</em>, matching the one-open-shift model.</div></div>
+        <div class="dec"><div><b>Split payments</b>Can one invoice be paid partly in cash and partly by card?</div><div class="rec">Suggested: <em>not in version 1</em>; add later if needed.</div></div>
+        <div class="dec"><div><b>Held invoices</b>How long do held invoices stay, and do they survive closing the shift?</div><div class="rec">Suggested: <em>kept until the shift closes</em>, then listed for cancel or resume.</div></div>
+        <div class="dec"><div><b>Returns</b>Who can approve a return, and is there a time limit?</div><div class="rec">Suggested: <em>manager approval</em>, within <em>14 days</em>.</div></div>
+        <div class="dec"><div><b>Selling below zero stock</b>Allow a sale when the system shows no stock left?</div><div class="rec">Suggested: <em>block it</em>, with a manager override.</div></div>
+        <div class="dec"><div><b>Tax</b>Are prices shown with VAT included, and at what rate?</div><div class="rec">Suggested: <em>prices include 14% VAT</em>, shown on the receipt.</div></div>
+        <div class="dec"><div><b>Profit calculation</b>Which cost is used for profit reports?</div><div class="rec">Suggested: <em>weighted average cost</em>.</div></div>
+        <div class="dec"><div><b>Backups</b>How often, and where to?</div><div class="rec">Suggested: <em>automatic daily</em> plus one at each shift close, to a second drive or USB.</div></div>
+        <div class="dec"><div><b>Licensing</b>How is the installation activated offline?</div><div class="rec">Suggested: <em>license file tied to the PC</em>, issued by us.</div></div>
+        <div class="dec"><div><b>Digits</b>Arabic-Indic (١٢٣) or Western (123) digits on screen and receipts?</div><div class="rec">Suggested: <em>Western on screen</em>, choice for receipts.</div></div>
+      </div>
+    </section>
+
+    <footer>StoresPOS · Product plan and design system · prepared by Hesham &amp; Joo · 18 November 2026. Names, numbers and products shown are examples.</footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Segmented switches in component kit
+  document.querySelectorAll('.seg').forEach(seg => {
+    const btns = seg.querySelectorAll('button');
+    if (seg.querySelector('#lang-en')) return;
+    btns.forEach(b => b.addEventListener('click', () => btns.forEach(x => x.setAttribute('aria-pressed', String(x === b)))));
+  });
+
+  // Pricing calculator
+  const pp = document.getElementById('pp');
+  const sets = [
+    { m: document.getElementById('rm'), p: document.getElementById('rp'), prof: document.getElementById('rprof'), mk: 20 },
+    { m: document.getElementById('wm'), p: document.getElementById('wp'), prof: document.getElementById('wprof'), mk: 10.77 }
+  ];
+  const cost = () => parseFloat(pp.value) || 0;
+  function fromMarkup(s) {
+    const mk = parseFloat(s.m.value) || 0;
+    const price = cost() * (1 + mk / 100);
+    s.p.value = price.toFixed(2); profit(s, price);
+  }
+  function fromPrice(s) {
+    const price = parseFloat(s.p.value) || 0, c = cost();
+    s.m.value = c > 0 ? ((price / c - 1) * 100).toFixed(2) : '0';
+    profit(s, price);
+  }
+  function profit(s, price) {
+    const pr = price - cost();
+    s.prof.textContent = 'Profit per piece: ' + fmt(pr) + ' EGP';
+    s.prof.style.color = pr < 0 ? 'var(--danger)' : '';
+  }
+  sets.forEach(s => {
+    s.m.value = s.mk.toFixed(2); fromMarkup(s);
+    s.m.addEventListener('input', () => fromMarkup(s));
+    s.p.addEventListener('input', () => fromPrice(s));
+  });
+  pp.addEventListener('input', () => sets.forEach(fromMarkup));
+
+  // Mini POS
+  const products = [
+    { en: 'Sunflower oil 1 L', ar: 'زيت عباد الشمس ١ لتر', p: 78, s: 64 },
+    { en: 'Rice 1 kg', ar: 'أرز ١ كجم', p: 34, s: 120 },
+    { en: 'Sugar 1 kg', ar: 'سكر ١ كجم', p: 30, s: 8, low: true },
+    { en: 'Black tea 250 g', ar: 'شاي أسود ٢٥٠ جم', p: 62, s: 45 },
+    { en: 'White cheese 500 g', ar: 'جبنة بيضاء ٥٠٠ جم', p: 48, s: 30 },
+    { en: 'Orange juice 1 L', ar: 'عصير برتقال ١ لتر', p: 38, s: 5, low: true }
+  ];
+  let cart = [ { i: 0, q: 2 }, { i: 3, q: 1 }, { i: 4, q: 3, over: 46 } ];
+  let lang = 'en';
+  const T = {
+    en: { store: 'Al Noor Market', shift: 'Shift open · #142', cashier: 'Cashier: Mona', close: 'Close shift', search: 'Barcode, name or code', all: 'All', c1: 'Grocery', c2: 'Drinks', c3: 'Dairy', c4: 'Cleaning', retail: 'Retail', wholesale: 'Wholesale', cust: 'Customer · F4', walkin: 'Walk-in customer', change: 'Change', inv: 'Invoice S-000318', sub: 'Subtotal', disc: 'Discount', total: 'Total', egp: 'EGP', bdisc: 'Discount', bhold: 'Hold · F8', bret: 'Return', pay: 'Pay and print · F9', items: 'items', each: 'each', inStock: 'In stock', lowStock: 'Low stock', edited: 'Price edited', empty: 'Scan or tap a product to start the invoice.' },
+    ar: { store: 'سوبر ماركت النور', shift: 'الوردية مفتوحة · ١٤٢', cashier: 'الكاشير: منى', close: 'إغلاق الوردية', search: 'الباركود أو الاسم أو الكود', all: 'الكل', c1: 'بقالة', c2: 'مشروبات', c3: 'ألبان', c4: 'منظفات', retail: 'قطاعي', wholesale: 'جملة', cust: 'العميل · F4', walkin: 'عميل نقدي', change: 'تغيير', inv: 'فاتورة S-000318', sub: 'الإجمالي قبل الخصم', disc: 'الخصم', total: 'الإجمالي', egp: 'ج.م', bdisc: 'خصم', bhold: 'تعليق · F8', bret: 'مرتجع', pay: 'دفع وطباعة · F9', items: 'قطع', each: 'للقطعة', inStock: 'المتوفر', lowStock: 'مخزون منخفض', edited: 'سعر معدّل', empty: 'امسح أو اختر منتجًا لبدء الفاتورة.' }
+  };
+  const frame = document.getElementById('posFrame');
+  const prodsEl = document.getElementById('prods');
+  const linesEl = document.getElementById('lines');
+
+  function renderProds() {
+    const t = T[lang];
+    prodsEl.innerHTML = '';
+    products.forEach((p, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'prod';
+      b.innerHTML = '<b></b><span class="pr num"></span><span class="st"></span>';
+      b.querySelector('b').textContent = p[lang];
+      b.querySelector('.pr').innerHTML = fmt(p.p) + ' <small>' + t.egp + '</small>';
+      const st = b.querySelector('.st');
+      st.textContent = (p.low ? t.lowStock : t.inStock) + ': ' + p.s;
+      if (p.low) st.classList.add('low');
+      b.addEventListener('click', () => {
+        const ex = cart.find(c => c.i === i);
+        if (ex) { if (ex.q < p.s) ex.q++; } else cart.push({ i, q: 1 });
+        renderCart();
+      });
+      prodsEl.appendChild(b);
+    });
+  }
+  function renderCart() {
+    const t = T[lang];
+    linesEl.innerHTML = '';
+    let sub = 0, cnt = 0;
+    if (!cart.length) {
+      linesEl.innerHTML = '<div class="empty-cart"></div>';
+      linesEl.firstChild.textContent = t.empty;
+    }
+    cart.forEach((c, idx) => {
+      const p = products[c.i], price = c.over ?? p.p, lt = price * c.q;
+      sub += lt; cnt += c.q;
+      const d = document.createElement('div'); d.className = 'line';
+      d.innerHTML = '<div><b></b><small class="num"></small></div><div class="qty"><button type="button" aria-label="Decrease">−</button><span class="num"></span><button type="button" aria-label="Increase">+</button></div><div class="lt num"></div>';
+      d.querySelector('b').textContent = p[lang];
+      const sm = d.querySelector('small'); sm.textContent = fmt(price) + ' ' + t.egp + ' ' + t.each;
+      if (c.over) { const e = document.createElement('span'); e.className = 'edited'; e.textContent = t.edited; sm.appendChild(e); }
+      d.querySelector('.qty span').textContent = c.q;
+      d.querySelector('.lt').textContent = fmt(lt);
+      const [minus, plus] = d.querySelectorAll('.qty button');
+      minus.addEventListener('click', () => { c.q--; if (c.q <= 0) cart.splice(idx, 1); renderCart(); });
+      plus.addEventListener('click', () => { if (c.q < p.s) c.q++; renderCart(); });
+      linesEl.appendChild(d);
+    });
+    document.getElementById('itemCount').textContent = cnt + ' ' + t.items;
+    document.getElementById('sub').textContent = fmt(sub);
+    document.getElementById('tot').textContent = fmt(sub);
+  }
+  function setLang(l) {
+    lang = l;
+    frame.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
+    frame.setAttribute('lang', l);
+    frame.classList.toggle('ar', l === 'ar');
+    frame.querySelectorAll('[data-t]').forEach(el => { el.textContent = T[l][el.dataset.t]; });
+    document.getElementById('lang-en').setAttribute('aria-pressed', String(l === 'en'));
+    document.getElementById('lang-ar').setAttribute('aria-pressed', String(l === 'ar'));
+    renderProds(); renderCart();
+  }
+  document.getElementById('lang-en').addEventListener('click', () => setLang('en'));
+  document.getElementById('lang-ar').addEventListener('click', () => setLang('ar'));
+  frame.querySelectorAll('.pos-right .seg button').forEach((b, _, all) => b.addEventListener('click', () => all.forEach(x => x.setAttribute('aria-pressed', String(x === b)))));
+  setLang('en');
+
+  // Shift reconciliation
+  const EXPECTED = 4850;
+  const actual = document.getElementById('actual');
+  const chip = document.getElementById('resChip'), amt = document.getElementById('resAmt'), txt = document.getElementById('resTxt');
+  function recon() {
+    const raw = actual.value.trim().replace(/,/g, '');
+    if (raw === '') {
+      chip.className = 'status s-neutral'; chip.textContent = 'Not reconciled';
+      amt.textContent = '—'; txt.textContent = 'No count entered. The shift closes as Not Reconciled; this is not treated as 0.00 counted.';
+      return;
+    }
+    const v = parseFloat(raw);
+    if (isNaN(v) || v < 0) {
+      chip.className = 'status s-bad'; chip.textContent = 'Invalid amount';
+      amt.textContent = '—'; txt.textContent = 'Enter a number of 0 or more, or leave it empty.';
+      return;
+    }
+    const diff = Math.round((v - EXPECTED) * 100) / 100;
+    if (diff === 0) { chip.className = 'status s-ok'; chip.textContent = 'Matched'; amt.textContent = '0.00 EGP'; txt.textContent = 'Drawer matches the expected amount.'; }
+    else if (diff > 0) { chip.className = 'status s-warn'; chip.textContent = 'Surplus'; amt.textContent = '+' + fmt(diff) + ' EGP'; txt.textContent = 'More cash than expected.'; }
+    else { chip.className = 'status s-bad'; chip.textContent = 'Shortage'; amt.textContent = '−' + fmt(-diff) + ' EGP'; txt.textContent = 'Less cash than expected.'; }
+  }
+  actual.addEventListener('input', recon); recon();
+})();
+</script>

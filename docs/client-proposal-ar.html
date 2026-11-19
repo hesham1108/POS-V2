@@ -1,0 +1,1076 @@
+<title>خطة StoresPOS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky section index on the left, one reading column on the right; mirrors the app's sidebar + workspace. */
+:root {
+  --primary: #0f6751;
+  --primary-hover: #0c5543;
+  --primary-soft: #e7f4ef;
+  --primary-border: #b7ddd1;
+  --ink-panel: #1a1d26;
+  --ink-panel-text: #e8eaed;
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-muted: #f8f9fa;
+  --text: #1f2937;
+  --text-strong: #111827;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --warning: #b45309;
+  --warning-soft: #fdf3e2;
+  --danger: #c62828;
+  --danger-soft: #fdecec;
+  --info: #2563eb;
+  --info-soft: #e8effd;
+  --neutral-soft: #eef0f3;
+  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 12px 32px -8px rgba(17, 24, 39, 0.10);
+  --hero-bg: #0d1412;
+  --hero-text: #eef4f1;
+  --hero-muted: #93a59e;
+  --hero-line: rgba(255, 255, 255, 0.10);
+  --display: "Manrope", "Inter", "Segoe UI", sans-serif;
+  --font: "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-ar: "IBM Plex Sans Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #3fae8c; --primary-hover: #56c19f; --primary-soft: #143a30; --primary-border: #24624f;
+    --ink-panel: #0b0e13; --ink-panel-text: #e8eaed;
+    --bg: #0f1317; --surface: #171c21; --surface-muted: #1d2329;
+    --text: #d9dee3; --text-strong: #f3f5f7; --text-muted: #9aa3ad;
+    --border: #2a3138; --border-strong: #38414a;
+    --warning: #f0a648; --warning-soft: #3a2c15; --danger: #f17373; --danger-soft: #3d1d1d;
+    --info: #7aa7ff; --info-soft: #1b2741; --neutral-soft: #242b32;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --primary: #3fae8c; --primary-hover: #56c19f; --primary-soft: #143a30; --primary-border: #24624f;
+  --ink-panel: #0b0e13; --ink-panel-text: #e8eaed;
+  --bg: #0f1317; --surface: #171c21; --surface-muted: #1d2329;
+  --text: #d9dee3; --text-strong: #f3f5f7; --text-muted: #9aa3ad;
+  --border: #2a3138; --border-strong: #38414a;
+  --warning: #f0a648; --warning-soft: #3a2c15; --danger: #f17373; --danger-soft: #3d1d1d;
+  --info: #7aa7ff; --info-soft: #1b2741; --neutral-soft: #242b32;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: 15px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+[lang="ar"], .ar { font-family: var(--font-ar); }
+h1, h2, h3, h4 { color: var(--text-strong); text-wrap: balance; margin: 0; line-height: 1.2; font-family: var(--display); letter-spacing: -0.01em; }
+p { margin: 0; }
+a { color: var(--primary); }
+.num { font-variant-numeric: tabular-nums; }
+code, .mono { font-family: var(--mono); font-size: 0.82em; }
+
+.shell {
+  display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px;
+  max-width: 1240px; margin: 0 auto;
+  padding-block: 40px 80px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; }
+.toc .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.logo {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--primary);
+  display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 14px; letter-spacing: -0.02em;
+}
+.toc .brand b { color: var(--text-strong); font-size: 15px; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s; }
+.toc li a {
+  display: flex; gap: 10px; text-decoration: none; color: var(--text-muted);
+  padding: 6px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500;
+}
+.toc li a::before { counter-increment: s; content: counter(s, decimal-leading-zero); font-family: var(--mono); font-size: 11px; padding-top: 2px; opacity: .7; }
+.toc li a:hover { background: var(--surface); color: var(--text-strong); }
+.toc li a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+main { display: grid; gap: 72px; min-width: 0; }
+section { display: grid; gap: 22px; min-width: 0; scroll-margin-top: 24px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--primary); }
+h2 { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; }
+h3 { font-size: 17px; font-weight: 750; }
+.lead { font-size: 16.5px; color: var(--text-muted); max-width: 68ch; }
+.sec-head { display: grid; gap: 8px; }
+
+/* Hero */
+.hero {
+  display: grid; gap: 22px; padding: clamp(28px, 5vw, 56px); border-radius: 24px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(63, 174, 140, 0.28), transparent 55%),
+    radial-gradient(80% 70% at 0% 100%, rgba(15, 103, 81, 0.35), transparent 60%),
+    var(--hero-bg);
+  color: var(--hero-text); border: 1px solid var(--hero-line); overflow: hidden; position: relative;
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(var(--hero-line) 1px, transparent 1px), linear-gradient(90deg, var(--hero-line) 1px, transparent 1px);
+  background-size: 48px 48px; mask-image: linear-gradient(180deg, rgba(0,0,0,.5), transparent 75%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.5), transparent 75%);
+}
+.hero > * { position: relative; z-index: 1; }
+.hero .eyebrow { color: #7fd6b8; }
+.hero h1 { font-size: clamp(34px, 5.4vw, 60px); font-weight: 800; letter-spacing: -0.045em; line-height: 1.04; color: var(--hero-text); max-width: 18ch; }
+.hero h1 span { background: linear-gradient(90deg, #7fd6b8, #3fae8c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .lead { color: var(--hero-muted); }
+.hero .chip { background: rgba(255,255,255,0.06); border-color: var(--hero-line); color: var(--hero-text); backdrop-filter: blur(6px); }
+.hero .chip .dot { background: #3fae8c; box-shadow: 0 0 0 3px rgba(63,174,140,.25); }
+.hero-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--hero-line); padding-top: 22px; margin-top: 6px; }
+.hero-stats div { display: grid; gap: 2px; padding-inline-end: 16px; }
+.hero-stats b { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; color: var(--hero-text); }
+.hero-stats span { font-size: 12.5px; color: var(--hero-muted); }
+@media (max-width: 760px) { .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; } }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border); font-size: 12.5px; font-weight: 600; color: var(--text);
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+
+/* Generic blocks */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px; min-width: 0; box-shadow: var(--shadow); }
+.rule, .mod, .flow, .ph, .dec, .state, .sw { border-radius: 16px !important; transition: border-color .2s, transform .2s; }
+.mod:hover, .rule:hover { border-color: var(--primary-border); transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .mod:hover, .rule:hover { transform: none; } }
+.btn.primary { background: linear-gradient(180deg, var(--primary-hover), var(--primary)); box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 6px 16px -6px var(--primary); }
+.pos-frame { border-radius: 22px !important; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.facts div { padding: 18px 20px; display: grid; gap: 4px; border-inline-end: 1px solid var(--border); }
+.facts div:last-child { border-inline-end: 0; }
+.facts small { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.facts b { color: var(--text-strong); font-size: 15px; }
+
+ul.clean { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+ul.clean li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; }
+ul.clean li::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--primary); margin-top: 8px; }
+ul.no li::before { background: var(--danger); border-radius: 50%; }
+
+.rule { display: grid; gap: 6px; padding: 16px 18px; border: 1px solid var(--border); background: var(--surface); border-radius: 12px; }
+.rule h4 { font-size: 14.5px; }
+.rule p { font-size: 13.5px; color: var(--text-muted); }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: start; padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); background: var(--surface-muted); font-weight: 650; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.c, th.c { text-align: center; }
+.yes { color: var(--primary); font-weight: 800; }
+.cfg { color: var(--warning); font-weight: 700; font-size: 12px; }
+.noo { color: var(--text-muted); opacity: .55; }
+
+/* Module list */
+.modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.mod { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 6px; align-content: start; }
+.mod header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.mod h4 { font-size: 14.5px; }
+.mod .ar { color: var(--text-muted); font-size: 13px; }
+.mod p { font-size: 13px; color: var(--text-muted); }
+.src { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+.src.m { background: var(--primary-soft); color: var(--primary); }
+.src.d { background: var(--info-soft); color: var(--info); }
+.src.p { background: var(--neutral-soft); color: var(--text-muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-muted); align-items: center; }
+
+/* Flows */
+.flows { display: grid; gap: 10px; }
+.flow { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.flow h4 { font-size: 14px; display: flex; gap: 8px; align-items: center; }
+.flow h4 .k { font-family: var(--mono); font-size: 11px; background: var(--ink-panel); color: var(--ink-panel-text); border-radius: 5px; padding: 1px 6px; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+.steps span { padding: 4px 9px; border-radius: 7px; background: var(--surface-muted); border: 1px solid var(--border); white-space: nowrap; }
+.steps span.end { background: var(--primary-soft); border-color: var(--primary-border); color: var(--primary); font-weight: 600; }
+.steps i { color: var(--text-muted); font-style: normal; }
+
+/* Design system */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.sw { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.sw .c { height: 64px; }
+.sw div:last-child { padding: 10px 12px; display: grid; gap: 1px; }
+.sw b { font-size: 13px; color: var(--text-strong); }
+.sw code { color: var(--text-muted); font-size: 11px; }
+.sw small { font-size: 11.5px; color: var(--text-muted); }
+
+.type-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.type-row:last-child { border-bottom: 0; }
+.type-row code { color: var(--text-muted); font-size: 11px; }
+.type-row [lang="ar"] { text-align: right; }
+
+.tokens-strip { display: flex; flex-wrap: wrap; gap: 20px; align-items: end; }
+.tok { display: grid; gap: 6px; justify-items: start; font-size: 12px; color: var(--text-muted); }
+.tok .box { background: var(--primary-soft); border: 1.5px solid var(--primary-border); }
+
+/* Component previews */
+.btn {
+  font: inherit; font-weight: 600; font-size: 14px; border-radius: 10px; padding: 10px 16px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-strong);
+  display: inline-flex; align-items: center; gap: 8px; min-height: 42px;
+}
+.btn:hover { background: var(--surface-muted); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.primary:hover { background: var(--primary-hover); }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.xl { width: 100%; justify-content: center; min-height: 54px; font-size: 17px; border-radius: 12px; }
+kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 5px; border: 1px solid currentColor; opacity: .8; }
+
+.status { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 650; }
+.status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.s-ok { background: var(--primary-soft); color: var(--primary); }
+.s-warn { background: var(--warning-soft); color: var(--warning); }
+.s-bad { background: var(--danger-soft); color: var(--danger); }
+.s-info { background: var(--info-soft); color: var(--info); }
+.s-neutral { background: var(--neutral-soft); color: var(--text-muted); }
+
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.input {
+  font: inherit; width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-strong);
+}
+.input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.hint { font-size: 12px; color: var(--text-muted); }
+.err { font-size: 12px; color: var(--danger); }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+.seg button { font: inherit; font-weight: 600; font-size: 14px; border: 0; background: transparent; color: var(--text-muted); padding: 9px; border-radius: 9px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* Mini POS */
+.pos-frame { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow); }
+.pos-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.pos-top .l { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pos-top b { color: var(--text-strong); }
+.pos-body { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; padding: 14px; }
+.pos-left { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.search { border: 2px solid var(--primary); border-radius: 12px; padding: 11px 14px; background: var(--surface); color: var(--text-muted); font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+.cats { display: flex; gap: 6px; flex-wrap: wrap; }
+.cats span { padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 600; }
+.cats span.on { background: var(--ink-panel); color: var(--ink-panel-text); border-color: var(--ink-panel); }
+.prods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.prod { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: grid; gap: 6px; cursor: pointer; text-align: start; font: inherit; color: inherit; }
+.prod:hover { border-color: var(--primary-border); }
+.prod b { font-size: 13.5px; color: var(--text-strong); font-weight: 650; }
+.prod .pr { color: var(--primary); font-weight: 750; font-size: 17px; }
+.prod .pr small { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.prod .st { font-size: 11.5px; color: var(--text-muted); }
+.prod .st.low { color: var(--warning); font-weight: 600; }
+.pos-right { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.cust { display: flex; justify-content: space-between; gap: 8px; border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 13px; }
+.cust a { font-weight: 650; text-decoration: none; }
+.inv-h { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.line { display: grid; grid-template-columns: minmax(0, 1fr) auto 64px; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.line b { font-size: 13px; color: var(--text-strong); display: block; }
+.line small { font-size: 11.5px; color: var(--text-muted); }
+.edited { background: var(--warning-soft); color: var(--warning); font-weight: 650; padding: 0 5px; border-radius: 4px; font-size: 10.5px; margin-inline-start: 4px; }
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty button { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-strong); font: inherit; font-weight: 700; cursor: pointer; }
+.qty span { min-width: 16px; text-align: center; font-weight: 650; }
+.line .lt { text-align: end; font-weight: 700; color: var(--text-strong); font-size: 13.5px; }
+.totals { display: grid; gap: 4px; font-size: 13px; padding-top: 4px; }
+.totals div { display: flex; justify-content: space-between; color: var(--text-muted); }
+.totals .grand { color: var(--text-strong); align-items: baseline; margin-top: 4px; }
+.totals .grand b { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.act3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.act3 .btn { justify-content: center; padding: 8px; font-size: 13px; min-height: 40px; }
+.empty-cart { padding: 26px 10px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* Shift close demo */
+.recon { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+.ledger { display: grid; gap: 0; font-size: 14px; }
+.ledger div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--border); }
+.ledger div.sum { border-bottom: 0; border-top: 2px solid var(--text-strong); margin-top: 4px; font-weight: 750; color: var(--text-strong); font-size: 15.5px; }
+.ledger .neg { color: var(--danger); }
+.ledger .muted { color: var(--text-muted); }
+.nc { margin-top: 14px; padding: 12px; border-radius: 10px; background: var(--surface-muted); border: 1px solid var(--border); font-size: 13px; display: grid; gap: 4px; }
+.nc div { display: flex; justify-content: space-between; }
+.result-box { border-radius: 12px; padding: 16px; display: grid; gap: 6px; border: 1px solid var(--border); background: var(--surface-muted); }
+.result-box b { font-size: 26px; font-weight: 800; color: var(--text-strong); }
+
+/* Pricing demo */
+.price-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.price-col { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-muted); align-content: start; }
+.price-col h4 { font-size: 13.5px; }
+.profit { font-size: 13px; color: var(--primary); font-weight: 650; }
+
+/* States */
+.states { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.state { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 16px; display: grid; gap: 8px; align-content: start; font-size: 13px; }
+.state h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); }
+.skel { height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--neutral-soft), var(--surface-muted), var(--neutral-soft)); background-size: 200% 100%; animation: sh 1.4s infinite linear; }
+@keyframes sh { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+.toast { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; font-size: 13px; }
+.toast.ok { background: var(--primary-soft); color: var(--primary); }
+.toast.bad { background: var(--danger-soft); color: var(--danger); }
+
+/* Receipt */
+.receipt-wrap { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.receipt { background: #fff; color: #111; font-family: var(--font-ar); width: 100%; max-width: 300px; padding: 18px 16px 24px; border-radius: 4px; box-shadow: var(--shadow); font-size: 12px; direction: rtl; border: 1px solid var(--border); }
+.receipt .ctr { text-align: center; }
+.receipt hr { border: 0; border-top: 1px dashed #999; margin: 8px 0; }
+.receipt table { font-size: 11.5px; }
+.receipt th, .receipt td { padding: 3px 2px; border: 0; background: none; color: #111; text-transform: none; letter-spacing: 0; font-size: 11.5px; text-align: right; }
+.receipt th { font-weight: 700; border-bottom: 1px solid #111; }
+.receipt .row { display: flex; justify-content: space-between; }
+.receipt .big { font-size: 15px; font-weight: 700; }
+.barcode { height: 38px; margin: 10px auto 4px; width: 80%; background: repeating-linear-gradient(90deg, #111 0 2px, #fff 2px 3px, #111 3px 4px, #fff 4px 7px, #111 7px 10px, #fff 10px 11px); }
+
+/* Roadmap */
+.road { display: grid; gap: 8px; }
+.ph { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 13px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.ph .n { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+.ph h4 { font-size: 14.5px; }
+.ph p { font-size: 12.5px; color: var(--text-muted); }
+.ph.done { background: var(--primary-soft); border-color: var(--primary-border); }
+.ph.done .n { color: var(--primary); }
+
+/* Decisions */
+.decisions { counter-reset: d; display: grid; gap: 10px; }
+.dec { display: grid; grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; font-size: 13.5px; }
+.dec::before { counter-increment: d; content: counter(d); width: 26px; height: 26px; border-radius: 50%; background: var(--warning-soft); color: var(--warning); display: grid; place-items: center; font-weight: 750; font-size: 12.5px; }
+.dec b { color: var(--text-strong); display: block; margin-bottom: 2px; }
+.dec .rec { color: var(--text-muted); }
+.dec .rec em { font-style: normal; font-weight: 650; color: var(--primary); }
+
+footer { color: var(--text-muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 20px; }
+
+@media (max-width: 1000px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  nav.toc { position: static; }
+  .toc ol { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .states, .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .grid2, .grid3, .recon, .receipt-wrap, .price-grid, .pos-body { grid-template-columns: minmax(0, 1fr); }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .facts div:nth-child(2) { border-inline-end: 0; }
+  .facts div:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .flow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .type-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .type-row [lang="ar"] { text-align: start; }
+  .dec { grid-template-columns: 34px minmax(0, 1fr); }
+  .dec .rec { grid-column: 2; }
+  .prods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h2 { font-size: 24px; }
+}
+@media (max-width: 440px) {
+  .states, .grid4 { grid-template-columns: minmax(0, 1fr); }
+  .ph { grid-template-columns: 40px minmax(0, 1fr); }
+  .ph .status { grid-column: 2; justify-self: start; }
+}
+</style>
+
+<style>
+/* Arabic overrides: Arabic-first type stacks, no negative tracking (it breaks letter joining), LTR islands for money and codes. */
+:root {
+  --font: "IBM Plex Sans Arabic", "Inter", "Noto Sans Arabic", Tahoma, sans-serif;
+  --display: "IBM Plex Sans Arabic", "Manrope", "Noto Sans Arabic", Tahoma, sans-serif;
+}
+.shell { font-family: var(--font); }
+h1, h2, h3, h4, .hero h1, .hero-stats b, .totals .grand b { letter-spacing: 0 !important; }
+.hero h1 { line-height: 1.25; max-width: 20ch; }
+h2 { font-weight: 700; }
+.eyebrow { letter-spacing: 0; text-transform: none; font-size: 13px; }
+th { letter-spacing: 0; text-transform: none; }
+.ltr, .ledger div span:last-child, .nc div span:last-child, #resAmt, .lt, #sub, #tot, .sw code, .type-row code, kbd { direction: ltr; unicode-bidi: isolate; }
+.toc li a::before { font-family: var(--font); }
+</style>
+
+<div class="shell" dir="rtl" lang="ar">
+  <nav class="toc" aria-label="الأقسام">
+    <div class="brand"><div class="logo">SP</div><b>StoresPOS</b></div>
+    <ol>
+      <li><a href="#overview">نظرة عامة</a></li>
+      <li><a href="#rules">القواعد المعتمدة</a></li>
+      <li><a href="#modules">أقسام النظام</a></li>
+      <li><a href="#flows">رحلات المستخدم</a></li>
+      <li><a href="#roles">الأدوار والصلاحيات</a></li>
+      <li><a href="#design">نظام التصميم</a></li>
+      <li><a href="#components">المكوّنات</a></li>
+      <li><a href="#pos">معاينة نقطة البيع</a></li>
+      <li><a href="#shift">إغلاق الوردية</a></li>
+      <li><a href="#states">حالات الشاشات</a></li>
+      <li><a href="#receipt">الإيصال</a></li>
+      <li><a href="#roadmap">خطة التسليم</a></li>
+      <li><a href="#decisions">قرارات مطلوبة</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- HERO -->
+    <header class="hero">
+      <div class="eyebrow">خطة المنتج ونظام التصميم · الإصدار 1.0</div>
+      <h1>نظام كاشير وإدارة متجر سريع يعمل بدون إنترنت، <span>مصمَّم لمتجرك.</span></h1>
+      <p class="lead">تجمع هذه الوثيقة التصميمات الأولية والمواصفات الفنية والمخطط الوظيفي التفصيلي في خطة واحدة. توضّح ما يقدّمه النظام، وكيف يتنقّل الكاشير والمدير بين شاشاته، وشكله، وترتيب تسليمه.</p>
+      <div class="meta-row">
+        <span class="chip"><span class="dot"></span>18 نوفمبر 2026</span>
+        <span class="chip">إعداد: هشام وجو</span>
+        <span class="chip">عربي · English</span>
+        <span class="chip">يعمل بدون إنترنت</span>
+      </div>
+      <div class="hero-stats">
+        <div><b>17</b><span>قسمًا</span></div>
+        <div><b>8</b><span>رحلات استخدام أساسية</span></div>
+        <div><b>4</b><span>طرق دفع</span></div>
+        <div><b class="ltr">2/11</b><span>مراحل تم تسليمها</span></div>
+      </div>
+    </header>
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <div class="sec-head">
+        <div class="eyebrow">01 · نظرة عامة</div>
+        <h2>ماذا نبني</h2>
+        <p class="lead">يعمل StoresPOS على جهاز داخل المتجر. يبيع الكاشير من شاشة واحدة سريعة، ويدير المالك والمدير المخزون والمشتريات والموردين والعملاء والورديات والتقارير من نفس البرنامج. لا شيء يعتمد على الإنترنت.</p>
+      </div>
+      <div class="facts">
+        <div><small>يعمل على</small><b>جهاز المتجر، شبكة محلية</b></div>
+        <div><small>قاعدة البيانات</small><b>SQL Server محلي</b></div>
+        <div><small>المستخدمون</small><b>مدير النظام · مدير · كاشير</b></div>
+        <div><small>العملة</small><b>جنيه مصري، رقمان عشريان</b></div>
+      </div>
+      <div class="grid3">
+        <div class="panel">
+          <h3>دفع أسرع</h3>
+          <p class="hint" style="font-size:13.5px;margin-top:6px">باركود أو بحث، واختصارات بضغطة واحدة (F2 وF4 وF8 وF9)، والدفع والطباعة في خطوة واحدة.</p>
+        </div>
+        <div class="panel">
+          <h3>درج نقدية موثوق</h3>
+          <p class="hint" style="font-size:13.5px;margin-top:6px">كل بيع ومرتجع ومصروف يُسجَّل على الوردية المفتوحة. النقدية المتوقعة ظاهرة دائمًا، والنقدي منفصل عن مدفوعات الفيزا والمحافظ.</p>
+        </div>
+        <div class="panel">
+          <h3>مخزون وأسعار دقيقة</h3>
+          <p class="hint" style="font-size:13.5px;margin-top:6px">فواتير الشراء تزيد المخزون وتحدّث أسعار البيع حسب نسبة الربح. والفواتير القديمة تحتفظ بالأسعار التي بيعت بها.</p>
+        </div>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>التقنية</h3>
+        <p style="font-size:13.5px;color:var(--text-muted)">ASP.NET Core MVC مع واجهات Razor، وبنية من ثلاث طبقات (الشاشات ← قواعد العمل ← البيانات)، وEntity Framework Core على SQL Server، وتسجيل دخول آمن بكلمات مرور مشفّرة وصلاحيات حسب الدور. جميع الخطوط والملفات مضمّنة في التثبيت، فلا يتصل البرنامج بالإنترنت أبدًا.</p>
+      </div>
+    </section>
+
+    <!-- RULES -->
+    <section id="rules">
+      <div class="sec-head">
+        <div class="eyebrow">02 · القواعد المعتمدة</div>
+        <h2>قواعد العمل المتفق عليها</h2>
+        <p class="lead">جاءت هذه القواعد من التصميمات الأولية ومن نقاشاتنا. التصميم والبرمجة يلتزمان بها، وأي تغيير فيها يُعتبر تغييرًا في نطاق العمل.</p>
+      </div>
+      <div class="grid2">
+        <div class="rule"><h4>وردية واحدة مفتوحة لأكثر من كاشير</h4><p>يوجد في المتجر وردية مفتوحة واحدة فقط. الكاشير الثاني عند تسجيل دخوله ينضم إليها كمشارك، مع تتبّع مبيعات ومصروفات كل كاشير على حدة.</p></div>
+        <div class="rule"><h4>الوردية لا تُغلق تلقائيًا</h4><p>تسجيل الخروج لا يغلق الوردية، ولا تُغلق الوردية القديمة بسبب تاريخها. الإغلاق إجراء مقصود من مستخدم لديه الصلاحية.</p></div>
+        <div class="rule"><h4>مبلغ الافتتاح اختياري</h4><p>إذا تُرك فارغًا يُحسب صفرًا. الكاشير يؤكّد ويبدأ البيع مباشرة.</p></div>
+        <div class="rule"><h4>عدّ النقدية عند الإغلاق اختياري</h4><p>عند إدخال المبلغ الفعلي يُظهر النظام زيادة أو عجزًا أو تطابقًا. وإذا تُرك فارغًا تُسجَّل الوردية <b>غير مُسوّاة</b>، ولا يُعتبر أنه تم عدّ صفر.</p></div>
+        <div class="rule"><h4>النقدي فقط يُحسب في الدرج</h4><p>الفيزا وإنستاباي وفودافون كاش تظهر في المبيعات والتقارير، لكنها لا تدخل في النقدية المتوقعة بالدرج.</p></div>
+        <div class="rule"><h4>تعديل السعر يخص الفاتورة فقط</h4><p>تغيير السعر عند البيع يؤثر على سطر الفاتورة فقط، ويبقى سعر المنتج في الكتالوج كما هو. يُحفظ السعران واسم المستخدم الذي عدّل.</p></div>
+        <div class="rule"><h4>المصروف النقدي = مبلغ + سبب</h4><p>لا توجد خزنة منفصلة. المصروف يُربط بالوردية المفتوحة وبالمستخدم، ويُخصم من النقدية المتوقعة.</p></div>
+        <div class="rule"><h4>نسبة الربح تحدّد سعر البيع</h4><p>أدخل السعر فتُحسب النسبة، أو العكس. وعند تسجيل سعر شراء جديد يُعاد حساب سعري القطاعي والجملة من النسب المحفوظة.</p></div>
+      </div>
+    </section>
+
+    <!-- MODULES -->
+    <section id="modules">
+      <div class="sec-head">
+        <div class="eyebrow">03 · أقسام النظام</div>
+        <h2>كل ما في النظام</h2>
+        <p class="lead">سبعة عشر قسمًا بشاشاتها الرئيسية. توضّح العلامات مصدر كل قسم، لترى ما ورد في التصميمات الأولية وما صمّمناه لاستكمال النظام.</p>
+      </div>
+      <div class="legend">
+        <span class="src m">تصميم أولي</span> ورد في التصميمات المرسلة
+        <span class="src d">متفق عليه</span> تم تأكيده في اجتماعاتنا
+        <span class="src p">مقترح</span> صمّمناه لاستكمال النظام
+      </div>
+      <div class="modules">
+        <div class="mod"><header><h4>تسجيل الدخول</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Sign in</span><p>اسم المستخدم وكلمة المرور واللغة، ثم خطوة الوردية للكاشير.</p></div>
+        <div class="mod"><header><h4>نقطة البيع</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Point of sale</span><p>بحث ومسح، قطاعي/جملة، سلة، تعديل سعر، خصم، تعليق، مرتجع، دفع وطباعة.</p></div>
+        <div class="mod"><header><h4>الورديات</h4><span class="src d">متفق عليه</span></header><span class="ar ltr" lang="en">Shifts</span><p>فتح، استئناف، الوردية الحالية، إغلاق مع التسوية، السجل والتفاصيل لكل كاشير.</p></div>
+        <div class="mod"><header><h4>المصروفات النقدية</h4><span class="src d">متفق عليه</span></header><span class="ar ltr" lang="en">Cash-outs</span><p>مبلغ وسبب بسرعة من شاشة البيع، مع سجل كامل وفلاتر.</p></div>
+        <div class="mod"><header><h4>المنتجات</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Products</span><p>قائمة وإضافة وتعديل وتفاصيل. اسم عربي/إنجليزي، باركود، وحدة، حد تنبيه، تسعير بنسبة الربح.</p></div>
+        <div class="mod"><header><h4>التصنيفات</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Categories</span><p>مستويات غير محدودة مع السحب لإعادة الترتيب أو النقل.</p></div>
+        <div class="mod"><header><h4>المخزون</h4><span class="src p">مقترح</span></header><span class="ar ltr" lang="en">Inventory</span><p>الأرصدة، الأصناف منخفضة المخزون، سجل الحركات، التسويات المصرّح بها.</p></div>
+        <div class="mod"><header><h4>فواتير الشراء</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Purchases</span><p>فواتير الموردين التي تزيد المخزون وتحدّث أسعار البيع.</p></div>
+        <div class="mod"><header><h4>فواتير البيع</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Sales invoices</span><p>بحث وعرض وإعادة طباعة، وبدء مرتجع من أي فاتورة.</p></div>
+        <div class="mod"><header><h4>المرتجعات</h4><span class="src p">مقترح</span></header><span class="ar ltr" lang="en">Returns</span><p>اختيار الفاتورة الأصلية والأصناف والكميات، والاسترداد بالسعر الأصلي.</p></div>
+        <div class="mod"><header><h4>العملاء</h4><span class="src p">مقترح</span></header><span class="ar ltr" lang="en">Customers</span><p>بيانات الاتصال وسجل المشتريات. "عميل نقدي" هو الافتراضي عند البيع.</p></div>
+        <div class="mod"><header><h4>الموردون</h4><span class="src p">مقترح</span></header><span class="ar ltr" lang="en">Suppliers</span><p>بيانات الاتصال وسجل وإجمالي المشتريات لكل مورد.</p></div>
+        <div class="mod"><header><h4>الرئيسية</h4><span class="src p">مقترح</span></header><span class="ar ltr" lang="en">Dashboard</span><p>مبيعات اليوم، النقدي وغير النقدي، تنبيهات المخزون، حالة الوردية، آخر النشاطات.</p></div>
+        <div class="mod"><header><h4>التقارير</h4><span class="src p">مقترح</span></header><span class="ar ltr" lang="en">Reports</span><p>تقارير المبيعات والمشتريات والمخزون والورديات مع الفلاتر والطباعة.</p></div>
+        <div class="mod"><header><h4>المستخدمون والصلاحيات</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Users &amp; roles</span><p>المستخدمون، التفعيل والإيقاف، ومفاتيح الصلاحيات لكل دور.</p></div>
+        <div class="mod"><header><h4>الإعدادات</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Settings</span><p>بيانات المتجر، المبيعات والضرائب، الترقيم، الطباعة، قاعدة البيانات، النسخ الاحتياطي، الترخيص، اللغة.</p></div>
+        <div class="mod"><header><h4>الإيصالات</h4><span class="src m">تصميم أولي</span></header><span class="ar ltr" lang="en">Receipts</span><p>إيصال بيع حراري 80 مم وتقرير وردية قابل للطباعة.</p></div>
+      </div>
+    </section>
+
+    <!-- FLOWS -->
+    <section id="flows">
+      <div class="sec-head">
+        <div class="eyebrow">04 · رحلات المستخدم</div>
+        <h2>كيف يتنقّل المستخدمون</h2>
+        <p class="lead">الرحلات الثماني التي نصمّم ونختبر عليها. كل رحلة تنتهي بحالة واضحة ومحفوظة.</p>
+      </div>
+      <div class="flows">
+        <div class="flow"><h4><span class="k">A</span>أول كاشير في اليوم</h4><div class="steps"><span>تسجيل الدخول</span><i>←</i><span>لا توجد وردية مفتوحة</span><i>←</i><span>فتح وردية (المبلغ اختياري)</span><i>←</i><span>البيع</span><i>←</i><span>إغلاق الوردية</span><i>←</i><span class="end">العودة لتسجيل الدخول</span></div></div>
+        <div class="flow"><h4><span class="k">B</span>انضمام كاشير ثانٍ</h4><div class="steps"><span>تسجيل الدخول</span><i>←</i><span>وردية مفتوحة بالفعل</span><i>←</i><span>استئناف</span><i>←</i><span>تسجيله كمشارك</span><i>←</i><span class="end">نقطة البيع</span></div></div>
+        <div class="flow"><h4><span class="k">C</span>وردية تُركت مفتوحة</h4><div class="steps"><span>تسجيل الدخول</span><i>←</i><span>ملخص الوردية القديمة</span><i>←</i><span>استئنافها أو إغلاقها</span><i>←</i><span>فتح وردية جديدة عند الإغلاق</span><i>←</i><span class="end">نقطة البيع</span></div></div>
+        <div class="flow"><h4><span class="k">D</span>بيع قطاعي</h4><div class="steps"><span>مسح / بحث</span><i>←</i><span>تعديل الكمية أو السعر</span><i>←</i><span>دفع · F9</span><i>←</i><span>اختيار طريقة الدفع</span><i>←</i><span class="end">حفظ + إيصال</span></div></div>
+        <div class="flow"><h4><span class="k">E</span>مصروف نقدي</h4><div class="steps"><span>نقطة البيع أو صفحة الوردية</span><i>←</i><span>المبلغ + السبب</span><i>←</i><span class="end">تحديث النقدية المتوقعة</span></div></div>
+        <div class="flow"><h4><span class="k">F</span>شراء من مورد</h4><div class="steps"><span>فاتورة شراء جديدة</span><i>←</i><span>الأصناف + التكلفة</span><i>←</i><span>حفظ</span><i>←</i><span>زيادة المخزون</span><i>←</i><span class="end">إعادة حساب الأسعار</span></div></div>
+        <div class="flow"><h4><span class="k">G</span>مرتجع عميل</h4><div class="steps"><span>البحث عن الفاتورة</span><i>←</i><span>اختيار الأصناف والكمية</span><i>←</i><span>طريقة الاسترداد</span><i>←</i><span class="end">تحديث المخزون والوردية</span></div></div>
+        <div class="flow"><h4><span class="k">H</span>إغلاق الوردية</h4><div class="steps"><span>مراجعة الملخص</span><i>←</i><span>عدّ النقدية (اختياري)</span><i>←</i><span>تأكيد</span><i>←</i><span>طباعة التقرير</span><i>←</i><span class="end">تسجيل الدخول</span></div></div>
+      </div>
+    </section>
+
+    <!-- ROLES -->
+    <section id="roles">
+      <div class="sec-head">
+        <div class="eyebrow">05 · الأدوار والصلاحيات</div>
+        <h2>من يستطيع فعل ماذا (افتراضيًا)</h2>
+        <p class="lead">ثلاثة أدوار للبداية. يستطيع مدير النظام تشغيل أو إيقاف أي صلاحية لكل دور من شاشة الأدوار؛ وهذا الجدول هو نقطة البداية التي نقترحها.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>الصلاحية</th><th class="c">مدير النظام</th><th class="c">مدير</th><th class="c">كاشير</th></tr></thead>
+          <tbody>
+            <tr><td>استخدام نقطة البيع</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+            <tr><td>فتح / استئناف وردية</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+            <tr><td>إغلاق وردية</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">اختياري</td></tr>
+            <tr><td>تعديل السعر داخل الفاتورة</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">اختياري</td></tr>
+            <tr><td>تطبيق الخصومات</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">اختياري</td></tr>
+            <tr><td>المصروفات النقدية</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+            <tr><td>المرتجعات</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c cfg">اختياري</td></tr>
+            <tr><td>المنتجات والتصنيفات</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>المشتريات والموردون</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>تسويات المخزون</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>التقارير</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c noo">—</td></tr>
+            <tr><td>المستخدمون والصلاحيات</td><td class="c yes">✓</td><td class="c noo">—</td><td class="c noo">—</td></tr>
+            <tr><td>الإعدادات والنسخ الاحتياطي والترخيص</td><td class="c yes">✓</td><td class="c noo">—</td><td class="c noo">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">مدير النظام والمدير يستطيعان فتح شاشات الإدارة دون فتح وردية. الوردية مطلوبة للبيع فقط.</p>
+    </section>
+
+    <!-- DESIGN SYSTEM -->
+    <section id="design">
+      <div class="sec-head">
+        <div class="eyebrow">06 · نظام التصميم</div>
+        <h2>الهوية البصرية</h2>
+        <p class="lead">عصري وفاخر وأنيق، ومبني على اللون الأخضر الداكن من التصميمات الأولية. أسطح هادئة بحدود رفيعة، وظلال ناعمة متدرجة، وخط عناوين واثق للعناوين والإجماليات، ووضع داكن لورديات المساء. الفخامة تأتي من دقة المسافات والخطوط وليس من الزخرفة، فتبقى شاشة البيع سريعة وهادئة طوال اليوم.</p>
+      </div>
+      <div class="grid4">
+        <div class="rule"><h4>أنيق</h4><p>حدود رفيعة 1 بكسل، مساحات واسعة، بلا صناديق ثقيلة أو ازدحام.</p></div>
+        <div class="rule"><h4>فاخر</h4><p>ظلال ناعمة متعددة الطبقات، زوايا دائرية 16–24 بكسل، تدرّج خفيف على الأزرار الرئيسية.</p></div>
+        <div class="rule"><h4>عصري</h4><p>خطوط حديثة، وضع فاتح وداكن، وانتقالات سلسة 150–200 مللي ثانية.</p></div>
+        <div class="rule"><h4>عملي</h4><p>تباين عالٍ للأرقام والحالات، والمؤثرات لا تبطئ البيع أبدًا.</p></div>
+      </div>
+      <div class="grid4">
+        <div class="rule"><h4>السرعة أولًا</h4><p>لوحة المفاتيح والماسح يقومان بكل شيء عند البيع، والماوس اختياري.</p></div>
+        <div class="rule"><h4>الأرقام هي الأبرز</h4><p>الإجماليات والأسعار بأكبر وأوضح خط في كل شاشة.</p></div>
+        <div class="rule"><h4>لون مميز واحد</h4><p>الأخضر يعني "نفّذ" أو "كل شيء سليم"، وكل ما عداه محايد.</p></div>
+        <div class="rule"><h4>نفس البرنامج بالاتجاهين</h4><p>كل شاشة مبنية لتنعكس بدقة بين العربية (من اليمين) والإنجليزية (من اليسار).</p></div>
+      </div>
+
+      <h3>الألوان</h3>
+      <div class="swatches">
+        <div class="sw"><div class="c" style="background:#0f6751"></div><div><b>الأساسي</b><code>#0F6751</code><small>الإجراءات، الأسعار، التأكيد</small></div></div>
+        <div class="sw"><div class="c" style="background:#e7f4ef"></div><div><b>الأساسي الفاتح</b><code>#E7F4EF</code><small>المحدد، خلفية النجاح</small></div></div>
+        <div class="sw"><div class="c" style="background:#1a1d26"></div><div><b>الداكن</b><code>#1A1D26</code><small>القائمة الجانبية، الأزرار النشطة</small></div></div>
+        <div class="sw"><div class="c" style="background:#f5f7fa"></div><div><b>الخلفية</b><code>#F5F7FA</code><small>خلفية البرنامج</small></div></div>
+        <div class="sw"><div class="c" style="background:#ffffff"></div><div><b>السطح</b><code>#FFFFFF</code><small>البطاقات، اللوحات، الحقول</small></div></div>
+        <div class="sw"><div class="c" style="background:#1f2937"></div><div><b>النص</b><code>#1F2937</code><small>النص الأساسي</small></div></div>
+        <div class="sw"><div class="c" style="background:#6b7280"></div><div><b>الثانوي</b><code>#6B7280</code><small>العناوين الصغيرة، التلميحات</small></div></div>
+        <div class="sw"><div class="c" style="background:#e5e7eb"></div><div><b>الحدود</b><code>#E5E7EB</code><small>الفواصل والإطارات</small></div></div>
+      </div>
+      <div class="swatches">
+        <div class="sw"><div class="c" style="background:#d97706"></div><div><b>تنبيه</b><code>#D97706</code><small>مخزون منخفض، سعر معدّل، زيادة</small></div></div>
+        <div class="sw"><div class="c" style="background:#dc2626"></div><div><b>خطر</b><code>#DC2626</code><small>عجز، أخطاء، حذف</small></div></div>
+        <div class="sw"><div class="c" style="background:#2563eb"></div><div><b>معلومة</b><code>#2563EB</code><small>مدفوعات غير نقدية، ملاحظات</small></div></div>
+        <div class="sw"><div class="c" style="background:#eef0f3"></div><div><b>محايد</b><code>#EEF0F3</code><small>غير مُسوّاة، غير نشط</small></div></div>
+      </div>
+
+      <h3>الخطوط</h3>
+      <div class="panel" style="padding:8px 22px">
+        <div class="type-row"><code>Display · 32/800</code><span lang="ar" style="font-size:30px;font-weight:700;color:var(--text-strong)">٣٥٦٫٠٠ ج.م</span><span lang="en" class="num ltr" style="font-family:'Manrope',sans-serif;font-size:32px;font-weight:800;letter-spacing:-.03em;color:var(--text-strong);text-align:left">356.00 EGP</span></div>
+        <div class="type-row"><code>Heading · 22/700</code><span lang="ar" style="font-size:22px;font-weight:700;color:var(--text-strong)">إغلاق الوردية</span><span lang="en" class="ltr" style="font-family:'Manrope',sans-serif;font-size:22px;font-weight:700;color:var(--text-strong);text-align:left">Close shift</span></div>
+        <div class="type-row"><code>Title · 16/650</code><span lang="ar" style="font-size:16px;font-weight:600;color:var(--text-strong)">زيت عباد الشمس ١ لتر</span><span lang="en" class="ltr" style="font-family:'Inter',sans-serif;font-size:16px;font-weight:650;color:var(--text-strong);text-align:left">Sunflower oil 1 L</span></div>
+        <div class="type-row"><code>Body · 15/400</code><span lang="ar" style="font-size:15px">امسح الباركود أو ابحث بالاسم.</span><span lang="en" class="ltr" style="font-family:'Inter',sans-serif;font-size:15px;text-align:left">Scan a barcode or search by name.</span></div>
+        <div class="type-row"><code>Label · 13/600</code><span lang="ar" style="font-size:13px;font-weight:600;color:var(--text-muted)">مبلغ الافتتاح (اختياري)</span><span lang="en" class="ltr" style="font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--text-muted);text-align:left">Opening amount (optional)</span></div>
+      </div>
+      <p class="hint">العربية: <b>IBM Plex Sans Arabic</b>. العناوين والإجماليات بالإنجليزية: <b>Manrope</b>، والنص: <b>Inter</b>. جميع الخطوط مضمّنة في التثبيت. الأرقام بعرض ثابت لتصطف الأعمدة. اختيار الأرقام العربية أو الإنجليزية إعداد قابل للتغيير (انظر القرارات المطلوبة).</p>
+
+      <h3>المسافات والزوايا والعمق</h3>
+      <div class="panel tokens-strip">
+        <div class="tok"><div class="box" style="width:4px;height:40px"></div>4</div>
+        <div class="tok"><div class="box" style="width:8px;height:40px"></div>8</div>
+        <div class="tok"><div class="box" style="width:12px;height:40px"></div>12</div>
+        <div class="tok"><div class="box" style="width:16px;height:40px"></div>16</div>
+        <div class="tok"><div class="box" style="width:24px;height:40px"></div>24</div>
+        <div class="tok"><div class="box" style="width:32px;height:40px"></div>32 بكسل</div>
+        <div style="width:1px;height:48px;background:var(--border)"></div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:8px"></div>8 · الحقول</div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:12px"></div>12 · البطاقات</div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:16px"></div>16 · اللوحات</div>
+        <div class="tok"><div class="box" style="width:48px;height:40px;border-radius:999px"></div>كبسولة · الشارات</div>
+      </div>
+      <p class="hint">أهداف اللمس لا يقل ارتفاعها عن 44 بكسل، وزر الدفع الرئيسي 56 بكسل. التصميم مخصص لشاشات 1366×768 فأكبر (شاشة الكاشير المعتادة) ويتكيّف حتى الأجهزة اللوحية.</p>
+    </section>
+
+    <!-- COMPONENTS -->
+    <section id="components">
+      <div class="sec-head">
+        <div class="eyebrow">07 · المكوّنات</div>
+        <h2>وحدات البناء</h2>
+        <p class="lead">مجموعة صغيرة ومتسقة تُستخدم في كل الشاشات. هذه العناصر تفاعلية: جرّب المفتاح وحاسبة الأسعار.</p>
+      </div>
+      <div class="grid2">
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <h3>الأزرار</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <button class="btn primary" type="button">حفظ المنتج</button>
+            <button class="btn" type="button">إلغاء</button>
+            <button class="btn" type="button">تعليق <kbd>F8</kbd></button>
+            <button class="btn danger" type="button">حذف</button>
+          </div>
+          <button class="btn primary xl" type="button">دفع وطباعة · F9</button>
+        </div>
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <h3>شارات الحالة</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span class="status s-ok">الوردية مفتوحة</span>
+            <span class="status s-ok">مطابق</span>
+            <span class="status s-warn">زيادة</span>
+            <span class="status s-bad">عجز</span>
+            <span class="status s-neutral">غير مُسوّاة</span>
+            <span class="status s-neutral">مغلقة</span>
+            <span class="status s-warn">مخزون منخفض</span>
+            <span class="status s-bad">نفد المخزون</span>
+            <span class="status s-info">إنستاباي</span>
+            <span class="status s-info">معلّقة</span>
+          </div>
+          <h3 style="margin-top:4px">مفتاح التبديل</h3>
+          <div class="seg" role="group" aria-label="نوع السعر">
+            <button type="button" aria-pressed="true" data-seg>قطاعي</button>
+            <button type="button" aria-pressed="false" data-seg>جملة</button>
+          </div>
+        </div>
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <h3>الحقول والتحقق</h3>
+          <div class="field">
+            <label for="f-open">مبلغ الافتتاح (اختياري)</label>
+            <input class="input num" id="f-open" placeholder="0.00" inputmode="decimal">
+            <span class="hint">اتركه فارغًا للبدء من 0.00 ج.م.</span>
+          </div>
+          <div class="field">
+            <label for="f-co">سبب المصروف</label>
+            <input class="input" id="f-co" style="border-color:var(--danger)" aria-invalid="true">
+            <span class="err">أضف سببًا، مثل "أدوات نظافة".</span>
+          </div>
+        </div>
+        <div class="panel" style="display:grid;gap:12px;align-content:start">
+          <h3>اختصارات لوحة المفاتيح عند البيع</h3>
+          <div class="table-wrap" style="border:0;box-shadow:none">
+            <table>
+              <tbody>
+                <tr><td><kbd>F2</kbd></td><td>البحث / الماسح</td><td><span class="src m">تصميم أولي</span></td></tr>
+                <tr><td><kbd>F4</kbd></td><td>اختيار العميل</td><td><span class="src m">تصميم أولي</span></td></tr>
+                <tr><td><kbd>F8</kbd></td><td>تعليق الفاتورة</td><td><span class="src m">تصميم أولي</span></td></tr>
+                <tr><td><kbd>F9</kbd></td><td>دفع وطباعة</td><td><span class="src m">تصميم أولي</span></td></tr>
+                <tr><td><kbd>F6</kbd></td><td>خصم</td><td><span class="src p">مقترح</span></td></tr>
+                <tr><td><kbd>F7</kbd></td><td>استئناف فاتورة معلّقة</td><td><span class="src p">مقترح</span></td></tr>
+                <tr><td><kbd>+</kbd> <kbd>−</kbd> <kbd>Del</kbd></td><td>زيادة/نقص الكمية، حذف السطر</td><td><span class="src p">مقترح</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="display:grid;gap:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <h3>التسعير (نموذج المنتج)</h3>
+          <span class="hint">اكتب سعر البيع أو نسبة الربح، والنظام يحسب الآخر.</span>
+        </div>
+        <div class="price-grid">
+          <div class="price-col">
+            <h4>سعر الشراء</h4>
+            <div class="field"><label for="pp">التكلفة (ج.م)</label><input class="input num" id="pp" value="65.00" inputmode="decimal" dir="ltr"></div>
+          </div>
+          <div class="price-col">
+            <h4>قطاعي</h4>
+            <div class="grid2" style="gap:8px">
+              <div class="field"><label for="rm">نسبة الربح %</label><input class="input num" id="rm" inputmode="decimal" dir="ltr"></div>
+              <div class="field"><label for="rp">سعر البيع</label><input class="input num" id="rp" inputmode="decimal" dir="ltr"></div>
+            </div>
+            <span class="profit num" id="rprof"></span>
+          </div>
+          <div class="price-col">
+            <h4>جملة</h4>
+            <div class="grid2" style="gap:8px">
+              <div class="field"><label for="wm">نسبة الربح %</label><input class="input num" id="wm" inputmode="decimal" dir="ltr"></div>
+              <div class="field"><label for="wp">سعر البيع</label><input class="input num" id="wp" inputmode="decimal" dir="ltr"></div>
+            </div>
+            <span class="profit num" id="wprof"></span>
+          </div>
+        </div>
+        <p class="hint">عند تسجيل فاتورة شراء بتكلفة جديدة، يُعاد حساب سعري البيع من نسب الربح المحفوظة. سعر القطاعي مستقل عن سعر الجملة.</p>
+      </div>
+    </section>
+
+    <!-- POS PREVIEW -->
+    <section id="pos">
+      <div class="sec-head">
+        <div class="eyebrow">08 · معاينة نقطة البيع</div>
+        <h2>شاشة الكاشير</h2>
+        <p class="lead">مبنية مباشرة على التصميم الأولي. اضغط على المنتجات لإضافتها واستخدم + / − لتغيير الكميات. بدّل اللغة لرؤية الاتجاه من اليسار إلى اليمين.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="seg" role="group" aria-label="لغة المعاينة" style="width:220px">
+          <button type="button" aria-pressed="true" id="lang-ar">العربية</button>
+          <button type="button" aria-pressed="false" id="lang-en" lang="en">English</button>
+        </div>
+      </div>
+      <div class="pos-frame" id="posFrame" dir="rtl">
+        <div class="pos-top">
+          <div class="l"><b data-t="store"></b><span class="status s-ok" data-t="shift"></span></div>
+          <div class="l"><span class="hint" data-t="cashier"></span><button class="btn" type="button" data-t="close" style="min-height:34px;padding:6px 12px;font-size:13px"></button></div>
+        </div>
+        <div class="pos-body">
+          <div class="pos-left">
+            <div class="search"><span data-t="search"></span><kbd>F2</kbd></div>
+            <div class="cats"><span class="on" data-t="all"></span><span data-t="c1"></span><span data-t="c2"></span><span data-t="c3"></span><span data-t="c4"></span></div>
+            <div class="prods" id="prods"></div>
+          </div>
+          <div class="pos-right">
+            <div class="seg"><button type="button" aria-pressed="true" data-t="retail"></button><button type="button" aria-pressed="false" data-t="wholesale"></button></div>
+            <div class="cust"><span><span class="hint" data-t="cust"></span> <b data-t="walkin"></b></span><a href="#pos" data-t="change"></a></div>
+            <div class="inv-h"><span data-t="inv"></span><span id="itemCount"></span></div>
+            <div id="lines"></div>
+            <div class="totals">
+              <div><span data-t="sub"></span><span class="num" id="sub"></span></div>
+              <div><span data-t="disc"></span><span class="num ltr">0.00</span></div>
+              <div class="grand"><span data-t="total"></span><span><b class="num" id="tot"></b> <span class="hint" data-t="egp"></span></span></div>
+            </div>
+            <div class="act3"><button class="btn" type="button" data-t="bdisc"></button><button class="btn" type="button" data-t="bhold"></button><button class="btn" type="button" data-t="bret"></button></div>
+            <button class="btn primary xl" type="button" data-t="pay"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHIFT -->
+    <section id="shift">
+      <div class="sec-head">
+        <div class="eyebrow">09 · إغلاق الوردية</div>
+        <h2>إغلاق وردية مشتركة</h2>
+        <p class="lead">يعرض الملخص ما يجب أن يكون في الدرج. العدّ اختياري: اكتب مبلغًا لترى النتيجة، أو امسحه لترى كيف تُسجَّل الوردية غير المعدودة.</p>
+      </div>
+      <div class="recon">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <h3>وردية رقم 142 · منى، أحمد</h3><span class="status s-ok">مفتوحة</span>
+          </div>
+          <div class="ledger num">
+            <div><span>مبلغ الافتتاح</span><span>500.00</span></div>
+            <div><span>المبيعات النقدية</span><span>4,820.00</span></div>
+            <div><span>المرتجعات النقدية</span><span class="neg">−120.00</span></div>
+            <div><span>المصروفات النقدية (2)</span><span class="neg">−350.00</span></div>
+            <div class="sum"><span>المتوقع في الدرج</span><span>4,850.00 EGP</span></div>
+          </div>
+          <div class="nc num">
+            <b style="color:var(--text-strong)">مبيعات غير نقدية · لا تدخل الدرج</b>
+            <div><span>فيزا / بطاقة</span><span>1,240.00</span></div>
+            <div><span>إنستاباي</span><span>610.00</span></div>
+            <div><span>فودافون كاش</span><span>300.00</span></div>
+          </div>
+        </div>
+        <div class="panel" style="display:grid;gap:14px;align-content:start">
+          <div class="field">
+            <label for="actual">النقدية الفعلية في الدرج (اختياري)</label>
+            <input class="input num" id="actual" value="4830" inputmode="decimal" placeholder="اتركه فارغًا إذا لم يتم العدّ">
+          </div>
+          <div class="result-box" id="resBox">
+            <span id="resChip"></span>
+            <b class="num" id="resAmt"></b>
+            <span class="hint" id="resTxt"></span>
+          </div>
+          <button class="btn primary xl" type="button">تأكيد وإغلاق الوردية</button>
+          <p class="hint">إذا كان كاشير آخر في منتصف عملية بيع عند بدء الإغلاق، ينتظر الإغلاق حتى تكتمل العملية أو تُعلَّق، فلا تبقى أي فاتورة محفوظة جزئيًا.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATES -->
+    <section id="states">
+      <div class="sec-head">
+        <div class="eyebrow">10 · حالات الشاشات</div>
+        <h2>لكل شاشة خمس حالات</h2>
+        <p class="lead">عادية، فارغة، تحميل، خطأ، وتأكيد. الرسائل توضّح ما حدث وما الخطوة التالية.</p>
+      </div>
+      <div class="states">
+        <div class="state"><h4>فارغة</h4><b style="color:var(--text-strong)">لا توجد منتجات تطابق "زعتر"</b><span class="hint">تأكد من الكتابة أو امسح الباركود.</span><button class="btn" type="button" style="justify-self:start">مسح البحث</button></div>
+        <div class="state"><h4>تحميل</h4><div class="skel" style="width:70%"></div><div class="skel"></div><div class="skel" style="width:85%"></div><div class="skel" style="width:50%"></div></div>
+        <div class="state"><h4>خطأ</h4><div class="toast bad"><span>المتبقي من "سكر ١ كجم" 3 فقط. قلّل الكمية إلى 3 أو أقل.</span></div><div class="toast bad"><span>المدفوع 300.00 أقل من الإجمالي 356.00.</span></div></div>
+        <div class="state"><h4>تأكيد</h4><div class="toast ok"><span>تم الدفع. الباقي: 44.00 ج.م. تم إرسال الإيصال للطابعة.</span></div><div class="toast ok"><span>تم حفظ المنتج.</span></div></div>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>الرسائل التي نغطيها</h3>
+        <p style="font-size:13.5px;color:var(--text-muted)">اسم مستخدم أو كلمة مرور خاطئة · لا توجد وردية مفتوحة · توجد وردية مفتوحة بالفعل · الوردية مغلقة بالفعل · مبلغ افتتاح غير صالح · سعر غير صالح أو سالب · المخزون غير كافٍ · فاتورة فارغة · المبلغ النقدي المدفوع أقل من المطلوب · لا توجد صلاحية لتعديل السعر · مبلغ مصروف غير صالح · سبب المصروف مفقود · تعذّر حفظ الفاتورة · مستخدم آخر يغلق الوردية · تعذّر الاتصال بقاعدة البيانات · لا توجد نتائج · تم الحفظ · تم الدفع · بدأت الطباعة.</p>
+      </div>
+    </section>
+
+    <!-- RECEIPT -->
+    <section id="receipt">
+      <div class="sec-head">
+        <div class="eyebrow">11 · الإيصال</div>
+        <h2>إيصال حراري 80 مم</h2>
+      </div>
+      <div class="receipt-wrap">
+        <div class="receipt">
+          <div class="ctr"><b style="font-size:15px">سوبر ماركت النور</b><br>١٢ شارع التحرير، الدقي<br>هاتف ٠١٠٠٠٠٠٠٠٠٠ · الرقم الضريبي ٢٠٠-٠٠٠-٠٠٠</div>
+          <hr>
+          <div class="row"><span>فاتورة بيع (قطاعي)</span><span>S-000318</span></div>
+          <div class="row"><span>التاريخ</span><span>2026/11/18 14:32</span></div>
+          <div class="row"><span>الكاشير</span><span>منى</span></div>
+          <div class="row"><span>العميل</span><span>عميل نقدي</span></div>
+          <hr>
+          <table><thead><tr><th>الصنف</th><th>كمية</th><th>سعر</th><th>إجمالي</th></tr></thead>
+            <tbody>
+              <tr><td>زيت عباد الشمس ١ لتر</td><td>2</td><td>78.00</td><td>156.00</td></tr>
+              <tr><td>شاي أسود ٢٥٠ جم</td><td>1</td><td>62.00</td><td>62.00</td></tr>
+              <tr><td>جبنة بيضاء ٥٠٠ جم</td><td>3</td><td>46.00</td><td>138.00</td></tr>
+            </tbody></table>
+          <hr>
+          <div class="row"><span>عدد القطع</span><span>6</span></div>
+          <div class="row"><span>الإجمالي قبل الخصم</span><span>356.00</span></div>
+          <div class="row"><span>الخصم</span><span>0.00</span></div>
+          <div class="row big"><span>الإجمالي</span><span>356.00 ج.م</span></div>
+          <div class="row"><span>المدفوع نقدًا</span><span>400.00</span></div>
+          <div class="row"><span>الباقي</span><span>44.00</span></div>
+          <hr>
+          <div class="ctr">شكرًا لزيارتكم</div>
+          <div class="barcode"></div>
+          <div class="ctr" style="font-family:var(--mono);font-size:11px">S-000318</div>
+        </div>
+        <div style="display:grid;gap:14px;align-content:start;min-width:0">
+          <p class="lead">يُطبع بلغة المتجر الافتراضية. الترويسة والتذييل والشعار وعرض الورق من الإعدادات ← الطباعة. وإعادة الطباعة متاحة من قائمة المبيعات.</p>
+          <ul class="clean" style="font-size:14px">
+            <li><span>اسم المتجر والعنوان والهاتف والرقم الضريبي</span></li>
+            <li><span>رقم الفاتورة والتاريخ والكاشير والعميل ونوع البيع (قطاعي / جملة)</span></li>
+            <li><span>الأصناف بالسعر الفعلي المحصّل، بما فيها الأسعار المعدّلة</span></li>
+            <li><span>الإجمالي قبل الخصم والخصم والإجمالي والمدفوع والباقي وطريقة الدفع</span></li>
+            <li><span>رسالة ختامية وباركود للفاتورة لتسريع المرتجعات</span></li>
+          </ul>
+          <p class="hint">يُطبع تقرير الوردية بنفس الشكل: الأوقات، المستخدمون، المشاركون، المبيعات حسب طريقة الدفع وحسب الكاشير، المصروفات، النقدية المتوقعة والفعلية، ونتيجة التسوية.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section id="roadmap">
+      <div class="sec-head">
+        <div class="eyebrow">12 · خطة التسليم</div>
+        <h2>ترتيب التسليم</h2>
+        <p class="lead">كل مرحلة تُبنى وتُختبر وتُعرض عليكم قبل بدء المرحلة التالية. المرحلتان الأوليان مكتملتان.</p>
+      </div>
+      <div class="road">
+        <div class="ph done"><span class="n">P0</span><div><h4>الأساس</h4><p>هيكل المشروع، الاتصال بقاعدة البيانات المحلية، التخطيط الأساسي، ملفات تعمل دون إنترنت.</p></div><span class="status s-ok">مكتملة</span></div>
+        <div class="ph done"><span class="n">P1</span><div><h4>تسجيل الدخول والأدوار</h4><p>دخول آمن، كلمات مرور مشفّرة، أدوار مدير النظام / مدير / كاشير، شاشات محمية.</p></div><span class="status s-ok">مكتملة</span></div>
+        <div class="ph"><span class="n">P2</span><div><h4>المنتجات والتصنيفات</h4><p>تصنيفات متداخلة، منتجات بالعربي والإنجليزي، باركود، وحدة، تسعير بنسبة الربح، تنبيهات المخزون.</p></div><span class="status s-info">التالية</span></div>
+        <div class="ph"><span class="n">P3</span><div><h4>الموردون والمشتريات</h4><p>بيانات الموردين، فواتير الشراء، زيادة المخزون، تحديث الأسعار تلقائيًا.</p></div><span class="status s-neutral">مخطط لها</span></div>
+        <div class="ph"><span class="n">P4</span><div><h4>المخزون</h4><p>حركات المخزون، الأرصدة، قائمة النواقص، التسويات المصرّح بها.</p></div><span class="status s-neutral">مخطط لها</span></div>
+        <div class="ph"><span class="n">P5</span><div><h4>الورديات</h4><p>فتح، استئناف، مشاركون متعددون، إغلاق مع عدّ اختياري، حالة غير مُسوّاة.</p></div><span class="status s-neutral">مخطط لها</span></div>
+        <div class="ph"><span class="n">P6</span><div><h4>نقطة البيع والمبيعات</h4><p>بحث ومسح، قطاعي/جملة، سلة، تعديل الأسعار، خصومات، تعليق، خصم من المخزون.</p></div><span class="status s-neutral">مخطط لها</span></div>
+        <div class="ph"><span class="n">P7</span><div><h4>المدفوعات والطباعة</h4><p>نقدي مع حساب الباقي، بطاقة، إنستاباي، محفظة؛ إيصالات حرارية بالعربية.</p></div><span class="status s-neutral">مخطط لها</span></div>
+        <div class="ph"><span class="n">P8</span><div><h4>المصروفات والمرتجعات</h4><p>مصروفات على الوردية، مرتجعات مرتبطة بالفواتير، استرداد وإعادة للمخزون.</p></div><span class="status s-neutral">مخطط لها</span></div>
+        <div class="ph"><span class="n">P9</span><div><h4>العملاء واللوحة الرئيسية والتقارير</h4><p>بيانات العملاء، اللوحة الرئيسية، تقارير المبيعات والمشتريات والمخزون والورديات.</p></div><span class="status s-neutral">مخطط لها</span></div>
+        <div class="ph"><span class="n">P10</span><div><h4>الإعدادات والتسليم</h4><p>بيانات المتجر، اللغة، الضرائب، الطباعة، النسخ الاحتياطي والاستعادة، التثبيت، الاختبار النهائي.</p></div><span class="status s-neutral">مخطط لها</span></div>
+      </div>
+    </section>
+
+    <!-- DECISIONS -->
+    <section id="decisions">
+      <div class="sec-head">
+        <div class="eyebrow">13 · قرارات مطلوبة</div>
+        <h2>ما نحتاجه منكم</h2>
+        <p class="lead">هذه الاختيارات تغيّر طريقة عمل أجزاء من النظام. لكل منها اقتراح منا؛ نحتاج فقط موافقة أو بديلًا.</p>
+      </div>
+      <div class="decisions">
+        <div class="dec"><div><b>أدراج النقدية</b>درج واحد للمتجر كله، أم درج لكل جهاز كاشير؟</div><div class="rec">المقترح: <em>درج واحد مشترك</em>، بما يتوافق مع نظام الوردية الواحدة.</div></div>
+        <div class="dec"><div><b>تقسيم الدفع</b>هل يمكن دفع فاتورة واحدة جزئيًا نقدًا وجزئيًا بالبطاقة؟</div><div class="rec">المقترح: <em>ليس في الإصدار الأول</em>، ويُضاف لاحقًا عند الحاجة.</div></div>
+        <div class="dec"><div><b>الفواتير المعلّقة</b>إلى متى تبقى الفواتير المعلّقة، وهل تبقى بعد إغلاق الوردية؟</div><div class="rec">المقترح: <em>تبقى حتى إغلاق الوردية</em>، ثم تظهر في قائمة للإلغاء أو الاستئناف.</div></div>
+        <div class="dec"><div><b>المرتجعات</b>من يوافق على المرتجع، وهل توجد مدة محددة؟</div><div class="rec">المقترح: <em>موافقة المدير</em>، خلال <em>14 يومًا</em>.</div></div>
+        <div class="dec"><div><b>البيع بمخزون صفر</b>هل يُسمح بالبيع عندما يُظهر النظام أن المخزون نفد؟</div><div class="rec">المقترح: <em>منع البيع</em>، مع إمكانية تجاوز بصلاحية المدير.</div></div>
+        <div class="dec"><div><b>الضريبة</b>هل الأسعار شاملة ضريبة القيمة المضافة، وبأي نسبة؟</div><div class="rec">المقترح: <em>الأسعار شاملة 14% ضريبة</em>، وتظهر على الإيصال.</div></div>
+        <div class="dec"><div><b>حساب الربح</b>أي تكلفة تُستخدم في تقارير الربح؟</div><div class="rec">المقترح: <em>متوسط التكلفة المرجّح</em>.</div></div>
+        <div class="dec"><div><b>النسخ الاحتياطي</b>كم مرة، وإلى أين؟</div><div class="rec">المقترح: <em>نسخة يومية تلقائية</em> ونسخة عند كل إغلاق وردية، على قرص ثانٍ أو فلاشة.</div></div>
+        <div class="dec"><div><b>الترخيص</b>كيف يتم تفعيل النسخة بدون إنترنت؟</div><div class="rec">المقترح: <em>ملف ترخيص مرتبط بالجهاز</em> نصدره نحن.</div></div>
+        <div class="dec"><div><b>الأرقام</b>أرقام عربية (١٢٣) أم إنجليزية (123) على الشاشة والإيصالات؟</div><div class="rec">المقترح: <em>إنجليزية على الشاشة</em>، والاختيار متاح للإيصالات.</div></div>
+      </div>
+    </section>
+
+    <footer>StoresPOS · خطة المنتج ونظام التصميم · إعداد هشام وجو · 18 نوفمبر 2026. الأسماء والأرقام والمنتجات المعروضة أمثلة توضيحية.</footer>
+  </main>
+</div>
+
+
+<script>
+(function () {
+  const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Segmented switches in component kit
+  document.querySelectorAll('.seg').forEach(seg => {
+    const btns = seg.querySelectorAll('button');
+    if (seg.querySelector('#lang-en')) return;
+    btns.forEach(b => b.addEventListener('click', () => btns.forEach(x => x.setAttribute('aria-pressed', String(x === b)))));
+  });
+
+  // Pricing calculator
+  const pp = document.getElementById('pp');
+  const sets = [
+    { m: document.getElementById('rm'), p: document.getElementById('rp'), prof: document.getElementById('rprof'), mk: 20 },
+    { m: document.getElementById('wm'), p: document.getElementById('wp'), prof: document.getElementById('wprof'), mk: 10.77 }
+  ];
+  const cost = () => parseFloat(pp.value) || 0;
+  function fromMarkup(s) {
+    const mk = parseFloat(s.m.value) || 0;
+    const price = cost() * (1 + mk / 100);
+    s.p.value = price.toFixed(2); profit(s, price);
+  }
+  function fromPrice(s) {
+    const price = parseFloat(s.p.value) || 0, c = cost();
+    s.m.value = c > 0 ? ((price / c - 1) * 100).toFixed(2) : '0';
+    profit(s, price);
+  }
+  function profit(s, price) {
+    const pr = price - cost();
+    s.prof.textContent = 'الربح في القطعة: ' + fmt(pr) + ' ج.م';
+    s.prof.style.color = pr < 0 ? 'var(--danger)' : '';
+  }
+  sets.forEach(s => {
+    s.m.value = s.mk.toFixed(2); fromMarkup(s);
+    s.m.addEventListener('input', () => fromMarkup(s));
+    s.p.addEventListener('input', () => fromPrice(s));
+  });
+  pp.addEventListener('input', () => sets.forEach(fromMarkup));
+
+  // Mini POS
+  const products = [
+    { en: 'Sunflower oil 1 L', ar: 'زيت عباد الشمس ١ لتر', p: 78, s: 64 },
+    { en: 'Rice 1 kg', ar: 'أرز ١ كجم', p: 34, s: 120 },
+    { en: 'Sugar 1 kg', ar: 'سكر ١ كجم', p: 30, s: 8, low: true },
+    { en: 'Black tea 250 g', ar: 'شاي أسود ٢٥٠ جم', p: 62, s: 45 },
+    { en: 'White cheese 500 g', ar: 'جبنة بيضاء ٥٠٠ جم', p: 48, s: 30 },
+    { en: 'Orange juice 1 L', ar: 'عصير برتقال ١ لتر', p: 38, s: 5, low: true }
+  ];
+  let cart = [ { i: 0, q: 2 }, { i: 3, q: 1 }, { i: 4, q: 3, over: 46 } ];
+  let lang = 'en';
+  const T = {
+    en: { store: 'Al Noor Market', shift: 'Shift open · #142', cashier: 'Cashier: Mona', close: 'Close shift', search: 'Barcode, name or code', all: 'All', c1: 'Grocery', c2: 'Drinks', c3: 'Dairy', c4: 'Cleaning', retail: 'Retail', wholesale: 'Wholesale', cust: 'Customer · F4', walkin: 'Walk-in customer', change: 'Change', inv: 'Invoice S-000318', sub: 'Subtotal', disc: 'Discount', total: 'Total', egp: 'EGP', bdisc: 'Discount', bhold: 'Hold · F8', bret: 'Return', pay: 'Pay and print · F9', items: 'items', each: 'each', inStock: 'In stock', lowStock: 'Low stock', edited: 'Price edited', empty: 'Scan or tap a product to start the invoice.' },
+    ar: { store: 'سوبر ماركت النور', shift: 'الوردية مفتوحة · ١٤٢', cashier: 'الكاشير: منى', close: 'إغلاق الوردية', search: 'الباركود أو الاسم أو الكود', all: 'الكل', c1: 'بقالة', c2: 'مشروبات', c3: 'ألبان', c4: 'منظفات', retail: 'قطاعي', wholesale: 'جملة', cust: 'العميل · F4', walkin: 'عميل نقدي', change: 'تغيير', inv: 'فاتورة S-000318', sub: 'الإجمالي قبل الخصم', disc: 'الخصم', total: 'الإجمالي', egp: 'ج.م', bdisc: 'خصم', bhold: 'تعليق · F8', bret: 'مرتجع', pay: 'دفع وطباعة · F9', items: 'قطع', each: 'للقطعة', inStock: 'المتوفر', lowStock: 'مخزون منخفض', edited: 'سعر معدّل', empty: 'امسح أو اختر منتجًا لبدء الفاتورة.' }
+  };
+  const frame = document.getElementById('posFrame');
+  const prodsEl = document.getElementById('prods');
+  const linesEl = document.getElementById('lines');
+
+  function renderProds() {
+    const t = T[lang];
+    prodsEl.innerHTML = '';
+    products.forEach((p, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'prod';
+      b.innerHTML = '<b></b><span class="pr num"></span><span class="st"></span>';
+      b.querySelector('b').textContent = p[lang];
+      b.querySelector('.pr').innerHTML = fmt(p.p) + ' <small>' + t.egp + '</small>';
+      const st = b.querySelector('.st');
+      st.textContent = (p.low ? t.lowStock : t.inStock) + ': ' + p.s;
+      if (p.low) st.classList.add('low');
+      b.addEventListener('click', () => {
+        const ex = cart.find(c => c.i === i);
+        if (ex) { if (ex.q < p.s) ex.q++; } else cart.push({ i, q: 1 });
+        renderCart();
+      });
+      prodsEl.appendChild(b);
+    });
+  }
+  function renderCart() {
+    const t = T[lang];
+    linesEl.innerHTML = '';
+    let sub = 0, cnt = 0;
+    if (!cart.length) {
+      linesEl.innerHTML = '<div class="empty-cart"></div>';
+      linesEl.firstChild.textContent = t.empty;
+    }
+    cart.forEach((c, idx) => {
+      const p = products[c.i], price = c.over ?? p.p, lt = price * c.q;
+      sub += lt; cnt += c.q;
+      const d = document.createElement('div'); d.className = 'line';
+      d.innerHTML = '<div><b></b><small class="num"></small></div><div class="qty"><button type="button" aria-label="Decrease">−</button><span class="num"></span><button type="button" aria-label="Increase">+</button></div><div class="lt num"></div>';
+      d.querySelector('b').textContent = p[lang];
+      const sm = d.querySelector('small'); sm.textContent = fmt(price) + ' ' + t.egp + ' ' + t.each;
+      if (c.over) { const e = document.createElement('span'); e.className = 'edited'; e.textContent = t.edited; sm.appendChild(e); }
+      d.querySelector('.qty span').textContent = c.q;
+      d.querySelector('.lt').textContent = fmt(lt);
+      const [minus, plus] = d.querySelectorAll('.qty button');
+      minus.addEventListener('click', () => { c.q--; if (c.q <= 0) cart.splice(idx, 1); renderCart(); });
+      plus.addEventListener('click', () => { if (c.q < p.s) c.q++; renderCart(); });
+      linesEl.appendChild(d);
+    });
+    document.getElementById('itemCount').textContent = cnt + ' ' + t.items;
+    document.getElementById('sub').textContent = fmt(sub);
+    document.getElementById('tot').textContent = fmt(sub);
+  }
+  function setLang(l) {
+    lang = l;
+    frame.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
+    frame.setAttribute('lang', l);
+    frame.classList.toggle('ar', l === 'ar'); frame.style.fontFamily = l === 'en' ? 'var(--font-en, Inter, sans-serif)' : '';
+    frame.querySelectorAll('[data-t]').forEach(el => { el.textContent = T[l][el.dataset.t]; });
+    document.getElementById('lang-en').setAttribute('aria-pressed', String(l === 'en'));
+    document.getElementById('lang-ar').setAttribute('aria-pressed', String(l === 'ar'));
+    renderProds(); renderCart();
+  }
+  document.getElementById('lang-en').addEventListener('click', () => setLang('en'));
+  document.getElementById('lang-ar').addEventListener('click', () => setLang('ar'));
+  frame.querySelectorAll('.pos-right .seg button').forEach((b, _, all) => b.addEventListener('click', () => all.forEach(x => x.setAttribute('aria-pressed', String(x === b)))));
+  setLang('ar');
+
+  // Shift reconciliation
+  const EXPECTED = 4850;
+  const actual = document.getElementById('actual');
+  const chip = document.getElementById('resChip'), amt = document.getElementById('resAmt'), txt = document.getElementById('resTxt');
+  function recon() {
+    const raw = actual.value.trim().replace(/,/g, '');
+    if (raw === '') {
+      chip.className = 'status s-neutral'; chip.textContent = 'غير مُسوّاة';
+      amt.textContent = '—'; txt.textContent = 'لم يتم إدخال مبلغ. تُغلق الوردية بحالة غير مُسوّاة، ولا يُعتبر أنه تم عدّ 0.00.';
+      return;
+    }
+    const v = parseFloat(raw);
+    if (isNaN(v) || v < 0) {
+      chip.className = 'status s-bad'; chip.textContent = 'مبلغ غير صالح';
+      amt.textContent = '—'; txt.textContent = 'أدخل رقمًا يساوي 0 أو أكثر، أو اتركه فارغًا.';
+      return;
+    }
+    const diff = Math.round((v - EXPECTED) * 100) / 100;
+    if (diff === 0) { chip.className = 'status s-ok'; chip.textContent = 'مطابق'; amt.textContent = '0.00 ج.م'; txt.textContent = 'الدرج مطابق للمبلغ المتوقع.'; }
+    else if (diff > 0) { chip.className = 'status s-warn'; chip.textContent = 'زيادة'; amt.textContent = '+' + fmt(diff) + ' ج.م'; txt.textContent = 'النقدية أكثر من المتوقع.'; }
+    else { chip.className = 'status s-bad'; chip.textContent = 'عجز'; amt.textContent = '−' + fmt(-diff) + ' ج.م'; txt.textContent = 'النقدية أقل من المتوقع.'; }
+  }
+  actual.addEventListener('input', recon); recon();
+})();
+</script>
