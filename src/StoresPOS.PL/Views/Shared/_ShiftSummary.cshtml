@@ -43,6 +43,10 @@
             <div><dt>@L["Visa / Card"]</dt><dd class="num">@Money(Model.CardSales)</dd></div>
             <div><dt>@L["InstaPay"]</dt><dd class="num">@Money(Model.InstaPaySales)</dd></div>
             <div><dt>@L["Vodafone Cash"]</dt><dd class="num">@Money(Model.VodafoneCashSales)</dd></div>
+            @if (Model.NonCashRefunds > 0)
+            {
+                <div><dt>@L["Non-cash refunds"]</dt><dd class="num">−@Money(Model.NonCashRefunds)</dd></div>
+            }
         </dl>
     </div>
 

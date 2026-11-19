@@ -1,0 +1,32 @@
+@model IReadOnlyList<SalesReturnListItemDto>
+<div class="table-responsive">
+    <table class="table align-middle mb-0">
+        <thead>
+            <tr>
+                <th>@L["Return"]</th>
+                <th>@L["Date"]</th>
+                <th>@L["User"]</th>
+                <th>@L["Refund method"]</th>
+                <th>@L["Reason"]</th>
+                <th class="text-end">@L["Amount"]</th>
+                <th><span class="visually-hidden">@L["Print"]</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td class="num">@r.ReturnNumber</td>
+                    <td class="num">@r.CreatedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                    <td>@r.UserDisplayName</td>
+                    <td><partial name="_RefundMethodLabel" model="r.RefundMethod" /></td>
+                    <td>@r.Reason</td>
+                    <td class="text-end num">@r.TotalAmount.ToString("N2")</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Return", "Receipts", new { id = r.Id })">@L["Print"]</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

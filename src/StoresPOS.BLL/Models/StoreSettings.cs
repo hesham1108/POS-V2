@@ -27,6 +27,9 @@ public class StoreSettings
     public bool PricesIncludeVat { get; set; } = true;
     public decimal VatPercent { get; set; } = 14m;
 
+    /// <summary>Open decision default: returns accepted within 14 days of the sale. 0 = no limit.</summary>
+    public int ReturnWindowDays { get; set; } = 14;
+
     /// <summary>Paper roll width; the printable area is ~8 mm narrower.</summary>
     public int PaperWidthMm { get; set; } = 80;
 

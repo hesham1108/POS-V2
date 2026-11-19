@@ -81,6 +81,14 @@ public static class AuthenticationExtensions
                 options.AddPolicy(permission, policy =>
                     policy.RequireAuthenticatedUser().RequireClaim(AppPermissions.ClaimType, permission));
             }
+
+            // Lists open to whoever records them or reads reports.
+            options.AddPolicy(AppPolicies.CashOutsView, policy => policy.RequireAuthenticatedUser().RequireAssertion(ctx =>
+                ctx.User.HasClaim(AppPermissions.ClaimType, AppPermissions.CashOutsCreate)
+                || ctx.User.HasClaim(AppPermissions.ClaimType, AppPermissions.ReportsView)));
+            options.AddPolicy(AppPolicies.ReturnsView, policy => policy.RequireAuthenticatedUser().RequireAssertion(ctx =>
+                ctx.User.HasClaim(AppPermissions.ClaimType, AppPermissions.ReturnsCreate)
+                || ctx.User.HasClaim(AppPermissions.ClaimType, AppPermissions.ReportsView)));
         });
         return services;
     }

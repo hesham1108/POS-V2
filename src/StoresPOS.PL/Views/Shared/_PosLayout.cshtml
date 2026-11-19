@@ -30,7 +30,14 @@
                     data-print-url="@(ViewData["LastInvoiceId"] is int last ? Url.Action("Sale", "Receipts", new { id = last }) : null)"
                     @(ViewData["LastInvoiceId"] is int ? null : "disabled")>@L["Reprint last"]</button>
             <a class="btn btn-sm sp-btn-secondary" asp-controller="Shifts" asp-action="Current">@L["Shift"]</a>
-            <span class="btn btn-sm sp-btn-secondary disabled" title="@L["Coming in a later phase"]" aria-disabled="true">@L["Cash-out"]</span>
+            @if (Can(AppPermissions.CashOutsCreate))
+            {
+                <button type="button" class="btn btn-sm sp-btn-secondary" data-cashout>@L["Cash-out"]</button>
+            }
+            @if (Can(AppPermissions.ReturnsCreate))
+            {
+                <a class="btn btn-sm sp-btn-secondary" asp-controller="Returns" asp-action="Create">@L["Return"]</a>
+            }
             @if (Can(AppPermissions.ShiftsClose))
             {
                 <a class="btn btn-sm sp-btn-secondary" asp-controller="Shifts" asp-action="Close">@L["Close shift"]</a>
@@ -59,6 +66,11 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/print-frame.js" asp-append-version="true"></script>
+    @if (Can(AppPermissions.CashOutsCreate))
+    {
+        <partial name="_CashOutModal" />
+        <script src="~/js/cashout.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

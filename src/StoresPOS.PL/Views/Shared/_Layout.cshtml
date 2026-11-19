@@ -64,8 +64,22 @@
                 {
                     <span class="app-sidebar__link is-disabled" title="@denied">@L["Sales invoices"]</span>
                 }
-                <span class="app-sidebar__link is-disabled" title="@soon">@L["Returns"]</span>
-                <span class="app-sidebar__link is-disabled" title="@soon">@L["Cash-outs"]</span>
+                @if (Can(AppPermissions.ReturnsCreate) || Can(AppPermissions.ReportsView))
+                {
+                    <a class="@NavClass(IsCtrl("Returns"))" asp-controller="Returns" asp-action="Index">@L["Returns"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Returns"]</span>
+                }
+                @if (Can(AppPermissions.CashOutsCreate) || Can(AppPermissions.ReportsView))
+                {
+                    <a class="@NavClass(IsCtrl("CashOuts"))" asp-controller="CashOuts" asp-action="Index">@L["Cash-outs"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Cash-outs"]</span>
+                }
 
                 @if (Can(AppPermissions.CatalogManage))
                 {

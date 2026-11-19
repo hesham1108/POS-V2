@@ -18,6 +18,8 @@ public class ShiftCurrentViewModel
     public ShiftSummaryDto Summary { get; set; } = new();
     public bool IsParticipant { get; set; }
     public bool CanClose { get; set; }
+    public bool CanCashOut { get; set; }
+    public IReadOnlyList<CashOutListItemDto> CashOuts { get; set; } = [];
 }
 
 public class ShiftCloseViewModel

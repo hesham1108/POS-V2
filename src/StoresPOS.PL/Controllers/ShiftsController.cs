@@ -18,12 +18,18 @@ public class ShiftsController : Controller
 
     private readonly IShiftService _shifts;
     private readonly ISalesService _sales;
+    private readonly ICashOutService _cashOuts;
     private readonly IStringLocalizer<SharedResource> _l;
 
-    public ShiftsController(IShiftService shifts, ISalesService sales, IStringLocalizer<SharedResource> localizer)
+    public ShiftsController(
+        IShiftService shifts,
+        ISalesService sales,
+        ICashOutService cashOuts,
+        IStringLocalizer<SharedResource> localizer)
     {
         _shifts = shifts;
         _sales = sales;
+        _cashOuts = cashOuts;
         _l = localizer;
     }
 
@@ -91,11 +97,15 @@ public class ShiftsController : Controller
         }
 
         var userId = this.GetRequiredUserId();
+        var isParticipant = summary.Participants.Any(x => x.UserId == userId);
         return View(new ShiftCurrentViewModel
         {
             Summary = summary,
-            IsParticipant = summary.Participants.Any(x => x.UserId == userId),
-            CanClose = User.HasPermission(AppPermissions.ShiftsClose)
+            IsParticipant = isParticipant,
+            CanClose = User.HasPermission(AppPermissions.ShiftsClose),
+            // Cash-outs attach to the user's shift, so only participants can record one.
+            CanCashOut = isParticipant && User.HasPermission(AppPermissions.CashOutsCreate),
+            CashOuts = await _cashOuts.GetListAsync(new CashOutFilterDto { ShiftId = summary.Id }, cancellationToken)
         });
     }
 

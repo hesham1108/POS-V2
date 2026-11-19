@@ -1,0 +1,128 @@
+@model ReturnIndexViewModel
+@{
+    ViewData["Section"] = L["Returns"].Value;
+    ViewData["Title"] = L["Returns"].Value;
+    ViewData["Subtitle"] = Model.CanSeeAll
+        ? L["Customer returns · refunded at the prices on the original invoice"].Value
+        : L["Returns made in the shift you are working in"].Value;
+    var printUrl = Model.PrintId.HasValue ? Url.Action("Return", "Receipts", new { id = Model.PrintId }) : null;
+}
+
+@section PageActions {
+    @if (Model.CanCreate)
+    {
+        <a class="btn sp-btn-primary" asp-action="Create">@L["New return"]</a>
+    }
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+@if (printUrl is not null)
+{
+    @* Return slip prints once after saving. *@
+    <div class="alert alert-light d-flex align-items-center gap-3" data-print-on-load="@printUrl">
+        <span>@L["The return slip was sent to the printer."]</span>
+        <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@printUrl">@L["Print again"]</button>
+    </div>
+}
+
+<div class="sp-card p-3 mb-4">
+    <form method="get" class="sp-filter-row">
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="search">@L["Return or invoice number"]</label>
+            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="R-000001 / S-000001" />
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="from">@L["From"]</label>
+            <input class="form-control" type="date" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="to">@L["To"]</label>
+            <input class="form-control" type="date" id="to" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="method">@L["Refund method"]</label>
+            <select class="form-select" id="method" name="method">
+                <option value="">@L["All"]</option>
+                @foreach (var m in Enum.GetValues<PaymentMethod>())
+                {
+                    var label = m switch
+                    {
+                        PaymentMethod.Cash => L["Cash"].Value,
+                        PaymentMethod.Card => L["Visa / Card"].Value,
+                        PaymentMethod.InstaPay => L["InstaPay"].Value,
+                        _ => L["Vodafone Cash"].Value
+                    };
+                    <option value="@((int)m)" selected="@(Model.Method == m)">@label</option>
+                }
+            </select>
+        </div>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-primary">@L["Filter"]</button>
+            <a class="btn sp-btn-secondary" asp-action="Index">@L["Reset"]</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.Items.Count == 0)
+{
+    var empty = (L["No returns found"].Value, L["Returns are made from the original invoice: scan its receipt barcode."].Value);
+    <partial name="_EmptyState" model="empty" />
+}
+else
+{
+    <div class="sp-card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@L["Return"]</th>
+                        <th>@L["Original invoice"]</th>
+                        <th>@L["Date"]</th>
+                        <th>@L["Shift"]</th>
+                        <th>@L["User"]</th>
+                        <th>@L["Refund method"]</th>
+                        <th>@L["Reason"]</th>
+                        <th class="text-end">@L["Amount"]</th>
+                        <th><span class="visually-hidden">@L["Print"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Items)
+                    {
+                        <tr>
+                            <td class="num">@r.ReturnNumber</td>
+                            <td>
+                                @if (Model.CanSeeAll)
+                                {
+                                    <a asp-controller="Sales" asp-action="Details" asp-route-id="@r.OriginalInvoiceId" class="num">@r.OriginalInvoiceNumber</a>
+                                }
+                                else
+                                {
+                                    <span class="num">@r.OriginalInvoiceNumber</span>
+                                }
+                            </td>
+                            <td class="num">@r.CreatedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                            <td class="num">@(r.ShiftId.HasValue ? "#" + r.ShiftId : "—")</td>
+                            <td>@r.UserDisplayName</td>
+                            <td><partial name="_RefundMethodLabel" model="r.RefundMethod" /></td>
+                            <td>@r.Reason</td>
+                            <td class="text-end num">@r.TotalAmount.ToString("N2")</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Return", "Receipts", new { id = r.Id })">@L["Print"]</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="7">@string.Format(L["{0} returns"].Value, Model.Items.Count)</th>
+                        <th class="text-end num num-total">@Model.Total.ToString("N2")</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+}

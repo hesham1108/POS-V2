@@ -127,6 +127,11 @@ public class SalesInvoiceListItemDto
     public PaymentMethod PaymentMethod { get; set; }
     public int LineCount { get; set; }
     public decimal Total { get; set; }
+
+    /// <summary>Sum refunded by returns against this invoice.</summary>
+    public decimal ReturnedAmount { get; set; }
+    public bool IsFullyReturned => ReturnedAmount > 0 && ReturnedAmount >= Total;
+    public bool IsPartlyReturned => ReturnedAmount > 0 && ReturnedAmount < Total;
 }
 
 public class SalesInvoiceLineDto

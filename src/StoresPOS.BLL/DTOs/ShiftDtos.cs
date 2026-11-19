@@ -59,6 +59,10 @@ public class ShiftSummaryDto
     public decimal VodafoneCashSales { get; set; }
     public decimal NonCashTotal => CardSales + InstaPaySales + VodafoneCashSales;
 
+    /// <summary>Refunds made back to a non-cash method — recorded only, never part of the drawer.</summary>
+    public decimal NonCashRefunds { get; set; }
+    public int ReturnsCount { get; set; }
+
     public int InvoiceCount { get; set; }
     public IReadOnlyList<ShiftParticipantDto> Participants { get; set; } = [];
 

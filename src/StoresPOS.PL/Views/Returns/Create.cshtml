@@ -1,0 +1,170 @@
+@model ReturnCreateViewModel
+@{
+    ViewData["Section"] = L["Returns"].Value;
+    var inv = Model.Invoice;
+    ViewData["Title"] = inv is null ? L["New return"].Value : string.Format(L["Return from invoice {0}"].Value, inv.InvoiceNumber);
+    ViewData["Subtitle"] = inv is null
+        ? L["Scan the barcode on the customer's receipt, or type the invoice number."].Value
+        : inv.CompletedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm") + " · " + inv.CashierDisplayName;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var canSubmit = inv is not null && inv.IsWithinWindow && !inv.IsFullyReturned;
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back to list"]</a>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+@if (inv is null)
+{
+    <div class="sp-card p-4" style="max-width: 32rem">
+        <form method="get" asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <label class="form-label" for="number">@L["Invoice number"]</label>
+            <input class="form-control form-control-lg num" id="number" name="number" value="@Model.Number"
+                   placeholder="S-000001" autocomplete="off" autofocus />
+            <button type="submit" class="btn sp-btn-primary mt-3">@L["Find invoice"]</button>
+        </form>
+    </div>
+    return;
+}
+
+<form method="post" asp-action="Create" id="return-form" novalidate>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="InvoiceId" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    @if (!inv.IsWithinWindow)
+    {
+        <div class="alert alert-warning" role="alert">@string.Format(L["This invoice is older than {0} days and can no longer be returned."].Value, inv.ReturnWindowDays)</div>
+    }
+    else if (inv.IsFullyReturned)
+    {
+        <div class="alert alert-info" role="status">@L["Everything on this invoice has already been returned."]</div>
+    }
+
+    <div class="shift-layout">
+        <section class="sp-card p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>@L["Item"]</th>
+                            <th class="text-end">@L["Sold"]</th>
+                            <th class="text-end">@L["Returned before"]</th>
+                            <th class="text-end">@L["Can return"]</th>
+                            <th class="text-end">@L["Price"]</th>
+                            <th style="width: 9rem">@L["Return qty"]</th>
+                            <th class="text-end">@L["Refund"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < inv.Lines.Count; i++)
+                        {
+                            var line = inv.Lines[i];
+                            <tr data-refund-unit="@line.RefundUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                <td>@(isAr ? line.NameAr : line.NameEn)</td>
+                                <td class="text-end num">@line.SoldQuantity.ToString("0.###") @line.Unit</td>
+                                <td class="text-end num">@line.ReturnedQuantity.ToString("0.###")</td>
+                                <td class="text-end num">@line.AvailableQuantity.ToString("0.###")</td>
+                                <td class="text-end num">
+                                    @line.UnitPrice.ToString("N2")
+                                    @if (line.RefundUnitPrice != line.UnitPrice)
+                                    {
+                                        <div class="small text-muted">@string.Format(L["{0} after discount"].Value, line.RefundUnitPrice.ToString("N2"))</div>
+                                    }
+                                </td>
+                                <td>
+                                    <input type="hidden" name="Lines[@i].SalesInvoiceItemId" value="@line.SalesInvoiceItemId" />
+                                    <input type="number" class="form-control num" name="Lines[@i].Quantity" data-return-qty
+                                           min="0" max="@line.AvailableQuantity.ToString(System.Globalization.CultureInfo.InvariantCulture)" step="any"
+                                           value="@(Model.Lines.ElementAtOrDefault(i)?.Quantity?.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture))"
+                                           aria-label="@L["Return qty"]" @(line.AvailableQuantity <= 0 || !canSubmit ? "disabled" : null) />
+                                </td>
+                                <td class="text-end num" data-line-refund>0.00</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="sp-card shift-summary">
+            <dl class="shift-summary__rows">
+                <div><dt>@L["Paid by"]</dt><dd><partial name="_PaymentChip" model="inv.PaymentMethod" /></dd></div>
+                <div><dt>@L["Invoice total"]</dt><dd class="num">@inv.Total.ToString("N2")</dd></div>
+                @if (inv.DiscountAmount > 0)
+                {
+                    <div><dt>@L["Discount"]</dt><dd class="num">@inv.DiscountAmount.ToString("N2")</dd></div>
+                }
+                <div><dt>@L["Refunded before"]</dt><dd class="num">@inv.RefundedSoFar.ToString("N2")</dd></div>
+            </dl>
+
+            <div class="shift-summary__expected">
+                <span>@L["Refund"]</span>
+                <strong class="num-total" id="return-total">0.00 <small>@L["EGP"]</small></strong>
+            </div>
+
+            @if (canSubmit)
+            {
+                <fieldset class="mt-3">
+                    <legend class="form-label">@L["Refund method"]</legend>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="RefundMethod" id="refund-cash" value="@PaymentMethod.Cash" />
+                        <label class="form-check-label" for="refund-cash">@L["Cash from drawer"]</label>
+                    </div>
+                    @if (inv.PaymentMethod != PaymentMethod.Cash)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="RefundMethod" id="refund-original" value="@inv.PaymentMethod" />
+                            <label class="form-check-label" for="refund-original">@L["Original payment method"] (<partial name="_PaymentChip" model="inv.PaymentMethod" />)</label>
+                        </div>
+                    }
+                    @if (!inv.HasOpenShift)
+                    {
+                        <p class="form-text text-warning mb-0">@L["No shift is open: a cash refund is not possible right now."]</p>
+                    }
+                </fieldset>
+
+                <label class="form-label mt-3" asp-for="Reason">@L["Reason"]</label>
+                <input class="form-control" asp-for="Reason" maxlength="300" required placeholder="@L["e.g. damaged item"]" />
+
+                <button type="submit" class="btn sp-btn-primary w-100 mt-3" id="return-submit">@L["Confirm return"]</button>
+            }
+        </section>
+    </div>
+</form>
+
+@if (inv.PreviousReturns.Count > 0)
+{
+    <section class="sp-card p-4 mt-4">
+        <h2 class="shift-section-title">@L["Earlier returns on this invoice"]</h2>
+        <partial name="_ReturnsTable" model="inv.PreviousReturns" />
+    </section>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById("return-form");
+            if (!form) return;
+            const fmt = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const total = document.getElementById("return-total");
+            function recalc() {
+                let sum = 0;
+                form.querySelectorAll("tr[data-refund-unit]").forEach((row) => {
+                    const input = row.querySelector("[data-return-qty]");
+                    const qty = Math.max(0, parseFloat(input.value) || 0);
+                    const value = Math.round(qty * parseFloat(row.dataset.refundUnit) * 100) / 100;
+                    row.querySelector("[data-line-refund]").textContent = fmt.format(value);
+                    sum += value;
+                });
+                total.firstChild.textContent = fmt.format(sum) + " ";
+            }
+            form.addEventListener("input", recalc);
+            recalc();
+        })();
+    </script>
+}

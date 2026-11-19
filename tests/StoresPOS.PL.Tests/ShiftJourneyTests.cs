@@ -194,6 +194,9 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         {
             await using var scope = Services.CreateAsyncScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.SalesReturnItems.RemoveRange(db.SalesReturnItems);
+            db.SalesReturns.RemoveRange(db.SalesReturns);
+            db.CashOuts.RemoveRange(db.CashOuts);
             db.ShiftParticipants.RemoveRange(db.ShiftParticipants);
             db.Shifts.RemoveRange(db.Shifts);
 

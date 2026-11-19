@@ -84,7 +84,17 @@ else
                             <td>@(i.SaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</td>
                             <td><partial name="_PaymentChip" model="i.PaymentMethod" /></td>
                             <td class="text-end num">@i.LineCount</td>
-                            <td class="text-end num num-total">@i.Total.ToString("N2")</td>
+                            <td class="text-end num num-total">
+                                @i.Total.ToString("N2")
+                                @if (i.IsFullyReturned)
+                                {
+                                    <div><span class="sp-status sp-status-warn">@L["Fully returned"]</span></div>
+                                }
+                                else if (i.IsPartlyReturned)
+                                {
+                                    <div><span class="sp-status sp-status-info">@L["Partly returned"]</span></div>
+                                }
+                            </td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@Url.Action("Sale", "Receipts", new { id = i.Id })">@L["Print"]</button>
                             </td>

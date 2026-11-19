@@ -192,14 +192,17 @@ Defaults applied from Open Decisions (still to be confirmed by the client): one 
 
 Store header, receipt language/digits and VAT line come from `appsettings.json` → `Store` until the Settings screen (Phase 11).
 
-### Phase 9 — Cash-outs & Returns ← next
+### Phase 9 — Cash-outs & Returns ✅
 
-- [ ] Cash-out: amount + reason; tie to shift + user; reduce expected cash.
-- [ ] Returns linked to original invoice (original prices).
-- [ ] Select lines/qty; refund method; restock + update shift cash when cash refund.
-- [ ] Cash-out and return lists with filters.
+- [x] Cash-out: amount + reason; tie to shift + user; reduce expected cash. (POS header + Current shift modal; over-drawer = warning only)
+- [x] Returns linked to original invoice (original prices; invoice discount shared pro rata; full return refunds exactly the invoice total).
+- [x] Select lines/qty; refund method; restock + update shift cash when cash refund. (cash needs an open shift; non-cash only by the original method)
+- [x] Cash-out and return lists with filters. (cashiers see their current shift only)
+- [x] Find invoice by scanning the receipt barcode; return slip (80 mm) prints after saving.
 
-### Phase 10 — Customers, Dashboard & Reports
+Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:ReturnWindowDays` = 14. No in-line manager approval yet — a manager makes the return.
+
+### Phase 10 — Customers, Dashboard & Reports ← next
 
 - [ ] Customer management + default Walk-in ("عميل نقدي").
 - [ ] Dashboard: today sales, cash vs non-cash, low stock, shift status, recent activity.
