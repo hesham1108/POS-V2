@@ -33,10 +33,12 @@ public class ReturnsController : Controller
         DateTime? to,
         PaymentMethod? method,
         int? printId,
+        [FromQuery] ListQuery list,
         CancellationToken cancellationToken)
     {
         var canSeeAll = User.HasPermission(AppPermissions.ReportsView);
-        IReadOnlyList<SalesReturnListItemDto> items = [];
+        search = list.Term ?? search;
+        PagedResult<SalesReturnListItemDto> page = new();
 
         // Without Reports.View the list is the returns made in the shift the user is working in.
         var activeShift = canSeeAll
@@ -44,14 +46,27 @@ public class ReturnsController : Controller
             : await _shifts.GetActiveShiftIdForUserAsync(this.GetRequiredUserId(), cancellationToken);
         if (canSeeAll || activeShift.HasValue)
         {
-            items = await _returns.GetListAsync(new SalesReturnFilterDto
+            page = await _returns.GetPageAsync(new SalesReturnFilterDto
             {
                 Search = search,
                 FromUtc = from?.Date.ToUniversalTime(),
                 ToUtc = to?.Date.AddDays(1).ToUniversalTime(),
                 RefundMethod = method,
                 ShiftId = activeShift
-            }, cancellationToken);
+            }, list.ForRequest(Request), cancellationToken);
+        }
+
+        if (Request.WantsCsv())
+        {
+            return CsvExport.File("returns", page.Items,
+                (_l["Return"].Value, x => x.ReturnNumber),
+                (_l["Invoice"].Value, x => x.OriginalInvoiceNumber),
+                (_l["Date"].Value, x => x.CreatedAtUtc.ToLocalTime()),
+                (_l["Shift"].Value, x => x.ShiftId),
+                (_l["User"].Value, x => x.UserDisplayName),
+                (_l["Refund method"].Value, x => x.RefundMethod.ToString()),
+                (_l["Amount"].Value, x => x.TotalAmount),
+                (_l["Reason"].Value, x => x.Reason));
         }
 
         return View(new ReturnIndexViewModel
@@ -63,7 +78,9 @@ public class ReturnsController : Controller
             PrintId = printId,
             CanSeeAll = canSeeAll,
             CanCreate = User.HasPermission(AppPermissions.ReturnsCreate),
-            Items = items
+            Items = page.Items,
+            Page = page,
+            Total = page.Sum ?? 0m
         });
     }
 

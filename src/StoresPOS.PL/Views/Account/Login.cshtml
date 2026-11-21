@@ -1,35 +1,47 @@
 @model StoresPOS.PL.ViewModels.LoginViewModel
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> StoreOptions
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = L["Sign in"].Value;
     Layout = "_LoginLayout";
+    var loginLogo = StoreOptions.CurrentValue.EffectiveUiLogoPath;
+    var isAr = Ui.IsArabic;
+    var storeName = StoreOptions.CurrentValue.NameFor(isAr ? "ar" : "en");
+    var here = Context.Request.Path + Context.Request.QueryString;
 }
 
-<div class="login-page" id="loginPage" dir="ltr" lang="en">
+<div class="login-page" id="loginPage" dir="@(isAr ? "rtl" : "ltr")" lang="@(isAr ? "ar" : "en")">
     <div class="login-shell">
         <div class="login-brand">
             <div class="login-brand-mark">
-                <div class="login-brand-mark__logo" aria-hidden="true">SP</div>
+                @if (!string.IsNullOrWhiteSpace(loginLogo))
+                {
+                    <img class="login-brand-mark__logo login-brand-mark__logo--img" src="~/@loginLogo" alt="" />
+                }
+                else
+                {
+                    <div class="login-brand-mark__logo" aria-hidden="true">SP</div>
+                }
                 <div class="login-brand-mark__text">
-                    <strong data-i18n="brand">StoresPOS</strong>
-                    <span data-i18n="brandSub">Local store cashier</span>
+                    <strong>@storeName</strong>
+                    <span >@L["Local store cashier"]</span>
                 </div>
             </div>
-            <button type="button"
-                    class="login-lang"
-                    id="loginLangToggle"
-                    data-lang="en"
-                    aria-label="Switch language">
-                العربية
-            </button>
+            <form asp-controller="Culture" asp-action="Set" method="post" class="m-0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ui" value="@(isAr ? "en" : "ar")" />
+                <input type="hidden" name="returnUrl" value="@here" />
+                <button type="submit" class="login-lang" id="loginLangToggle" lang="@(isAr ? "en" : "ar")"
+                        aria-label="@(isAr ? L["Switch to English"] : L["Switch to Arabic"])">@(isAr ? "English" : "العربية")</button>
+            </form>
         </div>
 
         <div class="login-card">
             <div class="login-card__eyebrow">
                 <span class="sp-badge-dot" aria-hidden="true"></span>
-                <span data-i18n="eyebrow">Secure sign-in</span>
+                <span >@L["Secure sign-in"]</span>
             </div>
-            <h1 class="login-card__title" data-i18n="title">Welcome back</h1>
-            <p class="login-card__subtitle" data-i18n="subtitle">Sign in to open the till and continue store operations.</p>
+            <h1 class="login-card__title" >@L["Welcome back"]</h1>
+            <p class="login-card__subtitle" >@L["Sign in to open the till and continue store operations."]</p>
 
             @if (TempData["Success"] is string loginNotice)
             {
@@ -37,35 +49,35 @@
             }
 
             <form asp-action="Login" method="post" class="login-form" novalidate>
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" data-i18n-validation></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 <input type="hidden" asp-for="ReturnUrl" />
 
                 <div class="mb-3">
-                    <label for="Username" class="form-label" data-i18n="username">Username</label>
+                    <label for="Username" class="form-label" >@L["Username"]</label>
                     <input asp-for="Username"
                            class="form-control"
                            autocomplete="username"
                            autofocus
-                           data-i18n-placeholder="usernamePlaceholder" />
+                           placeholder="@L["Enter username"]" />
                     <span asp-validation-for="Username" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label for="Password" class="form-label" data-i18n="password">Password</label>
+                    <label for="Password" class="form-label" >@L["Password"]</label>
                     <input asp-for="Password"
                            class="form-control"
                            autocomplete="current-password"
-                           data-i18n-placeholder="passwordPlaceholder" />
+                           placeholder="@L["Enter password"]" />
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
                 <div class="login-actions">
-                    <button type="submit" class="login-submit" data-i18n="submit">Sign in</button>
+                    <button type="submit" class="login-submit" >@L["Sign in"]</button>
                 </div>
             </form>
         </div>
 
-        <div class="login-footer" data-i18n="footer">StoresPOS · Local installation</div>
+        <div class="login-footer" >@L["StoresPOS · Local installation"]</div>
     </div>
 </div>
 

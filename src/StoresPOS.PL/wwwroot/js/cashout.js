@@ -68,6 +68,7 @@
     const flash = sessionStorage.getItem("storespos:flash");
     if (flash) {
       sessionStorage.removeItem("storespos:flash");
+      if (window.StoresToast) { window.StoresToast(flash, "success"); return; }
       const box = document.createElement("div");
       box.className = "alert alert-success";
       box.setAttribute("role", "status");

@@ -1,22 +1,38 @@
 @model SalesIndexViewModel
 @inject IPaymentMethodService PaymentMethods
+@using StoresPOS.PL.Extensions
 @{
     ViewData["Section"] = L["Sales invoices"].Value;
     ViewData["Title"] = L["Sales invoices"].Value;
     ViewData["Subtitle"] = L["Completed sales · saved at the prices they were sold at"].Value;
     var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
     var methods = await PaymentMethods.ListAsync(includeInactive: true);
+    var page = Model.Page;
+    var chips = new List<FilterChip>();
+    if (!string.IsNullOrEmpty(Model.Search)) chips.Add(new(string.Format(L["Search: {0}"].Value, Model.Search), ListUrl.Reset(Context.Request, ("q", null), ("search", null))));
+    if (Model.From.HasValue) chips.Add(new(L["From"].Value + ": " + Model.From.Value.ToString("yyyy-MM-dd"), ListUrl.Reset(Context.Request, ("from", null))));
+    if (Model.To.HasValue) chips.Add(new(L["To"].Value + ": " + Model.To.Value.ToString("yyyy-MM-dd"), ListUrl.Reset(Context.Request, ("to", null))));
+    if (Model.Method.HasValue)
+    {
+        var m = methods.FirstOrDefault(x => x.Id == (int)Model.Method.Value);
+        chips.Add(new(L["Payment method"].Value + ": " + (m is null ? Model.Method.Value.ToString() : isAr ? m.NameAr : m.NameEn), ListUrl.Reset(Context.Request, ("method", null))));
+    }
+    if (Model.ShiftId.HasValue) chips.Add(new(string.Format(L["Shift #{0}"].Value, Model.ShiftId), ListUrl.Reset(Context.Request, ("shiftId", null))));
+    if (Model.CashierId.HasValue) chips.Add(new(L["Cashier"].Value + ": #" + Model.CashierId, ListUrl.Reset(Context.Request, ("cashierId", null))));
+    if (Model.ProductId.HasValue) chips.Add(new(L["Product"].Value + ": #" + Model.ProductId, ListUrl.Reset(Context.Request, ("productId", null))));
 }
 
 <partial name="_PageHeader" />
 <partial name="_Flash" />
 
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = L["Invoice number"].Value + " — S-000001", Chips = chips, Page = page }' />
+
 <div class="sp-card p-3 mb-4">
     <form method="get" class="sp-filter-row">
-        <div class="sp-filter-row__field">
-            <label class="form-label" for="search">@L["Invoice number"]</label>
-            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="S-000001" />
-        </div>
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <input type="hidden" name="q" value="@Model.Search" />
+        }
         <div class="sp-filter-row__field">
             <label class="form-label" for="from">@L["From"]</label>
             <input class="form-control" type="date" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />
@@ -39,6 +55,14 @@
         {
             <input type="hidden" name="shiftId" value="@Model.ShiftId" />
         }
+        @if (Model.CashierId.HasValue)
+        {
+            <input type="hidden" name="cashierId" value="@Model.CashierId" />
+        }
+        @if (Model.ProductId.HasValue)
+        {
+            <input type="hidden" name="productId" value="@Model.ProductId" />
+        }
         <div class="sp-filter-row__actions">
             <button type="submit" class="btn sp-btn-primary">@L["Filter"]</button>
             <a class="btn sp-btn-secondary" asp-action="Index">@L["Reset"]</a>
@@ -46,7 +70,7 @@
     </form>
 </div>
 
-@if (Model.Invoices.Count == 0)
+@if (page.TotalCount == 0)
 {
     var empty = (L["No invoices found"].Value, L["Completed sales from the POS appear here."].Value);
     <partial name="_EmptyState" model="empty" />
@@ -54,19 +78,19 @@
 else
 {
     <div class="sp-card">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
+        <div class="table-responsive sp-table-scroll">
+            <table class="table sp-table">
                 <thead>
                     <tr>
-                        <th>@L["Invoice"]</th>
-                        <th>@L["Date"]</th>
-                        <th>@L["Shift"]</th>
-                        <th>@L["Cashier"]</th>
-                        <th>@L["Customer"]</th>
+                        <partial name="_SortTh" model='new SortHeader("InvoiceNumber", L["Invoice"].Value, page)' />
+                        <partial name="_SortTh" model='new SortHeader("CompletedAtUtc", L["Date"].Value, page)' />
+                        <partial name="_SortTh" model='new SortHeader("ShiftId", L["Shift"].Value, page)' />
+                        <partial name="_SortTh" model='new SortHeader("CashierDisplayName", L["Cashier"].Value, page)' />
+                        <partial name="_SortTh" model='new SortHeader("CustomerName", L["Customer"].Value, page)' />
                         <th>@L["Sale type"]</th>
                         <th>@L["Payment method"]</th>
-                        <th class="text-end">@L["Items"]</th>
-                        <th class="text-end">@L["Total"]</th>
+                        <partial name="_SortTh" model='new SortHeader("LineCount", L["Items"].Value, page, Numeric: true)' />
+                        <partial name="_SortTh" model='new SortHeader("Total", L["Total"].Value, page, Numeric: true)' />
                         <th><span class="visually-hidden">@L["Reprint receipt"]</span></th>
                     </tr>
                 </thead>
@@ -102,12 +126,13 @@ else
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="8">@string.Format(L["{0} invoices"].Value, Model.Invoices.Count)</th>
+                        <th colspan="8">@string.Format(L["{0} invoices"].Value, page.TotalCount.ToString("N0"))</th>
                         <th class="text-end num num-total">@Model.Total.ToString("N2")</th>
                         <th></th>
                     </tr>
                 </tfoot>
             </table>
         </div>
+        <partial name="_Pager" model="page" />
     </div>
 }

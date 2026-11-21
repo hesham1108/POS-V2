@@ -38,7 +38,7 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
 
         var pos = await PostFormAsync(mona, "/Shifts/Open", gate.Html, new() { ["OpeningAmount"] = "" });
         Assert.Contains("/Pos", pos.Url);
-        Assert.Contains("Pay and print · F9", pos.Html);
+        Assert.Contains("<span class=\"pos-pay-btn__label\">Collect</span>", pos.Html); // pay button: "Collect {total} EGP · F9"
         AssertAssetUrlsResolved(pos.Html);
         Assert.Contains("data-flash=\"Shift #", pos.Html); // "opened" message shown on the till, not on a later page
 
@@ -95,6 +95,21 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         Assert.Contains("تقرير الوردية", report.Html);
         Assert.Contains("زيادة", report.Html);       // Surplus
         Assert.Contains("window.print()", report.Html);
+
+        // Phase 19: the same report on A4 (format parameter and the ShiftA4 action), still in the store language.
+        var a4 = await GetAsync(admin, $"/Receipts/Shift/{shiftId}?format=A4");
+        Assert.Contains("a4-invoice a4-doc-shift", a4.Html);
+        Assert.Contains("تقرير الوردية", a4.Html);
+        Assert.Contains("زيادة", a4.Html);
+        Assert.Contains("size: A4", a4.Html);
+        var a4Direct = await GetAsync(admin, $"/Receipts/ShiftA4/{shiftId}");
+        Assert.Contains("a4-invoice a4-doc-shift", a4Direct.Html);
+        var thermal = await GetAsync(admin, $"/Receipts/Shift/{shiftId}?format=80mm");
+        Assert.DoesNotContain("a4-doc-shift", thermal.Html);
+
+        // The closed screen offers the paper-size switch next to the print buttons.
+        Assert.Contains("data-format-picker=\"shift\"", closed.Html);
+        Assert.Contains($"data-format-base=\"/Receipts/Shift/{shiftId}\"", closed.Html);
 
         var login = await PostFormAsync(admin, "/Account/Logout", closed.Html, new());
         Assert.Contains("/Account/Login", login.Url);
@@ -184,6 +199,9 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development");
+            // Own settings folder: the app's defaults, not whatever this PC's App_Data holds.
+            builder.UseSetting("AppDataPath", Path.Combine(Path.GetTempPath(), "storespos-" + _dbName));
+            builder.UseSetting("Dashboard:CacheSeconds", "0"); // tests sell and read the dashboard right away
             builder.ConfigureServices(services =>
             {
                 var descriptors = services
@@ -198,7 +216,24 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
                 }
 
                 services.AddDbContext<ApplicationDbContext>(o => o.UseInMemoryDatabase(_dbName));
+
+                // Never ask this PC's Windows printers (slow, machine-specific) during tests.
+                foreach (var d in services.Where(d => d.ServiceType == typeof(StoresPOS.PL.Printing.IWindowsPrinterService)).ToList())
+                {
+                    services.Remove(d);
+                }
+
+                services.AddSingleton<StoresPOS.PL.Printing.IWindowsPrinterService, FakePrinters>();
             });
+        }
+
+        private sealed class FakePrinters : StoresPOS.PL.Printing.IWindowsPrinterService
+        {
+            public bool IsSupported => true;
+            public IReadOnlyList<string> ListPrinters() => ["Test Thermal 80", "Test A4"];
+            public string? GetWindowsDefault() => "Test A4";
+            public bool SetWindowsDefault(string printerName) => false;
+            public void Invalidate() { }
         }
 
         public HttpClient CreateBrowser() =>

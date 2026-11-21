@@ -31,21 +31,36 @@ public class CashOutsController : Controller
         DateTime? to,
         int? shiftId,
         int? userId,
+        [FromQuery] ListQuery list,
         CancellationToken cancellationToken)
     {
         var canSeeAll = User.HasPermission(AppPermissions.ReportsView);
         var activeShift = await _shifts.GetActiveShiftIdForUserAsync(this.GetRequiredUserId(), cancellationToken);
 
-        IReadOnlyList<CashOutListItemDto> all = [];
+        PagedResult<CashOutListItemDto> page = new();
+        IReadOnlyList<(int UserId, string DisplayName)> users = [];
         if (canSeeAll || activeShift.HasValue)
         {
-            all = await _cashOuts.GetListAsync(new CashOutFilterDto
+            var filter = new CashOutFilterDto
             {
                 // Dates are picked in store-local time; the end date is inclusive.
                 FromUtc = canSeeAll ? from?.Date.ToUniversalTime() : null,
                 ToUtc = canSeeAll ? to?.Date.AddDays(1).ToUniversalTime() : null,
                 ShiftId = canSeeAll ? shiftId : activeShift
-            }, cancellationToken);
+            };
+            users = await _cashOuts.GetUsersAsync(filter, cancellationToken);
+            filter.UserId = userId;
+            page = await _cashOuts.GetPageAsync(filter, list.ForRequest(Request), cancellationToken);
+        }
+
+        if (Request.WantsCsv())
+        {
+            return CsvExport.File("cash-outs", page.Items,
+                (_l["Date"].Value, x => x.CreatedAtUtc.ToLocalTime()),
+                (_l["Shift"].Value, x => x.ShiftId),
+                (_l["User"].Value, x => x.UserDisplayName),
+                (_l["Amount"].Value, x => x.Amount),
+                (_l["Reason"].Value, x => x.Reason));
         }
 
         return View(new CashOutIndexViewModel
@@ -57,8 +72,10 @@ public class CashOutsController : Controller
             CanSeeAll = canSeeAll,
             CanCreate = User.HasPermission(AppPermissions.CashOutsCreate),
             InShift = activeShift.HasValue,
-            Users = all.GroupBy(x => x.UserId).Select(g => (g.Key, g.First().UserDisplayName)).OrderBy(x => x.Item2).ToList(),
-            Items = userId.HasValue ? all.Where(x => x.UserId == userId.Value).ToList() : all
+            Users = users.Select(u => (u.UserId, u.DisplayName)).ToList(),
+            Items = page.Items,
+            Page = page,
+            Total = page.Sum ?? 0m
         });
     }
 

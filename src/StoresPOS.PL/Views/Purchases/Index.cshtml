@@ -1,12 +1,14 @@
 @model PurchaseIndexViewModel
+@using StoresPOS.PL.Extensions
 @{
-    ViewData["Section"] = "Purchase invoices";
-    ViewData["Title"] = "Purchase invoices";
-    ViewData["Subtitle"] = "Supplier invoices · stock & price updates on confirm";
+    var listChips = ListUrl.SearchChip(Context.Request, L["Search"].Value).Concat(ListUrl.Chips(Context.Request, ("supplierId", L["Supplier"].Value, v => Model.SupplierOptions.FirstOrDefault(x => x.Id.ToString() == v)?.DisplayName), ("status", L["Status"].Value, null))).ToList();
+    ViewData["Section"] = L["Purchase invoices"].Value;
+    ViewData["Title"] = L["Purchase invoices"].Value;
+    ViewData["Subtitle"] = L["Supplier invoices · stock & price updates on confirm"].Value;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-primary" asp-action="Create">New purchase</a>
+    <a class="btn sp-btn-primary" asp-action="Create">@L["New purchase"]</a>
 }
 
 <partial name="_PageHeader" />
@@ -20,16 +22,18 @@
     <div class="alert alert-danger">@error</div>
 }
 
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = L["Invoice # or supplier"].Value, Chips = listChips, Page = Model.Page, ShowSearch = true }' />
+
 <div class="sp-card p-3 mb-4">
     <form method="get" class="sp-filter-row">
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <input type="hidden" name="q" value="@Model.Search" />
+        }
         <div class="sp-filter-row__field">
-            <label class="form-label" for="search">Search</label>
-            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Invoice # or supplier" />
-        </div>
-        <div class="sp-filter-row__field">
-            <label class="form-label" for="supplierId">Supplier</label>
+            <label class="form-label" for="supplierId">@L["Supplier"]</label>
             <select class="form-select" id="supplierId" name="supplierId">
-                <option value="">All</option>
+                <option value="">@L["All"]</option>
                 @foreach (var opt in Model.SupplierOptions)
                 {
                     if (Model.SupplierId == opt.Id)
@@ -44,45 +48,45 @@
             </select>
         </div>
         <div class="sp-filter-row__field">
-            <label class="form-label" for="status">Status</label>
+            <label class="form-label" for="status">@L["Status"]</label>
             <select class="form-select" id="status" name="status">
-                <option value="">All</option>
+                <option value="">@L["All"]</option>
                 @if (Model.Status == PurchaseInvoiceStatus.Draft)
                 {
-                    <option value="@((int)PurchaseInvoiceStatus.Draft)" selected>Draft</option>
+                    <option value="@((int)PurchaseInvoiceStatus.Draft)" selected>@L["Draft"]</option>
                 }
                 else
                 {
-                    <option value="@((int)PurchaseInvoiceStatus.Draft)">Draft</option>
+                    <option value="@((int)PurchaseInvoiceStatus.Draft)">@L["Draft"]</option>
                 }
                 @if (Model.Status == PurchaseInvoiceStatus.Confirmed)
                 {
-                    <option value="@((int)PurchaseInvoiceStatus.Confirmed)" selected>Confirmed</option>
+                    <option value="@((int)PurchaseInvoiceStatus.Confirmed)" selected>@L["Confirmed"]</option>
                 }
                 else
                 {
-                    <option value="@((int)PurchaseInvoiceStatus.Confirmed)">Confirmed</option>
+                    <option value="@((int)PurchaseInvoiceStatus.Confirmed)">@L["Confirmed"]</option>
                 }
             </select>
         </div>
         <div class="sp-filter-row__actions">
-            <button type="submit" class="btn sp-btn-secondary">Filter</button>
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
         </div>
     </form>
 </div>
 
 <div class="sp-card p-0 overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+    <div class="table-responsive sp-table-scroll">
+        <table class="table sp-table">
             <thead>
                 <tr>
-                    <th>Invoice</th>
-                    <th>Supplier</th>
-                    <th>Date</th>
-                    <th class="col-num">Lines</th>
-                    <th class="col-num">Total</th>
-                    <th>Status</th>
-                    <th class="col-num">Actions</th>
+                    <partial name="_SortTh" model='new SortHeader("InvoiceNumber", L["Invoice"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("SupplierNameEn", L["Supplier"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("InvoiceDate", L["Date"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("LineCount", L["Lines"].Value, Model.Page, Numeric: true)' />
+                    <partial name="_SortTh" model='new SortHeader("SubTotal", L["Total"].Value, Model.Page, Numeric: true)' />
+                    <partial name="_SortTh" model='new SortHeader("Status", L["Status"].Value, Model.Page)' />
+                    <th class="col-num">@L["Actions"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -90,7 +94,7 @@
             {
                 <tr>
                     <td colspan="7">
-                        <partial name="_EmptyState" model='("No purchase invoices", "Create a draft purchase to receive stock from a supplier.")' />
+                        <partial name="_EmptyState" model='(L["No purchase invoices"].Value, L["Create a draft purchase to receive stock from a supplier."].Value)' />
                     </td>
                 </tr>
             }
@@ -107,18 +111,18 @@
                         <td>
                             @if (item.Status == PurchaseInvoiceStatus.Confirmed)
                             {
-                                <span class="sp-status sp-status-ok">Confirmed</span>
+                                <span class="sp-status sp-status-ok">@L["Confirmed"]</span>
                             }
                             else
                             {
-                                <span class="sp-status sp-status-neutral">Draft</span>
+                                <span class="sp-status sp-status-neutral">@L["Draft"]</span>
                             }
                         </td>
                         <td class="col-num text-nowrap">
-                            <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">@L["View"]</a>
                             @if (item.Status == PurchaseInvoiceStatus.Draft)
                             {
-                                <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                                <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">@L["Edit"]</a>
                             }
                         </td>
                     </tr>
@@ -127,4 +131,5 @@
             </tbody>
         </table>
     </div>
+        <partial name="_Pager" model="Model.Page" />
 </div>

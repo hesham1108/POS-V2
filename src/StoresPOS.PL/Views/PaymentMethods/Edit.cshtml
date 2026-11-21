@@ -7,7 +7,7 @@
 <partial name="_PageHeader" />
 
 <div class="sp-card p-4" style="max-width:640px">
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" class="sp-form">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="Id" />
@@ -24,7 +24,7 @@
         </div>
         <div class="mb-3">
             <label asp-for="Kind" class="form-label"></label>
-            <select asp-for="Kind" class="form-select" asp-items="Html.GetEnumSelectList<PaymentMethodKind>()"></select>
+            <select asp-for="Kind" class="form-select" asp-items="Ui.EnumItems<PaymentMethodKind>(L)"></select>
             <div class="form-text">@L["Only Cash kind enters the shift drawer."]</div>
         </div>
         <div class="mb-3">
@@ -34,7 +34,7 @@
         <div class="mb-3">
             <label asp-for="DefaultTreasuryId" class="form-label"></label>
             <select asp-for="DefaultTreasuryId" class="form-select"
-                    asp-items="Model.TreasuryOptions.Select(t => new SelectListItem(t.NameEn, t.Id.ToString()))">
+                    asp-items="Model.TreasuryOptions.Select(t => new SelectListItem(Ui.Name(t.NameEn, t.NameAr), t.Id.ToString()))">
                 <option value="">@L["— none —"]</option>
             </select>
             <div class="form-text">@L["Non-cash sales settle into this treasury when set. Cheque waits until collected."]</div>
@@ -43,7 +43,7 @@
             <input asp-for="IsActive" class="form-check-input" />
             <label asp-for="IsActive" class="form-check-label"></label>
         </div>
-        <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
+        <partial name="_FormActions" model="@(Url.Action("Index"))" />
     </form>
 </div>
 

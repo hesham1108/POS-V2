@@ -1,12 +1,14 @@
 @model SupplierIndexViewModel
+@using StoresPOS.PL.Extensions
 @{
-    ViewData["Section"] = "Suppliers";
-    ViewData["Title"] = "Suppliers";
-    ViewData["Subtitle"] = "Contacts and purchase totals";
+    var listChips = ListUrl.SearchChip(Context.Request, L["Search"].Value).Concat(ListUrl.Chips(Context.Request, ("includeInactive", L["Include inactive"].Value, null))).ToList();
+    ViewData["Section"] = L["Suppliers"].Value;
+    ViewData["Title"] = L["Suppliers"].Value;
+    ViewData["Subtitle"] = L["Contacts and purchase totals"].Value;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-primary" asp-action="Create">Add supplier</a>
+    <a class="btn sp-btn-primary" asp-action="Create">@L["Add supplier"]</a>
 }
 
 <partial name="_PageHeader" />
@@ -20,35 +22,37 @@
     <div class="alert alert-danger">@error</div>
 }
 
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = L["Name, phone, email"].Value, Chips = listChips, Page = Model.Page, ShowSearch = true }' />
+
 <div class="sp-card p-3 mb-4">
     <form method="get" class="sp-filter-row">
-        <div class="sp-filter-row__field">
-            <label class="form-label" for="search">Search</label>
-            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Name, phone, email" />
-        </div>
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <input type="hidden" name="q" value="@Model.Search" />
+        }
         <label class="sp-filter-row__check form-check" for="includeInactive">
             <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
                    @(Model.IncludeInactive ? "checked" : null) />
-            <span class="form-check-label">Include inactive</span>
+            <span class="form-check-label">@L["Include inactive"]</span>
         </label>
         <div class="sp-filter-row__actions">
-            <button type="submit" class="btn sp-btn-secondary">Filter</button>
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
         </div>
     </form>
 </div>
 
 <div class="sp-card p-0 overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+    <div class="table-responsive sp-table-scroll">
+        <table class="table sp-table">
             <thead>
                 <tr>
-                    <th>Supplier</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                    <th class="col-num">Purchases</th>
-                    <th class="col-num">Total</th>
-                    <th>Status</th>
-                    <th class="col-num">Actions</th>
+                    <partial name="_SortTh" model='new SortHeader("NameEn", L["Supplier"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("Phone", L["Phone"].Value, Model.Page)' />
+                    <th>@L["Email"]</th>
+                    <partial name="_SortTh" model='new SortHeader("ConfirmedPurchaseCount", L["Purchases"].Value, Model.Page, Numeric: true)' />
+                    <partial name="_SortTh" model='new SortHeader("TotalPurchasesAmount", L["Total"].Value, Model.Page, Numeric: true)' />
+                    <th>@L["Status"]</th>
+                    <th class="col-num">@L["Actions"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,8 +70,8 @@
                 {
                     <tr>
                         <td>
-                            <div class="fw-semibold">@item.NameEn</div>
-                            <div class="small text-muted" dir="rtl">@item.NameAr</div>
+                            <div class="fw-semibold">@Ui.Name(item.NameEn, item.NameAr)</div>
+                            <div class="small text-muted" lang="@(Ui.IsArabic ? "en" : "ar")" dir="@(Ui.IsArabic ? "ltr" : "rtl")">@(Ui.IsArabic ? item.NameEn : item.NameAr)</div>
                         </td>
                         <td>@(item.Phone ?? "—")</td>
                         <td>@(item.Email ?? "—")</td>
@@ -76,22 +80,22 @@
                         <td>
                             @if (item.IsActive)
                             {
-                                <span class="sp-status sp-status-ok">Active</span>
+                                <span class="sp-status sp-status-ok">@L["Active"]</span>
                             }
                             else
                             {
-                                <span class="sp-status sp-status-neutral">Inactive</span>
+                                <span class="sp-status sp-status-neutral">@L["Inactive"]</span>
                             }
                         </td>
                         <td class="col-num text-nowrap">
-                            <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
-                            <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">@L["View"]</a>
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">@L["Edit"]</a>
                             @if (item.IsActive)
                             {
                                 <form asp-action="Deactivate" asp-route-id="@item.Id" method="post" class="d-inline"
                                       onsubmit="return confirm('Deactivate this supplier?');">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@L["Deactivate"]</button>
                                 </form>
                             }
                         </td>
@@ -101,4 +105,5 @@
             </tbody>
         </table>
     </div>
+        <partial name="_Pager" model="Model.Page" />
 </div>

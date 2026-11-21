@@ -1,3 +1,4 @@
+using StoresPOS.BLL.DTOs;
 using System.ComponentModel.DataAnnotations;
 
 namespace StoresPOS.PL.ViewModels;
@@ -83,4 +84,7 @@ public class ProductIndexViewModel
     public bool IncludeInactive { get; set; }
     public IReadOnlyList<CategoryOptionViewModel> CategoryOptions { get; set; } = [];
     public IReadOnlyList<ProductListItemViewModel> Products { get; set; } = [];
+
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
 }

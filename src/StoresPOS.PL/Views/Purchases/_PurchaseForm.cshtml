@@ -3,21 +3,21 @@
     var treasuryItems = Model.TreasuryOptions
         .Select(t => new SelectListItem
         {
-            Text = t.NameEn + " · " + t.Balance.ToString("N2"),
+            Text = Ui.Name(t.NameEn, t.NameAr) + " · " + t.Balance.ToString("N2"),
             Value = t.Id.ToString()
         })
         .ToList();
     var warehouseItems = Model.WarehouseOptions
         .Select(w => new SelectListItem
         {
-            Text = w.NameEn,
+            Text = Ui.Name(w.NameEn, w.NameAr),
             Value = w.Id.ToString()
         })
         .ToList();
 }
 
 <div class="sp-card p-4">
-    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post" id="purchase-form">
+    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post" id="purchase-form" class="sp-form">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="Id" />
@@ -26,7 +26,7 @@
             <div class="col-md-4">
                 <label asp-for="SupplierId" class="form-label"></label>
                 <select asp-for="SupplierId" class="form-select">
-                    <option value="">— Select —</option>
+                    <option value="">@L["— select —"]</option>
                     @foreach (var opt in Model.SupplierOptions)
                     {
                         <option value="@opt.Id">@opt.DisplayName</option>
@@ -40,7 +40,7 @@
             </div>
             <div class="col-md-5">
                 <label asp-for="InvoiceNumber" class="form-label"></label>
-                <input asp-for="InvoiceNumber" class="form-control font-monospace" placeholder="Auto if empty" />
+                <input asp-for="InvoiceNumber" class="form-control font-monospace" placeholder="@L["Auto if empty"]" />
             </div>
             <div class="col-12">
                 <label asp-for="Notes" class="form-label"></label>
@@ -49,18 +49,18 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <h2 class="h6 mb-0">Lines</h2>
-            <button type="button" class="btn btn-sm sp-btn-secondary" id="add-line">Add line</button>
+            <h2 class="h6 mb-0">@L["Lines"]</h2>
+            <button type="button" class="btn btn-sm sp-btn-secondary" id="add-line">@L["Add line"]</button>
         </div>
 
         <div class="table-responsive mb-3">
-            <table class="table align-middle" id="purchase-lines">
+            <table class="table sp-table" id="purchase-lines">
                 <thead class="table-light">
                     <tr>
-                        <th style="min-width: 240px;">Product</th>
-                        <th style="width: 120px;">Qty</th>
-                        <th style="width: 140px;">Unit cost</th>
-                        <th style="width: 120px;" class="text-end">Line</th>
+                        <th style="min-width: 240px;">@L["Product"]</th>
+                        <th style="width: 120px;">@L["Qty"]</th>
+                        <th style="width: 140px;">@L["Unit cost"]</th>
+                        <th style="width: 120px;" class="text-end">@L["Line"]</th>
                         <th style="width: 60px;"></th>
                     </tr>
                 </thead>
@@ -70,7 +70,7 @@
                     <tr class="purchase-line">
                         <td>
                             <select name="Items[@i].ProductId" class="form-select product-select" data-index="@i">
-                                <option value="">— Select —</option>
+                                <option value="">@L["— select —"]</option>
                                 @foreach (var opt in Model.ProductOptions)
                                 {
                                     if (Model.Items[i].ProductId == opt.Id)
@@ -102,14 +102,14 @@
                         </td>
                         <td class="text-end font-monospace line-total">0.00</td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">&times;</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="@L["Remove"]">&times;</button>
                         </td>
                     </tr>
                 }
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3" class="text-end fw-semibold">Subtotal</td>
+                        <td colspan="3" class="text-end fw-semibold">@L["Subtotal"]</td>
                         <td class="text-end fw-bold font-monospace" id="subtotal">0.00</td>
                         <td></td>
                     </tr>
@@ -120,15 +120,15 @@
         <div class="mb-3">
             <label asp-for="ReceivedIntoWarehouseId" class="form-label"></label>
             <select asp-for="ReceivedIntoWarehouseId" class="form-select" asp-items="warehouseItems">
-                <option value="">— select warehouse —</option>
+                <option value="">@L["— select warehouse —"]</option>
             </select>
         </div>
         <div class="mb-3">
             <label asp-for="PaidFromTreasuryId" class="form-label"></label>
             <select asp-for="PaidFromTreasuryId" class="form-select" asp-items="treasuryItems" id="pay-treasury">
-                <option value="">— select treasury —</option>
+                <option value="">@L["— select treasury —"]</option>
             </select>
-            <div class="form-text">Pay from treasury, or tick “Pay by cheque” instead.</div>
+            <div class="form-text">@L["Pay from treasury, or tick “Pay by cheque” instead."]</div>
         </div>
         <div class="form-check mb-2">
             <input asp-for="PayByCheque" class="form-check-input" id="pay-by-cheque" />
@@ -154,14 +154,11 @@
         <div class="form-check mb-3">
             <input asp-for="ConfirmOnSave" class="form-check-input" />
             <label asp-for="ConfirmOnSave" class="form-check-label">
-                Confirm on save (increase stock &amp; recalculate sell prices)
+                @L["Confirm on save (increase stock & recalculate sell prices)"]
             </label>
         </div>
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn sp-btn-primary">Save</button>
-            <a class="btn sp-btn-secondary" asp-action="Index">Cancel</a>
-        </div>
+        <partial name="_FormActions" model="@(Url.Action("Index"))" />
     </form>
 </div>
 
@@ -169,7 +166,7 @@
     <tr class="purchase-line">
         <td>
             <select name="Items[__IX__].ProductId" class="form-select product-select">
-                <option value="">— Select —</option>
+                <option value="">@L["— select —"]</option>
                 @foreach (var opt in Model.ProductOptions)
                 {
                     <option value="@opt.Id"
@@ -187,7 +184,7 @@
         </td>
         <td class="text-end font-monospace line-total">0.00</td>
         <td class="text-end">
-            <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">&times;</button>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="@L["Remove"]">&times;</button>
         </td>
     </tr>
 </template>

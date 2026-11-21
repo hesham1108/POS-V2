@@ -4,6 +4,7 @@ using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.PL.Extensions;
 using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
@@ -26,9 +27,12 @@ public class ProductsController : Controller
         int? categoryId,
         bool lowStockOnly = false,
         bool includeInactive = false,
+        [FromQuery] ListQuery? list = null,
         CancellationToken cancellationToken = default)
     {
-        var products = await _productService.GetListAsync(
+        list ??= new ListQuery();
+        search = list.Term ?? search;
+        var page = await _productService.GetPageAsync(
             new ProductListFilterDto
             {
                 Search = search,
@@ -36,7 +40,25 @@ public class ProductsController : Controller
                 LowStockOnly = lowStockOnly,
                 IsActive = includeInactive ? null : true
             },
+            list.ForRequest(Request),
             cancellationToken);
+        var products = page.Items;
+
+        if (Request.WantsCsv())
+        {
+            var l = this.Localizer();
+            return CsvExport.File("products", products,
+                (l["English name"].Value, x => x.NameEn),
+                (l["Arabic name"].Value, x => x.NameAr),
+                (l["Barcode"].Value, x => x.Barcode),
+                (l["Unit"].Value, x => x.Unit),
+                (l["Category"].Value, x => x.CategoryNameEn),
+                (l["Purchase price"].Value, x => x.PurchasePrice),
+                (l["Retail price"].Value, x => x.RetailPrice),
+                (l["Wholesale price"].Value, x => x.WholesalePrice),
+                (l["Stock"].Value, x => x.StockQuantity),
+                (l["Active"].Value, x => x.IsActive));
+        }
 
         var model = new ProductIndexViewModel
         {
@@ -45,7 +67,8 @@ public class ProductsController : Controller
             LowStockOnly = lowStockOnly,
             IncludeInactive = includeInactive,
             CategoryOptions = await LoadCategoryOptionsAsync(cancellationToken),
-            Products = products.Select(MapListItem).ToList()
+            Products = products.Select(MapListItem).ToList(),
+            Page = page
         };
 
         return View(model);
@@ -87,7 +110,7 @@ public class ProductsController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             model.CategoryOptions = await LoadCategoryOptionsAsync(cancellationToken);
             return View(model);
         }
@@ -134,7 +157,7 @@ public class ProductsController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             model.CategoryOptions = await LoadCategoryOptionsAsync(cancellationToken);
             return View(model);
         }
@@ -157,7 +180,7 @@ public class ProductsController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index));
@@ -193,7 +216,7 @@ public class ProductsController : Controller
             .Select(x => new CategoryOptionViewModel
             {
                 Id = x.Id,
-                DisplayName = $"{x.NameEn} / {x.NameAr}"
+                DisplayName = Ui.Name(x.NameEn, x.NameAr)
             })
             .ToList();
     }
@@ -219,7 +242,7 @@ public class ProductsController : Controller
         NameEn = x.NameEn,
         Barcode = x.Barcode,
         Unit = x.Unit,
-        CategoryName = x.CategoryNameEn ?? x.CategoryNameAr,
+        CategoryName = Ui.NameOrNull(x.CategoryNameEn, x.CategoryNameAr),
         PurchasePrice = x.PurchasePrice,
         RetailPrice = x.RetailPrice,
         WholesalePrice = x.WholesalePrice,

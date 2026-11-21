@@ -3,7 +3,7 @@
     The shift and user are attached server-side. Wired by wwwroot/js/cashout.js.
 *@
 <div class="modal fade" id="cashout-modal" tabindex="-1" aria-labelledby="cashout-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered pos-modal-md">
         <form class="modal-content" id="cashout-form" novalidate
               data-url="@Url.Action("Create", "CashOuts")"
               data-msg-amount="@L["Enter a valid amount greater than zero."]"
@@ -11,6 +11,7 @@
               data-msg-error="@L["Something went wrong. Try again."]">
             @Html.AntiForgeryToken()
             <div class="modal-header">
+                <span class="pos-modal-icon"><partial name="_PosIcon" model='"coins"' /></span>
                 <h2 class="modal-title h6" id="cashout-title">@L["Cash-out"]</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
             </div>
@@ -24,7 +25,8 @@
                 <div class="text-danger mt-2" id="cashout-error" role="alert"></div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn sp-btn-primary">@L["Save cash-out"]</button>
+                <button type="submit" class="btn sp-btn-primary pos-modal-primary">@L["Save cash-out"]</button>
+                <button type="button" class="btn pos-modal-cancel" data-bs-dismiss="modal">@L["Cancel"]</button>
             </div>
         </form>
     </div>

@@ -1,12 +1,12 @@
 @model PurchaseDetailsViewModel
 @{
-    ViewData["Section"] = "Purchase invoices";
+    ViewData["Section"] = L["Purchase invoices"].Value;
     ViewData["Title"] = Model.InvoiceNumber;
     ViewData["Subtitle"] = $"{Model.SupplierName} · {Model.InvoiceDate:yyyy-MM-dd}";
     var treasuryItems = Model.TreasuryOptions
         .Select(t => new SelectListItem
         {
-            Text = t.NameEn + " · " + t.Balance.ToString("N2"),
+            Text = Ui.Name(t.NameEn, t.NameAr) + " · " + t.Balance.ToString("N2"),
             Value = t.Id.ToString(),
             Selected = t.Id == Model.PaidFromTreasuryId
         })
@@ -14,7 +14,7 @@
     var warehouseItems = Model.WarehouseOptions
         .Select(w => new SelectListItem
         {
-            Text = w.NameEn,
+            Text = Ui.Name(w.NameEn, w.NameAr),
             Value = w.Id.ToString(),
             Selected = w.Id == Model.ReceivedIntoWarehouseId
         })
@@ -22,25 +22,25 @@
 }
 
 @section PageActions {
-    <a class="btn sp-btn-secondary" asp-action="Index">Back</a>
-    <button type="button" class="btn sp-btn-secondary" data-print-url="@Url.Action("PurchaseA4", "Receipts", new { id = Model.Id })">Print A4</button>
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back"]</a>
+    <button type="button" class="btn sp-btn-secondary" data-print-url="@Url.Action("PurchaseA4", "Receipts", new { id = Model.Id })">@L["Print A4"]</button>
     @if (Model.Status == PurchaseInvoiceStatus.Draft)
     {
-        <a class="btn sp-btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn sp-btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">@L["Edit"]</a>
         <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
               onsubmit="return confirm('Confirm this purchase? Stock and selling prices will update.');"
               class="d-inline-flex flex-wrap align-items-center gap-2">
             @Html.AntiForgeryToken()
-            <select name="receivedIntoWarehouseId" class="form-select form-select-sm" asp-items="warehouseItems" title="Warehouse"></select>
+            <select name="receivedIntoWarehouseId" class="form-select form-select-sm" asp-items="warehouseItems" title="@L["Warehouse"]"></select>
             <select name="paidFromTreasuryId" class="form-select form-select-sm" asp-items="treasuryItems"></select>
             <label class="form-check form-check-inline mb-0">
                 <input type="checkbox" class="form-check-input" name="payByCheque" value="true" id="confirm-pay-cheque" />
-                <span class="form-check-label">Cheque</span>
+                <span class="form-check-label">@L["Cheque"]</span>
             </label>
-            <input name="chequeNumber" class="form-control form-control-sm" style="width:8rem" placeholder="No." />
-            <input name="chequeBank" class="form-control form-control-sm" style="width:8rem" placeholder="Bank" />
+            <input name="chequeNumber" class="form-control form-control-sm" style="width:8rem" placeholder="@L["No."]" />
+            <input name="chequeBank" class="form-control form-control-sm" style="width:8rem" placeholder="@L["Bank"]" />
             <input name="chequeDueDate" type="date" class="form-control form-control-sm" style="width:10rem" />
-            <button type="submit" class="btn sp-btn-primary">Confirm</button>
+            <button type="submit" class="btn sp-btn-primary">@L["Confirm"]</button>
         </form>
     }
 }
@@ -59,48 +59,48 @@
 <div class="sp-card p-4 mb-4">
     <div class="row g-3">
         <div class="col-md-3">
-            <div class="text-muted small">Status</div>
+            <div class="text-muted small">@L["Status"]</div>
             <div>
                 @if (Model.Status == PurchaseInvoiceStatus.Confirmed)
                 {
-                    <span class="sp-badge"><span class="sp-badge-dot"></span> Confirmed</span>
+                    <span class="sp-badge"><span class="sp-badge-dot"></span> @L["Confirmed"]</span>
                 }
                 else
                 {
-                    <span class="badge text-bg-secondary">Draft</span>
+                    <span class="badge text-bg-secondary">@L["Draft"]</span>
                 }
             </div>
         </div>
         <div class="col-md-3">
-            <div class="text-muted small">Created by</div>
+            <div class="text-muted small">@L["Created by"]</div>
             <div>@Model.CreatedByUsername</div>
         </div>
         <div class="col-md-3">
-            <div class="text-muted small">Confirmed by</div>
+            <div class="text-muted small">@L["Confirmed by"]</div>
             <div>@(Model.ConfirmedByUsername ?? "—")</div>
         </div>
         <div class="col-md-3">
-            <div class="text-muted small">Total</div>
+            <div class="text-muted small">@L["Total"]</div>
             <div class="fs-4 fw-bold font-monospace" style="color: var(--sp-primary);">@Model.SubTotal.ToString("N2") EGP</div>
         </div>
         @if (!string.IsNullOrWhiteSpace(Model.ReceivedIntoWarehouseName))
         {
             <div class="col-md-3">
-                <div class="text-muted small">Received into warehouse</div>
+                <div class="text-muted small">@L["Received into warehouse"]</div>
                 <div>@Model.ReceivedIntoWarehouseName</div>
             </div>
         }
         @if (!string.IsNullOrWhiteSpace(Model.PaidFromTreasuryName))
         {
             <div class="col-md-3">
-                <div class="text-muted small">Paid from treasury</div>
+                <div class="text-muted small">@L["Paid from treasury"]</div>
                 <div>@Model.PaidFromTreasuryName</div>
             </div>
         }
         @if (!string.IsNullOrWhiteSpace(Model.Notes))
         {
             <div class="col-12">
-                <div class="text-muted small">Notes</div>
+                <div class="text-muted small">@L["Notes"]</div>
                 <div>@Model.Notes</div>
             </div>
         }
@@ -108,14 +108,14 @@
 </div>
 
 <div class="sp-card p-0 overflow-hidden">
-    <table class="table mb-0 align-middle">
+    <table class="table sp-table">
         <thead class="table-light">
             <tr>
-                <th>Product</th>
-                <th>Unit</th>
-                <th class="text-end">Qty</th>
-                <th class="text-end">Unit cost</th>
-                <th class="text-end">Line total</th>
+                <th>@L["Product"]</th>
+                <th>@L["Unit"]</th>
+                <th class="text-end">@L["Qty"]</th>
+                <th class="text-end">@L["Unit cost"]</th>
+                <th class="text-end">@L["Line total"]</th>
             </tr>
         </thead>
         <tbody>
@@ -123,8 +123,8 @@
         {
             <tr>
                 <td>
-                    <div class="fw-semibold">@line.ProductNameEn</div>
-                    <div class="small text-muted" dir="rtl">@line.ProductNameAr</div>
+                    <div class="fw-semibold">@Ui.Name(line.ProductNameEn, line.ProductNameAr)</div>
+                    <div class="small text-muted" lang="@(Ui.IsArabic ? "en" : "ar")" dir="@(Ui.IsArabic ? "ltr" : "rtl")">@(Ui.IsArabic ? line.ProductNameEn : line.ProductNameAr)</div>
                 </td>
                 <td>@line.Unit</td>
                 <td class="text-end font-monospace">@line.Quantity.ToString("0.###")</td>

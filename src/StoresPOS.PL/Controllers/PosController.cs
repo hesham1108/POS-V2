@@ -134,10 +134,10 @@ public class PosController : Controller
     public Task<IActionResult> Hold(CancellationToken cancellationToken) =>
         CartAction(userId => _sales.HoldAsync(userId, cancellationToken));
 
-    /// <summary>F4 picker: customers matching name or mobile.</summary>
+    /// <summary>F4 picker: customers matching name or mobile, 12 per page.</summary>
     [HttpGet]
-    public async Task<IActionResult> Customers(string? term, CancellationToken cancellationToken) =>
-        await Run(async _ => PartialView("_PosCustomers", await _customers.SearchAsync(term, 20, cancellationToken)));
+    public async Task<IActionResult> Customers(string? term, int page = 1, CancellationToken cancellationToken = default) =>
+        await Run(async _ => PartialView("_PosCustomers", await _customers.SearchPageAsync(term, page, 12, cancellationToken)));
 
     /// <summary>Sets the invoice customer; empty = walk-in.</summary>
     [HttpPost]
@@ -145,13 +145,21 @@ public class PosController : Controller
     public Task<IActionResult> Customer(int? customerId, CancellationToken cancellationToken) =>
         CartAction(userId => _sales.SetCustomerAsync(userId, customerId, cancellationToken));
 
-    /// <summary>Quick add from the till: name + mobile only, then picked for the invoice.</summary>
+    /// <summary>Quick add from the till: name + mobile + type, then picked for the invoice.
+    /// A wholesale customer gets the wholesale price level; retail and company get retail prices.</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public Task<IActionResult> QuickCustomer(string? name, string? phone, CancellationToken cancellationToken) =>
+    public Task<IActionResult> QuickCustomer(string? name, string? phone, CustomerType? customerType, CancellationToken cancellationToken) =>
         CartAction(async userId =>
         {
-            var created = await _customers.CreateAsync(new CustomerUpsertDto { Name = name ?? string.Empty, Phone = phone }, cancellationToken);
+            var type = customerType is { } t && Enum.IsDefined(t) ? t : CustomerType.Retail;
+            var created = await _customers.CreateAsync(new CustomerUpsertDto
+            {
+                Name = name ?? string.Empty,
+                Phone = phone,
+                CustomerType = type,
+                DefaultSaleType = type == CustomerType.Wholesale ? StoresPOS.DAL.Entities.SaleType.Wholesale : StoresPOS.DAL.Entities.SaleType.Retail
+            }, cancellationToken);
             return await _sales.SetCustomerAsync(userId, created.Id, cancellationToken);
         });
 
@@ -191,20 +199,26 @@ public class PosController : Controller
 
             var isCash = await _paymentMethods.IsCashAsync((byte)sale.PaymentMethod, cancellationToken);
             var message = isCash
-                ? string.Format(_l["Payment received. Invoice {0}. Change: {1} EGP. Receipt sent to printer."].Value, sale.InvoiceNumber, sale.ChangeAmount.ToString("N2"))
-                : string.Format(_l["Payment received. Invoice {0}. Receipt sent to printer."].Value, sale.InvoiceNumber);
+                ? string.Format(_l["Payment received. Invoice {0}. Change: {1} EGP."].Value, sale.InvoiceNumber, sale.ChangeAmount.ToString("N2"))
+                : string.Format(_l["Payment received. Invoice {0}."].Value, sale.InvoiceNumber);
 
             var receipt80Url = Url.Action("Sale", "Receipts", new { id = sale.InvoiceId });
             var receiptA4Url = Url.Action("SaleA4", "Receipts", new { id = sale.InvoiceId });
-            var receiptUrl = _store.CurrentValue.PrefersA4Receipt ? receiptA4Url : receipt80Url;
+            var preferA4 = _store.CurrentValue.PrefersA4Receipt;
+            var paperWidthMm = _store.CurrentValue.PaperWidthMm;
+
             return Json(new
             {
                 ok = true,
                 invoiceId = sale.InvoiceId,
                 invoiceNumber = sale.InvoiceNumber,
                 message,
-                receiptUrl,
-                receiptA4Url
+                receiptUrl = preferA4 ? receiptA4Url : receipt80Url,
+                receipt80Url,
+                receiptA4Url,
+                preferA4,
+                paperWidthMm,
+                changeAmount = sale.ChangeAmount
             });
         });
 

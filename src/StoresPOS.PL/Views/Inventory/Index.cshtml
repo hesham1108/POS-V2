@@ -1,15 +1,15 @@
 @model InventoryIndexViewModel
 @{
-    ViewData["Section"] = "Products and categories";
-    ViewData["Title"] = "Inventory";
+    ViewData["Section"] = L["Products and categories"].Value;
+    ViewData["Title"] = L["Inventory"].Value;
     ViewData["Subtitle"] = Model.LowStockCount > 0
         ? $"Balances · {Model.LowStockCount} low-stock"
-        : "Balances · no low-stock alerts";
+        : L["Balances · no low-stock alerts"].Value;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-secondary" asp-action="Movements">Movements</a>
-    <a class="btn sp-btn-primary" asp-action="Adjust">Adjust stock</a>
+    <a class="btn sp-btn-secondary" asp-action="Movements">@L["Movements"]</a>
+    <a class="btn sp-btn-primary" asp-action="Adjust">@L["Adjust stock"]</a>
 }
 
 <partial name="_PageHeader" />
@@ -23,13 +23,13 @@
 <div class="sp-card p-3 mb-4">
     <form method="get" class="sp-filter-row">
         <div class="sp-filter-row__field">
-            <label class="form-label" for="search">Search</label>
-            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Name or barcode" />
+            <label class="form-label" for="search">@L["Search"]</label>
+            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="@L["Name or barcode"]" />
         </div>
         <div class="sp-filter-row__field">
-            <label class="form-label" for="categoryId">Category</label>
+            <label class="form-label" for="categoryId">@L["Category"]</label>
             <select class="form-select" id="categoryId" name="categoryId">
-                <option value="">All</option>
+                <option value="">@L["All"]</option>
                 @foreach (var opt in Model.CategoryOptions)
                 {
                     if (Model.CategoryId == opt.Id)
@@ -44,18 +44,18 @@
             </select>
         </div>
         <div class="sp-filter-row__field">
-            <label class="form-label" for="warehouseId">Warehouse</label>
+            <label class="form-label" for="warehouseId">@L["Warehouse"]</label>
             <select class="form-select" id="warehouseId" name="warehouseId">
-                <option value="">All (total)</option>
+                <option value="">@L["All (total)"]</option>
                 @foreach (var w in Model.WarehouseOptions)
                 {
                     if (Model.WarehouseId == w.Id)
                     {
-                        <option value="@w.Id" selected>@w.NameEn</option>
+                        <option value="@w.Id" selected>@Ui.Name(w.NameEn, w.NameAr)</option>
                     }
                     else
                     {
-                        <option value="@w.Id">@w.NameEn</option>
+                        <option value="@w.Id">@Ui.Name(w.NameEn, w.NameAr)</option>
                     }
                 }
             </select>
@@ -63,26 +63,26 @@
         <label class="sp-filter-row__check form-check" for="lowStockOnly">
             <input class="form-check-input" type="checkbox" name="lowStockOnly" value="true" id="lowStockOnly"
                    @(Model.LowStockOnly ? "checked" : null) />
-            <span class="form-check-label">Low stock only</span>
+            <span class="form-check-label">@L["Low stock only"]</span>
         </label>
         <div class="sp-filter-row__actions">
-            <button type="submit" class="btn sp-btn-secondary">Filter</button>
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
         </div>
     </form>
 </div>
 
 <div class="sp-card p-0 overflow-hidden">
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table sp-table">
             <thead>
                 <tr>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Barcode</th>
-                    <th class="col-num">On hand</th>
-                    <th class="col-num">Threshold</th>
-                    <th>Status</th>
-                    <th class="col-num">Actions</th>
+                    <th>@L["Product"]</th>
+                    <th>@L["Category"]</th>
+                    <th>@L["Barcode"]</th>
+                    <th class="col-num">@L["On hand"]</th>
+                    <th class="col-num">@L["Threshold"]</th>
+                    <th>@L["Status"]</th>
+                    <th class="col-num">@L["Actions"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -100,8 +100,8 @@
                 {
                     <tr class="@(item.IsLowStock ? "table-warning" : null)">
                         <td>
-                            <div class="fw-semibold">@item.NameEn</div>
-                            <div class="small text-muted" dir="rtl">@item.NameAr</div>
+                            <div class="fw-semibold">@Ui.Name(item.NameEn, item.NameAr)</div>
+                            <div class="small text-muted" lang="@(Ui.IsArabic ? "en" : "ar")" dir="@(Ui.IsArabic ? "ltr" : "rtl")">@(Ui.IsArabic ? item.NameEn : item.NameAr)</div>
                         </td>
                         <td>@(item.CategoryName ?? "—")</td>
                         <td class="font-monospace">@(item.Barcode ?? "—")</td>
@@ -112,16 +112,16 @@
                         <td>
                             @if (item.IsLowStock)
                             {
-                                <span class="sp-status sp-status-warn">Low</span>
+                                <span class="sp-status sp-status-warn">@L["Low"]</span>
                             }
                             else
                             {
-                                <span class="sp-status sp-status-ok">OK</span>
+                                <span class="sp-status sp-status-ok">@L["OK"]</span>
                             }
                         </td>
                         <td class="col-num text-nowrap">
-                            <a class="btn btn-sm sp-btn-secondary" asp-action="Movements" asp-route-productId="@item.ProductId">History</a>
-                            <a class="btn btn-sm sp-btn-secondary" asp-action="Adjust" asp-route-productId="@item.ProductId">Adjust</a>
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Movements" asp-route-productId="@item.ProductId">@L["History"]</a>
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Adjust" asp-route-productId="@item.ProductId">@L["Adjust"]</a>
                         </td>
                     </tr>
                 }

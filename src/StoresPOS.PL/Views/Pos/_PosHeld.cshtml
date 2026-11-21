@@ -1,19 +1,39 @@
 @model IReadOnlyList<HeldInvoiceDto>
+@{
+    var currency = L["EGP"].Value;
+}
 @if (Model.Count == 0)
 {
-    <p class="text-muted mb-0">@L["No held invoices."]</p>
+    <div class="pos-modal-empty">
+        <partial name="_PosIcon" model='"bookmark"' />
+        <p>@L["No held invoices."]</p>
+    </div>
 }
 else
 {
     <ul class="pos-held">
         @foreach (var h in Model)
         {
-            <li>
-                <div>
-                    <strong class="num">@h.Total.ToString("N2")</strong>
-                    <span class="text-muted">· @string.Format(L["{0} items"].Value, h.LineCount) · @h.CashierDisplayName@(h.CustomerName is null ? "" : " · " + h.CustomerName) · <span class="num">@h.HeldAtUtc.ToLocalTime().ToString("HH:mm")</span></span>
+            var wholesale = h.SaleType == SaleType.Wholesale;
+            <li class="pos-held__card">
+                <div class="pos-held__main">
+                    <div class="pos-held__top">
+                        <strong class="pos-held__no num">#@h.Id</strong>
+                        <span class="pos-held__time"><partial name="_PosIcon" model='"clock"' /><span class="num">@h.HeldAtUtc.ToLocalTime().ToString("HH:mm")</span></span>
+                        <span class="pos-price-tag @(wholesale ? "is-wholesale" : null)">@(wholesale ? L["Wholesale"] : L["Retail"])</span>
+                    </div>
+                    <div class="pos-held__meta">
+                        <span><partial name="_PosIcon" model='"user"' />@(h.CustomerName ?? L["Walk-in customer"].Value)</span>
+                        <span>@string.Format(L["{0} items"].Value, h.LineCount)</span>
+                        <span class="pos-held__cashier">@h.CashierDisplayName</span>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-sm sp-btn-primary" data-resume-id="@h.Id">@L["Resume"]</button>
+                <div class="pos-held__end">
+                    <strong class="pos-held__total"><span class="num">@h.Total.ToString("N2")</span> <small>@currency</small></strong>
+                    <button type="button" class="btn sp-btn-primary pos-held__resume" data-resume-id="@h.Id">
+                        <partial name="_PosIcon" model='"play"' />@L["Resume"]
+                    </button>
+                </div>
             </li>
         }
     </ul>

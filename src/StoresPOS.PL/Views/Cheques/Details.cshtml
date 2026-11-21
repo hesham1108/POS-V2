@@ -2,7 +2,7 @@
 @{
     var c = Model.Cheque;
     var isIn = c.Direction == ChequeDirection.In;
-    var treasuryItems = Model.Treasuries.Select(t => new SelectListItem(t.NameEn, t.Id.ToString())).ToList();
+    var treasuryItems = Model.Treasuries.Select(t => new SelectListItem(Ui.Name(t.NameEn, t.NameAr), t.Id.ToString())).ToList();
 }
 
 @section PageActions {
@@ -20,7 +20,7 @@
         </div>
         <div class="col-md-3">
             <div class="text-muted small">@L["Status"]</div>
-            <div><span class="sp-status">@c.Status</span></div>
+            <div><span class="sp-status">@L[c.Status.ToString()]</span></div>
         </div>
         <div class="col-md-3">
             <div class="text-muted small">@(isIn ? L["Customer"].Value : L["Supplier"].Value)</div>
@@ -126,7 +126,7 @@
 
 <div class="sp-card p-0 overflow-hidden">
     <div class="p-3 border-bottom fw-semibold">@L["Status history"]</div>
-    <table class="table mb-0 align-middle">
+    <table class="table sp-table">
         <thead>
             <tr>
                 <th>@L["Date"]</th>

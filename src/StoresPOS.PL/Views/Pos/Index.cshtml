@@ -1,4 +1,5 @@
 @model PosPageViewModel
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> StoreOptions
 @{
     Layout = "_PosLayout";
     ViewData["Title"] = L["POS"].Value;
@@ -6,20 +7,45 @@
     ViewData["CashierName"] = Model.CashierName;
     ViewData["LastInvoiceId"] = Model.LastInvoiceId;
     var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var store = StoreOptions.CurrentValue;
+    // Receipt choice (80 mm | A4 | none) starts from Settings → Printing → Sales invoice
+    // (paper size; "none" when automatic printing is off).
+    var defaultPrint = !store.PrintSettingsFor(StoresPOS.BLL.Models.PrintDocumentType.Sale).AutoPrint
+        ? "none"
+        : store.PrefersA4Receipt ? "A4" : "80mm";
+    var thermalLabel = string.Format(L["{0} mm receipt"].Value, store.PaperWidthMm);
+
+    string MethodIcon(PaymentMethodDto m) => m.Kind switch
+    {
+        PaymentMethodKind.Cash => "cash",
+        PaymentMethodKind.Card => "card",
+        PaymentMethodKind.Wallet => "wallet",
+        PaymentMethodKind.BankTransfer => "bank",
+        PaymentMethodKind.Cheque => "cheque",
+        _ => "more-h"
+    };
 }
 
 <div id="pos-root" class="pos-layout"
      data-msg-confirm-clear="@L["Clear all items from this invoice?"]"
      data-msg-need-amount="@L["Enter a valid amount paid."]"
      data-msg-error="@L["Something went wrong. Try again."]"
+     data-msg-cheque-number="@L["Cheque number is required."]"
+     data-msg-cheque-due="@L["Cheque due date is required."]"
+     data-msg-paid="@L["Paid · Invoice {0}"]"
+     data-paper-width-mm="@store.PaperWidthMm"
+     data-print-default="@defaultPrint"
      data-flash="@(TempData["Success"] as string)"
      data-flash-error="@(TempData["Error"] as string)">
     @Html.AntiForgeryToken()
 
     <section class="pos-catalog" aria-label="@L["Products"]">
         <div class="pos-search">
-            <input id="pos-search" class="form-control form-control-lg" type="search" autocomplete="off" autofocus
-                   placeholder="@L["Barcode, name or code"]" aria-label="@L["Barcode, name or code"]" />
+            <partial name="_PosIcon" model='"search"' />
+            <input id="pos-search" type="search" autocomplete="off" autofocus
+                   placeholder="@L["Search by name or scan the barcode"]" aria-label="@L["Barcode, name or code"]" />
+            <span class="pos-search__sep" aria-hidden="true"></span>
+            <span class="pos-search__scan" aria-hidden="true"><partial name="_PosIcon" model='"barcode"' /></span>
             <kbd>F2</kbd>
         </div>
         <div class="pos-pills" role="tablist">
@@ -32,150 +58,304 @@
         <div id="pos-products" class="pos-products">
             <partial name="_PosProducts" model="Model.Products" />
         </div>
+        <nav class="pos-pager" id="pos-pager" aria-label="@L["Products"]"
+             data-page-size="16" data-msg-showing="@L["Showing {0} of {1} items"]" hidden>
+            <span class="pos-pager__info" id="pos-pager-info"></span>
+            <div class="pos-pager__pages">
+                <button type="button" class="pos-pager__btn" data-page="prev" aria-label="@L["Previous"]"><partial name="_PosIcon" model='"chev-right"' /></button>
+                <span id="pos-pager-numbers" class="pos-pager__numbers"></span>
+                <button type="button" class="pos-pager__btn" data-page="next" aria-label="@L["Next"]"><partial name="_PosIcon" model='"chev-left"' /></button>
+            </div>
+        </nav>
     </section>
 
-    <aside id="pos-cart" class="pos-cart-panel" aria-label="@L["Invoice"]">
-        <partial name="_PosCart" model="new PosCartViewModel { Cart = Model.Cart, CanOverridePrice = Model.CanOverridePrice, CanDiscount = Model.CanDiscount }" />
+    <aside class="pos-cart-panel" aria-label="@L["Invoice"]">
+        <div id="pos-cart" class="pos-cart-host">
+            <partial name="_PosCart" model="new PosCartViewModel { Cart = Model.Cart, CanOverridePrice = Model.CanOverridePrice, CanDiscount = Model.CanDiscount }" />
+        </div>
+
+        @* Static footer (not re-rendered with the cart): payment method, print format, pay, return, cash-out. *@
+        <div class="pos-checkout" id="pos-checkout">
+            @{
+                var shownMethods = Model.PaymentMethods.Count <= 4 ? Model.PaymentMethods : Model.PaymentMethods.Take(3).ToList();
+                var hasOther = Model.PaymentMethods.Count > 4;
+                var firstMethod = true;
+            }
+            <div class="pos-methods-bar" role="radiogroup" aria-label="@L["Payment method"]">
+                @foreach (var m in shownMethods)
+                {
+                    <button type="button" class="pos-method @(firstMethod ? "is-active" : null)" role="radio"
+                            aria-checked="@(firstMethod ? "true" : "false")" data-pay-method="@m.Id"
+                            data-kind="@((int)m.Kind)" data-name="@(isAr ? m.NameAr : m.NameEn)"
+                            title="@(isAr ? m.NameAr : m.NameEn)">
+                        <partial name="_PosIcon" model="MethodIcon(m)" />
+                        <span>@(isAr ? m.NameAr : m.NameEn)</span>
+                    </button>
+                    firstMethod = false;
+                }
+                @if (hasOther)
+                {
+                    <button type="button" class="pos-method" role="radio" aria-checked="false" data-pay-method="other">
+                        <partial name="_PosIcon" model='"more-h"' />
+                        <span data-other-label data-default="@L["Other"]">@L["Other"]</span>
+                    </button>
+                }
+            </div>
+
+            <div class="pos-pay-row">
+                <button type="button" class="pos-pay-btn" data-checkout="pay" @(Model.Cart.IsEmpty ? "disabled" : null)>
+                    <span class="pos-pay-btn__label">@L["Collect"]</span>
+                    <span class="pos-pay-btn__amount"><span class="num" id="pos-pay-amount">@Model.Cart.Total.ToString("N2")</span> <small>@L["EGP"]</small></span>
+                    <span class="pos-pay-btn__method" data-pay-method-name></span>
+                    <span class="pos-pay-btn__key">F9</span>
+                </button>
+            </div>
+
+            @{
+                var canReturn = User.HasClaim(AppPermissions.ClaimType, AppPermissions.ReturnsCreate);
+                var canCashOut = User.HasClaim(AppPermissions.ClaimType, AppPermissions.CashOutsCreate);
+            }
+            @if (canReturn || canCashOut)
+            {
+                <div class="pos-checkout__extra">
+                    @if (canReturn)
+                    {
+                        <a class="pos-ghost-btn" asp-controller="Returns" asp-action="Create">
+                            <partial name="_PosIcon" model='"undo"' /><span>@L["Return"]</span>
+                        </a>
+                    }
+                    @if (canCashOut)
+                    {
+                        <button type="button" class="pos-ghost-btn" data-cashout>
+                            <partial name="_PosIcon" model='"coins"' /><span>@L["Cash-out"]</span>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
     </aside>
 </div>
 
-<div id="pos-toast" class="pos-toast" role="status" aria-live="polite" hidden></div>
+@* ================= Modals: one style (pos-modal-sm | -md | -lg), icon title, primary button + text cancel ================= *@
 
-@* ---- Pay (F9) ---- *@
+@* ---- Pay (F9): cash and cheque only. Card / wallet / transfer pay in one tap from the checkout bar. ---- *@
 <div class="modal fade" id="pay-modal" tabindex="-1" aria-labelledby="pay-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered pos-modal-md pos-pay-dialog">
         <form class="modal-content" id="pay-form" novalidate>
             <div class="modal-header">
-                <h2 class="modal-title h5" id="pay-title">@L["Payment"]</h2>
+                <span class="pos-modal-icon"><partial name="_PosIcon" model='"receipt"' /></span>
+                <h2 class="modal-title" id="pay-title">@L["Collect the invoice"]</h2>
+                <span class="pos-method-chip" id="pay-method-chip"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
             </div>
             <div class="modal-body">
-                <div class="pos-pay__due">
-                    <span>@L["Total"]</span>
-                    <strong class="num-total" id="pay-due">0.00</strong>
-                </div>
-                <div class="pos-methods" role="radiogroup" aria-label="@L["Payment method"]">
-                    @{
-                        var first = true;
-                        foreach (var m in Model.PaymentMethods)
-                        {
-                            <label>
-                                <input type="radio" name="method" value="@m.Id"
-                                       data-cash="@(m.IsCash ? "1" : "0")"
-                                       data-kind="@((int)m.Kind)"
-                                       @(first ? "checked" : null) />
-                                <span>@(isAr ? m.NameAr : m.NameEn)</span>
-                            </label>
-                            first = false;
-                        }
-                    }
-                </div>
-                <div id="pay-cash">
-                    <label class="form-label" for="pay-amount">@L["Amount paid"]</label>
-                    <input id="pay-amount" name="amountPaid" class="form-control form-control-lg num" inputmode="decimal" autocomplete="off" />
-                    <div class="pos-quick" id="pay-quick">
-                        <button type="button" data-quick="exact">@L["Exact"]</button>
-                        <button type="button" data-quick="50">50</button>
-                        <button type="button" data-quick="100">100</button>
-                        <button type="button" data-quick="200">200</button>
-                        <button type="button" data-quick="500">500</button>
+                <input type="hidden" name="method" id="pay-method" />
+
+                @* 1) Receipt choice first *@
+                <section class="pos-pay-print" aria-labelledby="pay-print-title">
+                    <h3 class="pos-pay-print__title" id="pay-print-title"><partial name="_PosIcon" model='"printer"' />@L["Receipt printing"]</h3>
+                    <div class="pos-print-tiles" role="radiogroup" aria-labelledby="pay-print-title" data-print-seg>
+                        <button type="button" role="radio" data-print="80mm">
+                            <partial name="_PosIcon" model='"receipt"' />
+                            <span><strong>@thermalLabel</strong><small>@L["Thermal printer"]</small></span>
+                            <span class="pos-print-tiles__check" aria-hidden="true">✓</span>
+                        </button>
+                        <button type="button" role="radio" data-print="A4">
+                            <partial name="_PosIcon" model='"file"' />
+                            <span><strong>@L["A4 invoice"]</strong><small>@L["Full-page invoice"]</small></span>
+                            <span class="pos-print-tiles__check" aria-hidden="true">✓</span>
+                        </button>
+                        <button type="button" role="radio" data-print="none">
+                            <partial name="_PosIcon" model='"x"' />
+                            <span><strong>@L["No print"]</strong><small>@L["Payment only"]</small></span>
+                            <span class="pos-print-tiles__check" aria-hidden="true">✓</span>
+                        </button>
                     </div>
-                    <div class="pos-pay__change">
-                        <span>@L["Change"]</span>
-                        <strong class="num" id="pay-change">0.00</strong>
+                </section>
+
+                @* 2) Collect: amount due, amount received (focused on open), change; quick notes + numpad *@
+                <div class="pos-pay" id="pay-cash">
+                    <div class="pos-pay__main">
+                        <div class="pos-pay__due">
+                            <span>@L["Amount due"]</span>
+                            <strong><span class="num-total" id="pay-due">0.00</span> <small>@L["EGP"]</small></strong>
+                        </div>
+                        <div class="pos-pay__field">
+                            <label class="pos-pay__label" for="pay-amount">@L["Amount received"]</label>
+                            <div class="pos-pay__input-wrap">
+                                <input id="pay-amount" name="amountPaid" class="pos-pay__input num" type="text" inputmode="decimal"
+                                       autocomplete="off" spellcheck="false" dir="ltr" maxlength="12" pattern="[0-9]*[.]?[0-9]*" />
+                                <span class="pos-pay__currency">@L["EGP"]</span>
+                            </div>
+                        </div>
+                        <div class="pos-pay__change" id="pay-change-box" aria-live="polite">
+                            <span id="pay-change-label" data-change="@L["Change to give"]" data-short="@L["Still short"]">@L["Change to give"]</span>
+                            <strong class="num-total" id="pay-change">0.00</strong>
+                        </div>
+                    </div>
+                    <div class="pos-pay__side">
+                        <div class="pos-quick" id="pay-quick" data-exact="@L["Exact amount"]"></div>
+                        <div class="pos-numpad" id="pay-numpad" dir="ltr">
+                            @foreach (var k in new[] { "7", "8", "9", "4", "5", "6", "1", "2", "3", ".", "0", "back" })
+                            {
+                                if (k == "back")
+                                {
+                                    <button type="button" class="is-fn" data-key="back" aria-label="@L["Delete"]" tabindex="-1">⌫</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="num @(k == "." ? "is-fn" : null)" data-key="@k" tabindex="-1">@k</button>
+                                }
+                            }
+                        </div>
                     </div>
                 </div>
-                <div id="pay-noncash" hidden>
-                    <label class="form-label" for="pay-reference">@L["Transaction reference (optional)"]</label>
-                    <input id="pay-reference" name="reference" class="form-control" autocomplete="off" maxlength="100" />
-                </div>
-                <div id="pay-cheque" hidden>
-                    <label class="form-label" for="pay-cheque-number">@L["Cheque number"]</label>
-                    <input id="pay-cheque-number" name="chequeNumber" class="form-control mb-2" autocomplete="off" maxlength="60" />
-                    <label class="form-label" for="pay-cheque-bank">@L["Bank (optional)"]</label>
-                    <input id="pay-cheque-bank" name="chequeBank" class="form-control mb-2" autocomplete="off" maxlength="120" />
-                    <label class="form-label" for="pay-cheque-due">@L["Due date"]</label>
-                    <input id="pay-cheque-due" name="chequeDueDate" type="date" class="form-control" />
+                <div class="pos-pay pos-pay--cheque" id="pay-cheque" hidden>
+                    <div class="pos-pay__due">
+                        <span>@L["Amount due"]</span>
+                        <strong><span class="num-total" id="pay-due-cheque">0.00</span> <small>@L["EGP"]</small></strong>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <label class="form-label" for="pay-cheque-number">@L["Cheque number"]</label>
+                            <input id="pay-cheque-number" name="chequeNumber" class="form-control form-control-lg num" autocomplete="off" maxlength="60" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="pay-cheque-due">@L["Due date"]</label>
+                            <input id="pay-cheque-due" name="chequeDueDate" type="date" class="form-control form-control-lg" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="pay-cheque-bank">@L["Bank (optional)"]</label>
+                            <input id="pay-cheque-bank" name="chequeBank" class="form-control" autocomplete="off" maxlength="120" />
+                        </div>
+                    </div>
                     <p class="form-text mb-0">@L["Pick a customer (F4) before paying by cheque."]</p>
                 </div>
-                <div class="text-danger mt-2" id="pay-error" role="alert"></div>
+                <div class="pos-modal-error" id="pay-error" role="alert"></div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn sp-btn-primary pos-pay">@L["Confirm payment"]</button>
+                <button type="submit" class="btn sp-btn-primary pos-modal-primary pos-pay-confirm">
+                    <partial name="_PosIcon" model='"receipt"' />
+                    <span id="pay-confirm-label" data-print="@L["Confirm and print"]" data-noprint="@L["Confirm payment"]">@L["Confirm and print"]</span>
+                    <span class="pos-method-chip pos-method-chip--inverse" id="pay-confirm-chip"></span>
+                    <kbd>Enter</kbd>
+                </button>
+                <button type="button" class="btn pos-modal-cancel" data-bs-dismiss="modal">@L["Cancel"]</button>
             </div>
         </form>
     </div>
 </div>
 
-@* ---- Price override ---- *@
-<div class="modal fade" id="price-modal" tabindex="-1" aria-labelledby="price-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <form class="modal-content" id="price-form" novalidate>
+@* ---- Other payment methods ---- *@
+<div class="modal fade" id="methods-modal" tabindex="-1" aria-labelledby="methods-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered pos-modal-md">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title h6" id="price-title">@L["Change price for this invoice only"]</h2>
+                <span class="pos-modal-icon"><partial name="_PosIcon" model='"card"' /></span>
+                <h2 class="modal-title" id="methods-title">@L["Choose payment method"]</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
             </div>
             <div class="modal-body">
-                <input id="price-value" class="form-control form-control-lg num" inputmode="decimal" autocomplete="off" />
-                <p class="form-text mb-0">@L["The catalog price stays the same."]</p>
+                <div class="pos-methods-list" id="methods-list">
+                    @foreach (var m in Model.PaymentMethods)
+                    {
+                        <button type="button" class="pos-method" data-pay-method="@m.Id" data-kind="@((int)m.Kind)" data-name="@(isAr ? m.NameAr : m.NameEn)">
+                            <partial name="_PosIcon" model="MethodIcon(m)" />
+                            <span>@(isAr ? m.NameAr : m.NameEn)</span>
+                        </button>
+                    }
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn sp-btn-primary">@L["Save price"]</button>
+                <button type="button" class="btn pos-modal-cancel" data-bs-dismiss="modal">@L["Cancel"]</button>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 @* ---- Discount (F6) ---- *@
 <div class="modal fade" id="discount-modal" tabindex="-1" aria-labelledby="discount-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered pos-modal-sm">
         <form class="modal-content" id="discount-form" novalidate>
             <div class="modal-header">
-                <h2 class="modal-title h6" id="discount-title">@L["Discount"]</h2>
+                <span class="pos-modal-icon"><partial name="_PosIcon" model='"tag"' /></span>
+                <h2 class="modal-title" id="discount-title">@L["Discount"]</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
             </div>
             <div class="modal-body">
-                <div class="pos-segmented mb-3" role="group">
-                    <button type="button" class="is-active" data-discount-mode="amount">@L["Amount"]</button>
-                    <button type="button" data-discount-mode="percent">%</button>
+                <div class="pos-disc-summary">
+                    <span>@L["Invoice subtotal"]</span>
+                    <strong><span class="num" id="discount-subtotal">0.00</span> <small>@L["EGP"]</small></strong>
                 </div>
-                <input id="discount-value" class="form-control form-control-lg num" inputmode="decimal" autocomplete="off" />
-                <p class="form-text mb-0">@L["Enter 0 to remove the discount."]</p>
+                <p class="pos-modal-label">@L["Quick discount"]</p>
+                <div class="pos-disc-chips" id="discount-chips">
+                    <button type="button" class="num" data-discount-percent="5">5%</button>
+                    <button type="button" class="num" data-discount-percent="10">10%</button>
+                    <button type="button" class="num" data-discount-percent="20">20%</button>
+                </div>
+                <p class="pos-modal-label">@L["Custom discount"]</p>
+                <div class="pos-disc-custom">
+                    <div class="pos-segmented pos-disc-mode" role="radiogroup" aria-label="@L["Discount type"]">
+                        <button type="button" role="radio" class="is-active" aria-checked="true" data-discount-mode="amount">@L["EGP"]</button>
+                        <button type="button" role="radio" aria-checked="false" data-discount-mode="percent">%</button>
+                    </div>
+                    <input id="discount-value" class="pos-disc-input num" inputmode="decimal" autocomplete="off" dir="ltr"
+                           placeholder="0" aria-label="@L["Discount value"]" />
+                </div>
+                <p class="pos-disc-preview" id="discount-preview" data-template="@L["New total: {0} EGP"]"></p>
+                <div class="pos-modal-error" id="discount-error" role="alert"></div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn sp-btn-primary">@L["Apply"]</button>
+                <button type="submit" class="btn sp-btn-primary pos-modal-primary">@L["Apply discount"] <kbd>Enter</kbd></button>
+                <button type="button" class="btn pos-modal-cancel" data-bs-dismiss="modal">@L["Cancel"]</button>
+                <button type="button" class="btn pos-modal-cancel pos-modal-danger pos-modal-span" id="discount-remove">
+                    <partial name="_PosIcon" model='"trash"' />@L["Remove discount"]
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-@* ---- Customer (F4) ---- *@
+@* ---- Customer (F4): registered customers, paged, with quick add ---- *@
 <div class="modal fade" id="customer-modal" tabindex="-1" aria-labelledby="customer-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered pos-modal-lg pos-cust-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title h5" id="customer-title">@L["Customer"]</h2>
+                <span class="pos-modal-icon"><partial name="_PosIcon" model='"users"' /></span>
+                <h2 class="modal-title" id="customer-title">@L["Registered customers"]</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
             </div>
             <div class="modal-body">
-                <input id="customer-search" class="form-control form-control-lg mb-2" type="search" autocomplete="off"
-                       placeholder="@L["Name or mobile"]" aria-label="@L["Name or mobile"]" />
-                <button type="button" class="btn sp-btn-secondary w-100 mb-2" data-walk-in>@L["Walk-in customer"]</button>
-                <div id="customer-list" class="pos-customers"></div>
-
-                <form id="customer-quick" class="pos-customer-quick" novalidate>
-                    <h3 class="h6 mb-2">@L["Add new customer"]</h3>
-                    <div class="row g-2">
-                        <div class="col-7">
-                            <input id="quick-name" class="form-control" maxlength="200" autocomplete="off" placeholder="@L["Name"]" aria-label="@L["Name"]" />
-                        </div>
-                        <div class="col-5">
-                            <input id="quick-phone" class="form-control num" maxlength="40" inputmode="tel" dir="ltr" autocomplete="off" placeholder="@L["Mobile"]" aria-label="@L["Mobile"]" />
-                        </div>
+                <div class="pos-cust-tools">
+                    <div class="pos-search pos-search--modal">
+                        <partial name="_PosIcon" model='"search"' />
+                        <input id="customer-search" type="search" autocomplete="off"
+                               placeholder="@L["Search by name or mobile"]" aria-label="@L["Name or mobile"]" />
                     </div>
-                    <div class="text-danger small mt-1" id="customer-error" role="alert"></div>
-                    <button type="submit" class="btn sp-btn-primary w-100 mt-2">@L["Add and use for this invoice"]</button>
+                    <button type="button" class="pos-cust-add" id="customer-add-toggle" aria-expanded="false" aria-controls="customer-quick">
+                        <partial name="_PosIcon" model='"plus"' />@L["New customer"]
+                    </button>
+                </div>
+
+                <form id="customer-quick" class="pos-customer-quick" novalidate hidden>
+                    <h3 class="pos-modal-label mb-2">@L["Add new customer"]</h3>
+                    <div class="pos-segmented pos-quick-type mb-2" role="radiogroup" aria-label="@L["Customer type"]">
+                        <button type="button" role="radio" class="is-active" aria-checked="true" data-quick-type="1">@L["Retail"]</button>
+                        <button type="button" role="radio" aria-checked="false" data-quick-type="2">@L["Wholesale"]</button>
+                        <button type="button" role="radio" aria-checked="false" data-quick-type="3">@L["Company"]</button>
+                    </div>
+                    <div class="pos-customer-quick__row">
+                        <input id="quick-name" class="form-control form-control-lg" maxlength="200" autocomplete="off" placeholder="@L["Name"]" aria-label="@L["Name"]" />
+                        <input id="quick-phone" class="form-control form-control-lg num" maxlength="40" inputmode="tel" dir="ltr" autocomplete="off" placeholder="@L["Mobile"]" aria-label="@L["Mobile"]" />
+                        <button type="submit" class="btn sp-btn-primary">@L["Add and use for this invoice"]</button>
+                    </div>
+                    <div class="pos-modal-error" id="customer-error" role="alert"></div>
                 </form>
+
+                <div id="customer-list" class="pos-customers"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn pos-modal-cancel" data-bs-dismiss="modal">@L["Close"]</button>
             </div>
         </div>
     </div>
@@ -183,13 +363,17 @@
 
 @* ---- Held invoices (F7) ---- *@
 <div class="modal fade" id="held-modal" tabindex="-1" aria-labelledby="held-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable pos-modal-md">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title h5" id="held-title">@L["Held invoices"]</h2>
+                <span class="pos-modal-icon"><partial name="_PosIcon" model='"bookmark"' /></span>
+                <h2 class="modal-title" id="held-title">@L["Held invoices"]</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
             </div>
             <div class="modal-body" id="held-list"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn pos-modal-cancel" data-bs-dismiss="modal">@L["Close"]</button>
+            </div>
         </div>
     </div>
 </div>

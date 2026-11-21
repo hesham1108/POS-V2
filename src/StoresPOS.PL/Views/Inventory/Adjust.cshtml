@@ -1,12 +1,12 @@
 @model StockAdjustmentFormViewModel
 @{
-    ViewData["Section"] = "Products and categories";
-    ViewData["Title"] = "Adjust stock";
-    ViewData["Subtitle"] = "Authorized correction with a reason · cannot go below zero";
+    ViewData["Section"] = L["Products and categories"].Value;
+    ViewData["Title"] = L["Adjust stock"].Value;
+    ViewData["Subtitle"] = L["Authorized correction with a reason · cannot go below zero"].Value;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-secondary" asp-action="Index">Balances</a>
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Balances"]</a>
 }
 
 <partial name="_PageHeader" />
@@ -20,7 +20,7 @@
         <div class="mb-3">
             <label asp-for="ProductId" class="form-label"></label>
             <select asp-for="ProductId" class="form-select">
-                <option value="">— Select —</option>
+                <option value="">@L["— select —"]</option>
                 @foreach (var opt in Model.ProductOptions)
                 {
                     <option value="@opt.Id">@opt.DisplayName</option>
@@ -34,24 +34,24 @@
             <select asp-for="WarehouseId" class="form-select">
                 @foreach (var w in Model.WarehouseOptions)
                 {
-                    <option value="@w.Id">@w.NameEn</option>
+                    <option value="@w.Id">@Ui.Name(w.NameEn, w.NameAr)</option>
                 }
             </select>
             <span asp-validation-for="WarehouseId" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Adjustment mode</label>
+            <label class="form-label">@L["Adjustment mode"]</label>
             <div class="d-flex gap-3">
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="Mode" id="mode-delta" value="delta"
                            @(Model.Mode != "set" ? "checked" : null) />
-                    <label class="form-check-label" for="mode-delta">Change by amount (+/−)</label>
+                    <label class="form-check-label" for="mode-delta">@L["Change by amount (+/−)"]</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="Mode" id="mode-set" value="set"
                            @(Model.Mode == "set" ? "checked" : null) />
-                    <label class="form-check-label" for="mode-set">Set counted quantity</label>
+                    <label class="form-check-label" for="mode-set">@L["Set counted quantity"]</label>
                 </div>
             </div>
         </div>
@@ -59,7 +59,7 @@
         <div class="mb-3" id="delta-group">
             <label asp-for="QuantityChange" class="form-label"></label>
             <input asp-for="QuantityChange" class="form-control font-monospace" step="0.001" />
-            <div class="form-text">Example: <code>-2</code> damage, <code>5</code> found stock</div>
+            <div class="form-text">@Html.Raw(string.Format(System.Net.WebUtility.HtmlEncode(L["Example: {0} for damage, {1} for found stock"].Value), "<code>-2</code>", "<code>5</code>"))</div>
         </div>
 
         <div class="mb-3 d-none" id="set-group">
@@ -69,13 +69,13 @@
 
         <div class="mb-3">
             <label asp-for="Reason" class="form-label"></label>
-            <textarea asp-for="Reason" class="form-control" rows="3" placeholder="e.g. Cycle count correction"></textarea>
+            <textarea asp-for="Reason" class="form-control" rows="3" placeholder="@L["e.g. Cycle count correction"]"></textarea>
             <span asp-validation-for="Reason" class="text-danger"></span>
         </div>
 
         <div class="d-flex gap-2">
-            <button type="submit" class="btn sp-btn-primary">Save adjustment</button>
-            <a class="btn sp-btn-secondary" asp-action="Index">Cancel</a>
+            <button type="submit" class="btn sp-btn-primary">@L["Save adjustment"]</button>
+            <a class="btn sp-btn-secondary" asp-action="Index">@L["Cancel"]</a>
         </div>
     </form>
 </div>

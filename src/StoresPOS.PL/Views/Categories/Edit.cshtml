@@ -1,8 +1,8 @@
 @model CategoryFormViewModel
 @{
-    ViewData["Section"] = "Products and categories";
-    ViewData["Title"] = "Edit category";
-    ViewData["Subtitle"] = "Update names, parent, or sort order";
+    ViewData["Section"] = L["Products and categories"].Value;
+    ViewData["Title"] = L["Edit category"].Value;
+    ViewData["Subtitle"] = L["Update names, parent, or sort order"].Value;
 }
 
 <partial name="_PageHeader" />
@@ -13,13 +13,13 @@
 @if (Model.Id.HasValue)
 {
     <div class="sp-card p-4 mt-4">
-        <h2 class="h6">Move under another parent</h2>
+        <h2 class="h6">@L["Move under another parent"]</h2>
         <form asp-action="Move" asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end">
             @Html.AntiForgeryToken()
             <div class="col-md-6">
-                <label class="form-label" for="parentCategoryId">New parent</label>
+                <label class="form-label" for="parentCategoryId">@L["New parent"]</label>
                 <select class="form-select" id="parentCategoryId" name="parentCategoryId">
-                    <option value="">— Root —</option>
+                    <option value="">@L["— Root —"]</option>
                     @foreach (var opt in Model.ParentOptions)
                     {
                         if (Model.ParentCategoryId == opt.Id)
@@ -34,7 +34,7 @@
                 </select>
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn sp-btn-secondary">Move</button>
+                <button type="submit" class="btn sp-btn-secondary">@L["Move"]</button>
             </div>
         </form>
     </div>

@@ -16,6 +16,9 @@ public class ChequeIndexViewModel
     public bool CanManage { get; set; }
     public bool CanChangeStatus { get; set; }
     public bool Print { get; set; }
+
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
 }
 
 public class ChequeEditViewModel

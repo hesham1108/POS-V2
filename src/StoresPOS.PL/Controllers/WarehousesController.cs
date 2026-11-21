@@ -113,7 +113,7 @@ public class WarehousesController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             return View(model);
         }
     }
@@ -130,7 +130,7 @@ public class WarehousesController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index), new { includeInactive = true });
@@ -148,7 +148,7 @@ public class WarehousesController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index), new { includeInactive = true });
@@ -256,7 +256,7 @@ public class WarehousesController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             return View(await BuildTransferFormAsync(model, cancellationToken));
         }
     }
@@ -271,7 +271,7 @@ public class WarehousesController : Controller
             .Select(x => new ProductOptionViewModel
             {
                 Id = x.Id,
-                DisplayName = $"{x.NameEn} (stock {x.StockQuantity:0.###} {x.Unit})",
+                DisplayName = $"{Ui.Name(x.NameEn, x.NameAr)} ({x.StockQuantity:0.###} {x.Unit})",
                 Unit = x.Unit,
                 PurchasePrice = x.PurchasePrice
             })

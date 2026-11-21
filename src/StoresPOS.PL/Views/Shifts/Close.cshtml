@@ -6,7 +6,7 @@
     var treasuryItems = Model.Treasuries
         .Select(t => new SelectListItem
         {
-            Text = t.NameEn + " · " + t.Balance.ToString("N2"),
+            Text = Ui.Name(t.NameEn, t.NameAr) + " · " + t.Balance.ToString("N2"),
             Value = t.Id.ToString()
         })
         .ToList();

@@ -17,7 +17,10 @@ public class CashOutIndexViewModel
     public bool InShift { get; set; }
     public IReadOnlyList<CashOutListItemDto> Items { get; set; } = [];
     public IReadOnlyList<(int Id, string Name)> Users { get; set; } = [];
-    public decimal Total => Items.Sum(x => x.Amount);
+    public decimal Total { get; set; }
+
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
 }
 
 public class ReturnIndexViewModel
@@ -30,7 +33,10 @@ public class ReturnIndexViewModel
     public bool CanSeeAll { get; set; }
     public bool CanCreate { get; set; }
     public IReadOnlyList<SalesReturnListItemDto> Items { get; set; } = [];
-    public decimal Total => Items.Sum(x => x.TotalAmount);
+    public decimal Total { get; set; }
+
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
 }
 
 public class ReturnLineInput

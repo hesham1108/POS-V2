@@ -1,7 +1,7 @@
 @model SupplierFormViewModel
 
 <div class="sp-card p-4" style="max-width: 720px;">
-    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post">
+    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post" class="sp-form">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="Id" />
@@ -42,9 +42,6 @@
             </div>
         </div>
 
-        <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn sp-btn-primary">Save</button>
-            <a class="btn sp-btn-secondary" asp-action="Index">Cancel</a>
-        </div>
+        <partial name="_FormActions" model="@(Url.Action("Index"))" />
     </form>
 </div>

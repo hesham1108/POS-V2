@@ -86,6 +86,10 @@ public class PurchaseIndexViewModel
     public PurchaseInvoiceStatus? Status { get; set; }
     public IReadOnlyList<SupplierOptionViewModel> SupplierOptions { get; set; } = [];
     public IReadOnlyList<PurchaseListItemViewModel> Invoices { get; set; } = [];
+
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
+    public decimal Total { get; set; }
 }
 
 public class PurchaseListItemViewModel

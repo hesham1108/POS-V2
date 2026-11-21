@@ -6,6 +6,8 @@ using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
 using StoresPOS.PL.ViewModels;
 
+using StoresPOS.PL.Extensions;
+
 namespace StoresPOS.PL.Controllers;
 
 [Authorize(Policy = AppPermissions.CatalogManage)]
@@ -27,7 +29,7 @@ public class CategoriesController : Controller
             Id = x.Id,
             NameAr = x.NameAr,
             NameEn = x.NameEn,
-            ParentName = x.ParentNameEn ?? x.ParentNameAr,
+            ParentName = Ui.NameOrNull(x.ParentNameEn, x.ParentNameAr),
             SortOrder = x.SortOrder,
             ProductCount = x.ProductCount,
             ChildCount = x.ChildCount,
@@ -61,7 +63,7 @@ public class CategoriesController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             model.ParentOptions = await LoadParentOptionsAsync(excludeId: null, cancellationToken);
             return View(model);
         }
@@ -102,7 +104,7 @@ public class CategoriesController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             model.ParentOptions = await LoadParentOptionsAsync(excludeId: id, cancellationToken);
             return View(model);
         }
@@ -119,7 +121,7 @@ public class CategoriesController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index));
@@ -138,7 +140,7 @@ public class CategoriesController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index));
@@ -155,7 +157,7 @@ public class CategoriesController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index));
@@ -186,8 +188,8 @@ public class CategoriesController : Controller
             {
                 Id = x.Id,
                 DisplayName = string.IsNullOrWhiteSpace(x.ParentNameEn)
-                    ? $"{x.NameEn} / {x.NameAr}"
-                    : $"{x.ParentNameEn} › {x.NameEn} / {x.NameAr}"
+                    ? Ui.Name(x.NameEn, x.NameAr)
+                    : $"{Ui.Name(x.ParentNameEn, x.ParentNameAr)} › {Ui.Name(x.NameEn, x.NameAr)}"
             })
             .ToList();
     }

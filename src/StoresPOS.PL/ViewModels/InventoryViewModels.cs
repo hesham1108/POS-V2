@@ -38,6 +38,9 @@ public class StockMovementsIndexViewModel
     public IReadOnlyList<ProductOptionViewModel> ProductOptions { get; set; } = [];
     public IReadOnlyList<WarehouseListItemDto> WarehouseOptions { get; set; } = [];
     public IReadOnlyList<StockMovementRowViewModel> Movements { get; set; } = [];
+    public string? Search { get; set; }
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
 }
 
 public class StockMovementRowViewModel

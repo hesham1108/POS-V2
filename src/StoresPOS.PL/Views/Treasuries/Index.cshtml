@@ -32,7 +32,7 @@
 
 <div class="sp-card p-0 overflow-hidden">
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table sp-table">
             <thead>
                 <tr>
                     <th>@L["Treasury"]</th>
@@ -59,7 +59,7 @@
                     <tr>
                         <td>
                             <div class="fw-semibold">@name</div>
-                            <div class="small text-muted" dir="@(isAr ? "ltr" : "rtl")">@(isAr ? item.NameEn : item.NameAr)</div>
+                            <div class="small text-muted" dir="@(isAr ? "ltr" : "rtl")" lang="@(isAr ? "en" : "ar")">@(isAr ? item.NameEn : item.NameAr)</div>
                             @if (item.IsDefault)
                             {
                                 <span class="sp-badge mt-1">@L["Default"]</span>

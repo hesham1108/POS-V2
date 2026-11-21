@@ -1,12 +1,12 @@
 @model IReadOnlyList<CategoryListItemViewModel>
 @{
-    ViewData["Section"] = "Products and categories";
-    ViewData["Title"] = "Categories";
-    ViewData["Subtitle"] = "Hierarchical catalog structure";
+    ViewData["Section"] = L["Products and categories"].Value;
+    ViewData["Title"] = L["Categories"].Value;
+    ViewData["Subtitle"] = L["Hierarchical catalog structure"].Value;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-primary" asp-action="Create">Add category</a>
+    <a class="btn sp-btn-primary" asp-action="Create">@L["Add category"]</a>
 }
 
 <partial name="_PageHeader" />
@@ -23,17 +23,17 @@
 
 <div class="sp-card p-0 overflow-hidden">
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table sp-table">
             <thead>
                 <tr>
-                    <th class="col-num">Sort</th>
-                    <th>English</th>
-                    <th>Arabic</th>
-                    <th>Parent</th>
-                    <th class="col-num">Children</th>
-                    <th class="col-num">Products</th>
-                    <th>Status</th>
-                    <th class="col-num">Actions</th>
+                    <th class="col-num">@L["Sort"]</th>
+                    <th>@L["English"]</th>
+                    <th>@L["Arabic"]</th>
+                    <th>@L["Parent"]</th>
+                    <th class="col-num">@L["Children"]</th>
+                    <th class="col-num">@L["Products"]</th>
+                    <th>@L["Status"]</th>
+                    <th class="col-num">@L["Actions"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,7 +41,7 @@
             {
                 <tr>
                     <td colspan="8">
-                        <partial name="_EmptyState" model='("No categories yet", "Create the first category to organize the catalog.")' />
+                        <partial name="_EmptyState" model='(L["No categories yet"].Value, L["Create the first category to organize the catalog."].Value)' />
                     </td>
                 </tr>
             }
@@ -51,7 +51,7 @@
                 {
                     <tr class="@(!item.IsActive ? "table-secondary" : null)">
                         <td class="col-num"><span class="font-monospace">@item.SortOrder</span></td>
-                        <td>@item.NameEn</td>
+                        <td lang="en">@item.NameEn</td>
                         <td dir="rtl">@item.NameAr</td>
                         <td>@(item.ParentName ?? "—")</td>
                         <td class="col-num">@item.ChildCount</td>
@@ -59,21 +59,21 @@
                         <td>
                             @if (item.IsActive)
                             {
-                                <span class="sp-status sp-status-ok">Active</span>
+                                <span class="sp-status sp-status-ok">@L["Active"]</span>
                             }
                             else
                             {
-                                <span class="sp-status sp-status-neutral">Inactive</span>
+                                <span class="sp-status sp-status-neutral">@L["Inactive"]</span>
                             }
                         </td>
                         <td class="col-num text-nowrap">
-                            <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                            <a class="btn btn-sm sp-btn-secondary" asp-action="Edit" asp-route-id="@item.Id">@L["Edit"]</a>
                             @if (item.IsActive)
                             {
                                 <form asp-action="Deactivate" asp-route-id="@item.Id" method="post" class="d-inline"
                                       onsubmit="return confirm('Deactivate this category?');">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@L["Deactivate"]</button>
                                 </form>
                             }
                         </td>
@@ -88,8 +88,8 @@
 @if (Model.Count > 0)
 {
     <div class="sp-card p-4 mt-4">
-        <h2 class="h5 mb-3">Reorder</h2>
-        <p class="text-muted small">Set sort order numbers then save. Lower numbers appear first within the same parent.</p>
+        <h2 class="h5 mb-3">@L["Reorder"]</h2>
+        <p class="text-muted small">@L["Set sort order numbers then save. Lower numbers appear first within the same parent."]</p>
         <form asp-action="Reorder" method="post">
             @Html.AntiForgeryToken()
             <div class="row g-2">
@@ -97,14 +97,14 @@
                 {
                     <div class="col-md-6 col-lg-4">
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text text-truncate" style="max-width: 60%;">@Model[i].NameEn</span>
+                            <span class="input-group-text text-truncate" style="max-width: 60%;">@Ui.Name(Model[i].NameEn, Model[i].NameAr)</span>
                             <input type="hidden" name="items[@i].Id" value="@Model[i].Id" />
                             <input class="form-control" type="number" name="items[@i].SortOrder" value="@Model[i].SortOrder" />
                         </div>
                     </div>
                 }
             </div>
-            <button type="submit" class="btn sp-btn-primary mt-3">Save order</button>
+            <button type="submit" class="btn sp-btn-primary mt-3">@L["Save order"]</button>
         </form>
     </div>
 }

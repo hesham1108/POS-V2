@@ -1,3 +1,4 @@
+using StoresPOS.BLL.DTOs;
 using System.ComponentModel.DataAnnotations;
 
 namespace StoresPOS.PL.ViewModels;
@@ -54,6 +55,9 @@ public class SupplierIndexViewModel
     public string? Search { get; set; }
     public bool IncludeInactive { get; set; }
     public IReadOnlyList<SupplierListItemViewModel> Suppliers { get; set; } = [];
+
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
 }
 
 public class SupplierOptionViewModel

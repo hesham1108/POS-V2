@@ -5,6 +5,7 @@ using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
 using StoresPOS.DAL.Entities;
+using StoresPOS.PL.Extensions;
 using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
@@ -37,19 +38,38 @@ public class PurchasesController : Controller
         string? search,
         int? supplierId,
         PurchaseInvoiceStatus? status,
+        [FromQuery] ListQuery? list = null,
         CancellationToken cancellationToken = default)
     {
-        var invoices = await _purchaseService.GetListAsync(
+        list ??= new ListQuery();
+        search = list.Term ?? search;
+        var page = await _purchaseService.GetPageAsync(
             new PurchaseInvoiceListFilterDto
             {
                 Search = search,
                 SupplierId = supplierId,
                 Status = status
             },
+            list.ForRequest(Request),
             cancellationToken);
+        var invoices = page.Items;
+
+        if (Request.WantsCsv())
+        {
+            var l = this.Localizer();
+            return CsvExport.File("purchase-invoices", invoices,
+                (l["Invoice number"].Value, x => x.InvoiceNumber),
+                (l["Supplier"].Value, x => x.SupplierNameEn),
+                (l["Date"].Value, x => x.InvoiceDate),
+                (l["Status"].Value, x => x.Status.ToString()),
+                (l["Items"].Value, x => x.LineCount),
+                (l["Total"].Value, x => x.SubTotal));
+        }
 
         return View(new PurchaseIndexViewModel
         {
+            Page = page,
+            Total = page.Sum ?? 0m,
             Search = search,
             SupplierId = supplierId,
             Status = status,
@@ -58,7 +78,7 @@ public class PurchasesController : Controller
             {
                 Id = x.Id,
                 InvoiceNumber = x.InvoiceNumber,
-                SupplierName = x.SupplierNameEn,
+                SupplierName = Ui.Name(x.SupplierNameEn, x.SupplierNameAr),
                 InvoiceDate = x.InvoiceDate,
                 Status = x.Status,
                 SubTotal = x.SubTotal,
@@ -80,9 +100,18 @@ public class PurchasesController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create(CancellationToken cancellationToken)
+    public async Task<IActionResult> Create(int? productId, CancellationToken cancellationToken)
     {
-        return View(await BuildFormAsync(null, cancellationToken));
+        var model = await BuildFormAsync(null, cancellationToken);
+
+        // Dashboard "Purchase order" (Phase 22): start with the low product on the first line at its last cost.
+        var product = productId is null ? null : model.ProductOptions.FirstOrDefault(x => x.Id == productId.Value);
+        if (product is not null)
+        {
+            model.Items = [new PurchaseLineFormViewModel { ProductId = product.Id, Quantity = 1, UnitCost = product.PurchasePrice }];
+        }
+
+        return View(model);
     }
 
     [HttpPost]
@@ -112,7 +141,7 @@ public class PurchasesController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             await PopulateOptionsAsync(model, cancellationToken);
             return View(model);
         }
@@ -169,7 +198,7 @@ public class PurchasesController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             await PopulateOptionsAsync(model, cancellationToken);
             return View(model);
         }
@@ -207,7 +236,7 @@ public class PurchasesController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Details), new { id });
@@ -277,7 +306,7 @@ public class PurchasesController : Controller
             .Select(x => new SupplierOptionViewModel
             {
                 Id = x.Id,
-                DisplayName = $"{x.NameEn} / {x.NameAr}"
+                DisplayName = Ui.Name(x.NameEn, x.NameAr)
             })
             .ToList();
     }
@@ -293,7 +322,7 @@ public class PurchasesController : Controller
             .Select(x => new ProductOptionViewModel
             {
                 Id = x.Id,
-                DisplayName = $"{x.NameEn} ({x.Unit})",
+                DisplayName = $"{Ui.Name(x.NameEn, x.NameAr)} ({x.Unit})",
                 PurchasePrice = x.PurchasePrice,
                 Unit = x.Unit
             })
@@ -343,7 +372,7 @@ public class PurchasesController : Controller
         {
             Id = invoice.Id,
             InvoiceNumber = invoice.InvoiceNumber,
-            SupplierName = $"{invoice.SupplierNameEn} / {invoice.SupplierNameAr}",
+            SupplierName = Ui.Name(invoice.SupplierNameEn, invoice.SupplierNameAr),
             InvoiceDate = invoice.InvoiceDate,
             Status = invoice.Status,
             Notes = invoice.Notes,

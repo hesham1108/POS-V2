@@ -7,10 +7,15 @@ using StoresPOS.DAL.Extensions;
 using StoresPOS.PL;
 using StoresPOS.PL.Extensions;
 using StoresPOS.PL.Hosting;
+using StoresPOS.PL.Printing;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var appData = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
+// AppDataPath (optional) moves settings/license files elsewhere — used by the test host so tests never
+// read or write this PC's real App_Data/store-settings.json.
+var appData = builder.Configuration["AppDataPath"] is { Length: > 0 } customAppData
+    ? customAppData
+    : Path.Combine(builder.Environment.ContentRootPath, "App_Data");
 Directory.CreateDirectory(appData);
 var storeSettingsPath = Path.Combine(appData, "store-settings.json");
 var licensePath = Path.Combine(appData, "license.json");
@@ -25,6 +30,7 @@ builder.Services.Configure<StoreSettingsPersistenceOptions>(options =>
 {
     options.FilePath = storeSettingsPath;
     options.LicenseFilePath = licensePath;
+    options.TemplatesFilePath = Path.Combine(appData, "print-templates.json");
 });
 
 builder.Services.AddControllersWithViews()
@@ -34,6 +40,12 @@ builder.Services.AddStoresPosDal(builder.Configuration);
 builder.Services.AddStoresPosBll(builder.Configuration);
 builder.Services.AddStoresPosAuthentication(builder.Configuration);
 builder.Services.AddStoresPosLocalization();
+builder.Services.AddSingleton<IWindowsPrinterService, WindowsPrinterService>();
+builder.Services.AddHostedService<PrinterWarmupHostedService>();
+builder.Services.AddSingleton<StoresPOS.PL.Middlewares.UserStampCache>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<StoresPOS.BLL.Services.IPrintTemplateService, StoresPOS.BLL.Services.PrintTemplateService>();
+builder.Services.AddScoped<ISilentPrintService, SilentPrintService>();
 builder.Services.AddHostedService<DailyBackupHostedService>();
 
 var app = builder.Build();
@@ -80,6 +92,7 @@ app.UseStaticFiles();
 app.UseRequestLocalization();
 app.UseRouting();
 app.UseAuthentication();
+app.UseMiddleware<StoresPOS.PL.Middlewares.UserStampMiddleware>();
 app.UseAuthorization();
 
 app.MapControllerRoute(

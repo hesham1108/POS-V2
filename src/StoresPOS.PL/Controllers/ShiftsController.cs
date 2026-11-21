@@ -256,7 +256,7 @@ public class ShiftsController : Controller
         {
             Shift = shift,
             ReturnToGate = returnTo == ReturnToGate,
-            AutoPrint = print
+            AutoPrint = print && _store.CurrentValue.PrintSettingsFor(PrintDocumentType.Shift).AutoPrint
         });
     }
 

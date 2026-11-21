@@ -1,5 +1,7 @@
 @model ChequeIndexViewModel
+@using StoresPOS.PL.Extensions
 @{
+    var listChips = ListUrl.SearchChip(Context.Request, L["Search"].Value).Concat(ListUrl.Chips(Context.Request, ("status", L["Status"].Value, null), ("dueFrom", L["From"].Value, null), ("dueTo", L["To"].Value, null), ("overdueOnly", L["Overdue only"].Value, null))).ToList();
     var isIn = Model.Direction == ChequeDirection.In;
 }
 
@@ -21,6 +23,9 @@
 
 <partial name="_PageHeader" />
 <partial name="_Flash" />
+
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = L["Cheque no., bank or name"].Value, Chips = listChips, Page = Model.Page, ShowSearch = true }' />
+
 
 <div class="report-tabs mb-3 no-print">
     <a class="@(isIn ? "is-active" : null)" asp-action="Index" asp-route-direction="@((int)ChequeDirection.In)">@L["Receivable (لينا)"]</a>
@@ -49,7 +54,7 @@
         <input type="hidden" name="direction" value="@((int)Model.Direction)" />
         <div class="sp-filter-row__field">
             <label class="form-label">@L["Status"]</label>
-            <select class="form-select" name="status" asp-items="Html.GetEnumSelectList<ChequeStatus>()">
+            <select class="form-select" name="status" asp-items="Ui.EnumItems<ChequeStatus>(L)">
                 <option value="">@L["All"]</option>
             </select>
         </div>
@@ -61,10 +66,10 @@
             <label class="form-label">@L["To"]</label>
             <input class="form-control" type="date" name="dueTo" value="@Model.DueTo?.ToString("yyyy-MM-dd")" />
         </div>
-        <div class="sp-filter-row__field">
-            <label class="form-label">@L["Search"]</label>
-            <input class="form-control" name="search" value="@Model.Search" />
-        </div>
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <input type="hidden" name="q" value="@Model.Search" />
+        }
         <label class="sp-filter-row__check form-check">
             <input class="form-check-input" type="checkbox" name="overdueOnly" value="true" @(Model.OverdueOnly ? "checked" : null) />
             <span class="form-check-label">@L["Overdue only"]</span>
@@ -76,16 +81,16 @@
 </div>
 
 <div class="sp-card p-0 overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+    <div class="table-responsive sp-table-scroll">
+        <table class="table sp-table">
             <thead>
                 <tr>
-                    <th>@L["Number"]</th>
+                    <partial name="_SortTh" model='new SortHeader("Number", L["Number"].Value, Model.Page)' />
                     <th>@(isIn ? L["Customer"].Value : L["Supplier"].Value)</th>
-                    <th>@L["Bank"]</th>
-                    <th>@L["Due date"]</th>
-                    <th class="col-num">@L["Amount"]</th>
-                    <th>@L["Status"]</th>
+                    <partial name="_SortTh" model='new SortHeader("Bank", L["Bank"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("DueDate", L["Due date"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("Amount", L["Amount"].Value, Model.Page, Numeric: true)' />
+                    <partial name="_SortTh" model='new SortHeader("Status", L["Status"].Value, Model.Page)' />
                     <th class="col-num no-print">@L["Actions"]</th>
                 </tr>
             </thead>
@@ -114,7 +119,7 @@
                                 ChequeStatus.Collected or ChequeStatus.Paid => "sp-status-ok",
                                 ChequeStatus.Bounced => "sp-status-bad",
                                 _ => "sp-status-neutral"
-                            })">@item.Status</span>
+                            })">@L[item.Status.ToString()]</span>
                         </td>
                         <td class="col-num no-print">
                             <a class="btn btn-sm sp-btn-secondary" asp-action="Details" asp-route-id="@item.Id">@L["Open"]</a>
@@ -125,6 +130,7 @@
             </tbody>
         </table>
     </div>
+        <partial name="_Pager" model="Model.Page" />
 </div>
 
 @if (Model.Print)

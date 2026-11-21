@@ -1,11 +1,19 @@
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> StoreOptions
+@using StoresPOS.PL.Extensions
 @model ReturnIndexViewModel
 @{
+    var listChips = ListUrl.SearchChip(Context.Request, L["Search"].Value).Concat(ListUrl.Chips(Context.Request, ("from", L["From"].Value, null), ("to", L["To"].Value, null), ("method", L["Refund method"].Value, null))).ToList();
     ViewData["Section"] = L["Returns"].Value;
     ViewData["Title"] = L["Returns"].Value;
     ViewData["Subtitle"] = Model.CanSeeAll
         ? L["Customer returns · refunded at the prices on the original invoice"].Value
         : L["Returns made in the shift you are working in"].Value;
-    var printUrl = Model.PrintId.HasValue ? Url.Action("Return", "Receipts", new { id = Model.PrintId }) : null;
+    // Auto-print after saving follows Settings → Printing → Return slip (paper size + "print automatically").
+    var returnPrint = StoreOptions.CurrentValue;
+    var autoPrintReturn = returnPrint.PrintSettingsFor(StoresPOS.BLL.Models.PrintDocumentType.Return).AutoPrint;
+    var printUrl = Model.PrintId.HasValue
+        ? Url.Action(returnPrint.FormatFor(StoresPOS.BLL.Models.PrintDocumentType.Return) == "A4" ? "ReturnA4" : "Return", "Receipts", new { id = Model.PrintId })
+        : null;
 }
 
 @section PageActions {
@@ -18,21 +26,24 @@
 <partial name="_PageHeader" />
 <partial name="_Flash" />
 
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = "R-000001 / S-000001", Chips = listChips, Page = Model.Page, ShowSearch = true }' />
+
+
 @if (printUrl is not null)
 {
     @* Return slip prints once after saving. *@
-    <div class="alert alert-light d-flex align-items-center gap-3" data-print-on-load="@printUrl">
-        <span>@L["The return slip was sent to the printer."]</span>
-        <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@printUrl">@L["Print again"]</button>
+    <div class="alert alert-light d-flex align-items-center gap-3" data-print-on-load="@(autoPrintReturn ? printUrl : null)">
+        <span>@(autoPrintReturn ? L["The return slip was sent to the printer."] : L["Return saved."])</span>
+        <button type="button" class="btn btn-sm sp-btn-secondary" data-print-url="@printUrl">@(autoPrintReturn ? L["Print again"] : L["Print"])</button>
     </div>
 }
 
 <div class="sp-card p-3 mb-4">
     <form method="get" class="sp-filter-row">
-        <div class="sp-filter-row__field">
-            <label class="form-label" for="search">@L["Return or invoice number"]</label>
-            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="R-000001 / S-000001" />
-        </div>
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <input type="hidden" name="q" value="@Model.Search" />
+        }
         <div class="sp-filter-row__field">
             <label class="form-label" for="from">@L["From"]</label>
             <input class="form-control" type="date" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />
@@ -73,18 +84,18 @@
 else
 {
     <div class="sp-card">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
+        <div class="table-responsive sp-table-scroll">
+            <table class="table sp-table">
                 <thead>
                     <tr>
-                        <th>@L["Return"]</th>
-                        <th>@L["Original invoice"]</th>
-                        <th>@L["Date"]</th>
-                        <th>@L["Shift"]</th>
-                        <th>@L["User"]</th>
+                        <partial name="_SortTh" model='new SortHeader("ReturnNumber", L["Return"].Value, Model.Page)' />
+                        <partial name="_SortTh" model='new SortHeader("OriginalInvoiceNumber", L["Original invoice"].Value, Model.Page)' />
+                        <partial name="_SortTh" model='new SortHeader("CreatedAtUtc", L["Date"].Value, Model.Page)' />
+                        <partial name="_SortTh" model='new SortHeader("ShiftId", L["Shift"].Value, Model.Page)' />
+                        <partial name="_SortTh" model='new SortHeader("UserDisplayName", L["User"].Value, Model.Page)' />
                         <th>@L["Refund method"]</th>
                         <th>@L["Reason"]</th>
-                        <th class="text-end">@L["Amount"]</th>
+                        <partial name="_SortTh" model='new SortHeader("TotalAmount", L["Amount"].Value, Model.Page, Numeric: true)' />
                         <th><span class="visually-hidden">@L["Print"]</span></th>
                     </tr>
                 </thead>
@@ -118,12 +129,13 @@ else
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="7">@string.Format(L["{0} returns"].Value, Model.Items.Count)</th>
+                        <th colspan="7">@string.Format(L["{0} returns"].Value, Model.Page.TotalCount.ToString("N0"))</th>
                         <th class="text-end num num-total">@Model.Total.ToString("N2")</th>
                         <th></th>
                     </tr>
                 </tfoot>
             </table>
         </div>
+        <partial name="_Pager" model="Model.Page" />
     </div>
 }

@@ -44,8 +44,10 @@ public class ChequesController : Controller
         bool overdueOnly,
         string? search,
         bool print,
+        [FromQuery] ListQuery list,
         CancellationToken cancellationToken)
     {
+        search = list.Term ?? search;
         var dir = direction ?? ChequeDirection.In;
         ViewData["Section"] = _l["Cheques"].Value;
         ViewData["Title"] = dir == ChequeDirection.In ? _l["Receivable (لينا)"].Value : _l["Payable (علينا)"].Value;
@@ -55,7 +57,7 @@ public class ChequesController : Controller
             ViewData["PrintOnLoad"] = true;
         }
 
-        var result = await _cheques.ListAsync(new ChequeFilterDto
+        var filter = new ChequeFilterDto
         {
             Direction = dir,
             Status = status,
@@ -63,7 +65,24 @@ public class ChequesController : Controller
             DueTo = dueTo,
             OverdueOnly = overdueOnly,
             Search = search
-        }, cancellationToken);
+        };
+        // Printing and CSV take every matching cheque; the screen shows one page.
+        var result = print || Request.WantsCsv()
+            ? await _cheques.ListPageAsync(filter, list.ForExport(), cancellationToken)
+            : await _cheques.ListPageAsync(filter, list, cancellationToken);
+
+        if (Request.WantsCsv())
+        {
+            return CsvExport.File(dir == ChequeDirection.In ? "cheques-receivable" : "cheques-payable", result.Items,
+                (_l["Cheque no."].Value, x => x.Number),
+                (_l["Bank"].Value, x => x.Bank),
+                (_l["Due date"].Value, x => x.DueDate),
+                (_l["Amount"].Value, x => x.Amount),
+                (_l["Status"].Value, x => x.Status.ToString()),
+                (_l["Customer"].Value, x => x.CustomerName),
+                (_l["Supplier"].Value, x => x.SupplierName),
+                (_l["Invoice"].Value, x => x.SalesInvoiceNumber ?? x.PurchaseInvoiceNumber));
+        }
 
         return View(new ChequeIndexViewModel
         {
@@ -74,6 +93,7 @@ public class ChequesController : Controller
             OverdueOnly = overdueOnly,
             Search = search,
             Result = result,
+            Page = (IPagedResult?)result.Page ?? new PagedResult<ChequeListItemDto>(),
             CanManage = User.HasPermission(AppPermissions.ChequesManage),
             CanChangeStatus = User.HasPermission(AppPermissions.ChequesChangeStatus),
             Print = print
@@ -185,7 +205,7 @@ public class ChequesController : Controller
             .ToList();
         var suppliers = await _suppliers.GetListAsync(new SupplierListFilterDto { IsActive = true }, cancellationToken);
         model.SupplierOptions = suppliers
-            .Select(x => new SelectOptionViewModel { Id = x.Id, Name = x.NameEn })
+            .Select(x => new SelectOptionViewModel { Id = x.Id, Name = Ui.Name(x.NameEn, x.NameAr) })
             .ToList();
     }
 }

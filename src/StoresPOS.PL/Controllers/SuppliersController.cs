@@ -4,6 +4,7 @@ using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.PL.Extensions;
 using StoresPOS.PL.ViewModels;
 
 namespace StoresPOS.PL.Controllers;
@@ -21,18 +22,36 @@ public class SuppliersController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? search, bool includeInactive = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(string? search, bool includeInactive = false, [FromQuery] ListQuery? query = null, CancellationToken cancellationToken = default)
     {
-        var list = await _supplierService.GetListAsync(
+        query ??= new ListQuery();
+        search = query.Term ?? search;
+        var page = await _supplierService.GetPageAsync(
             new SupplierListFilterDto
             {
                 Search = search,
                 IsActive = includeInactive ? null : true
             },
+            query.ForRequest(Request),
             cancellationToken);
+        var list = page.Items;
+
+        if (Request.WantsCsv())
+        {
+            var l = this.Localizer();
+            return CsvExport.File("suppliers", list,
+                (l["English name"].Value, x => x.NameEn),
+                (l["Arabic name"].Value, x => x.NameAr),
+                (l["Phone"].Value, x => x.Phone),
+                (l["Email"].Value, x => x.Email),
+                (l["Confirmed purchases"].Value, x => x.ConfirmedPurchaseCount),
+                (l["Total purchases"].Value, x => x.TotalPurchasesAmount),
+                (l["Active"].Value, x => x.IsActive));
+        }
 
         return View(new SupplierIndexViewModel
         {
+            Page = page,
             Search = search,
             IncludeInactive = includeInactive,
             Suppliers = list.Select(x => new SupplierListItemViewModel
@@ -86,7 +105,7 @@ public class SuppliersController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             return View(model);
         }
     }
@@ -135,7 +154,7 @@ public class SuppliersController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             return View(model);
         }
     }
@@ -151,7 +170,7 @@ public class SuppliersController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index));

@@ -1,13 +1,13 @@
 @model ProductFormViewModel
 @{
-    ViewData["Section"] = "Products and categories";
-    ViewData["Title"] = "Add product";
-    ViewData["Subtitle"] = "Edit sell price or markup % — the other updates automatically";
+    ViewData["Section"] = L["Products and categories"].Value;
+    ViewData["Title"] = L["Add product"].Value;
+    ViewData["Subtitle"] = L["Edit sell price or markup % — the other updates automatically"].Value;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-secondary" asp-action="Index">Cancel</a>
-    <button type="submit" form="product-form" class="btn sp-btn-primary">Save product</button>
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Cancel"]</a>
+    <button type="submit" form="product-form" class="btn sp-btn-primary">@L["Save product"]</button>
 }
 
 <partial name="_PageHeader" />

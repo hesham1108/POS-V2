@@ -9,6 +9,8 @@ using StoresPOS.DAL.Entities;
 using StoresPOS.PL;
 using StoresPOS.PL.ViewModels;
 
+using StoresPOS.PL.Extensions;
+
 namespace StoresPOS.PL.Controllers;
 
 [Authorize(Policy = AppPermissions.PaymentMethodsManage)]
@@ -112,7 +114,7 @@ public class PaymentMethodsController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             return View(model);
         }
     }
@@ -128,7 +130,7 @@ public class PaymentMethodsController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index));
@@ -145,7 +147,7 @@ public class PaymentMethodsController : Controller
         }
         catch (BusinessException ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = this.Localizer().Localize(ex);
         }
 
         return RedirectToAction(nameof(Index));

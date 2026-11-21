@@ -7,7 +7,7 @@
 <partial name="_PageHeader" />
 
 <div class="sp-card p-4" style="max-width:560px">
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" class="sp-form">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
@@ -34,7 +34,7 @@
             <input asp-for="IsDefault" class="form-check-input" />
             <label asp-for="IsDefault" class="form-check-label"></label>
         </div>
-        <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
+        <partial name="_FormActions" model="@(Url.Action("Index"))" />
     </form>
 </div>
 

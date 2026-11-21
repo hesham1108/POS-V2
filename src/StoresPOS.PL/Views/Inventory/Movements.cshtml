@@ -1,13 +1,15 @@
 @model StockMovementsIndexViewModel
+@using StoresPOS.PL.Extensions
 @{
-    ViewData["Section"] = "Products and categories";
-    ViewData["Title"] = "Stock movements";
-    ViewData["Subtitle"] = "Ledger of purchases and adjustments";
+    var listChips = ListUrl.Chips(Context.Request, ("productId", L["Product"].Value, v => Model.ProductOptions.FirstOrDefault(p => p.Id.ToString() == v)?.DisplayName), ("warehouseId", L["Warehouse"].Value, v => Model.WarehouseOptions.FirstOrDefault(w => w.Id.ToString() == v)?.NameAr ?? ""), ("movementType", L["Type"].Value, null));
+    ViewData["Section"] = L["Products and categories"].Value;
+    ViewData["Title"] = L["Stock movements"].Value;
+    ViewData["Subtitle"] = L["Ledger of purchases and adjustments"].Value;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-secondary" asp-action="Index">Balances</a>
-    <a class="btn sp-btn-primary" asp-action="Adjust">Adjust stock</a>
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Balances"]</a>
+    <a class="btn sp-btn-primary" asp-action="Adjust">@L["Adjust stock"]</a>
 }
 
 <partial name="_PageHeader" />
@@ -18,12 +20,14 @@
     <div class="alert alert-success">@success</div>
 }
 
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = null, SearchPlaceholder = "", Chips = listChips, Page = Model.Page, ShowSearch = false }' />
+
 <div class="sp-card p-3 mb-4">
     <form method="get" class="sp-filter-row">
         <div class="sp-filter-row__field">
-            <label class="form-label" for="productId">Product</label>
+            <label class="form-label" for="productId">@L["Product"]</label>
             <select class="form-select" id="productId" name="productId">
-                <option value="">All</option>
+                <option value="">@L["All"]</option>
                 @foreach (var opt in Model.ProductOptions)
                 {
                     if (Model.ProductId == opt.Id)
@@ -38,59 +42,59 @@
             </select>
         </div>
         <div class="sp-filter-row__field">
-            <label class="form-label" for="warehouseId">Warehouse</label>
+            <label class="form-label" for="warehouseId">@L["Warehouse"]</label>
             <select class="form-select" id="warehouseId" name="warehouseId">
-                <option value="">All</option>
+                <option value="">@L["All"]</option>
                 @foreach (var w in Model.WarehouseOptions)
                 {
                     if (Model.WarehouseId == w.Id)
                     {
-                        <option value="@w.Id" selected>@w.NameEn</option>
+                        <option value="@w.Id" selected>@Ui.Name(w.NameEn, w.NameAr)</option>
                     }
                     else
                     {
-                        <option value="@w.Id">@w.NameEn</option>
+                        <option value="@w.Id">@Ui.Name(w.NameEn, w.NameAr)</option>
                     }
                 }
             </select>
         </div>
         <div class="sp-filter-row__field">
-            <label class="form-label" for="movementType">Type</label>
+            <label class="form-label" for="movementType">@L["Type"]</label>
             <select class="form-select" id="movementType" name="movementType">
-                <option value="">All</option>
+                <option value="">@L["All"]</option>
                 @foreach (StockMovementType type in Enum.GetValues<StockMovementType>())
                 {
                     if (Model.MovementType == type)
                     {
-                        <option value="@((int)type)" selected>@type</option>
+                        <option value="@((int)type)" selected>@L[type.ToString()]</option>
                     }
                     else
                     {
-                        <option value="@((int)type)">@type</option>
+                        <option value="@((int)type)">@L[type.ToString()]</option>
                     }
                 }
             </select>
         </div>
         <div class="sp-filter-row__actions">
-            <button type="submit" class="btn sp-btn-secondary">Filter</button>
+            <button type="submit" class="btn sp-btn-secondary">@L["Filter"]</button>
         </div>
     </form>
 </div>
 
 <div class="sp-card p-0 overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+    <div class="table-responsive sp-table-scroll">
+        <table class="table sp-table">
             <thead>
                 <tr>
-                    <th>When (UTC)</th>
-                    <th>Product</th>
-                    <th>Warehouse</th>
-                    <th>Type</th>
-                    <th class="col-num">Change</th>
-                    <th class="col-num">Before</th>
-                    <th class="col-num">After</th>
-                    <th>Reference</th>
-                    <th>By</th>
+                    <partial name="_SortTh" model='new SortHeader("CreatedAtUtc", L["Date"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("ProductNameEn", L["Product"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("WarehouseNameEn", L["Warehouse"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("MovementType", L["Type"].Value, Model.Page)' />
+                    <partial name="_SortTh" model='new SortHeader("QuantityChange", L["Change"].Value, Model.Page, Numeric: true)' />
+                    <th class="col-num">@L["Before"]</th>
+                    <partial name="_SortTh" model='new SortHeader("QuantityAfter", L["After"].Value, Model.Page, Numeric: true)' />
+                    <th>@L["Reference"]</th>
+                    <th>@L["By"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -98,7 +102,7 @@
             {
                 <tr>
                     <td colspan="9">
-                        <partial name="_EmptyState" model='("No movements yet", "Purchases and stock adjustments will appear here.")' />
+                        <partial name="_EmptyState" model='(L["No movements yet"].Value, L["Purchases and stock adjustments will appear here."].Value)' />
                     </td>
                 </tr>
             }
@@ -113,7 +117,7 @@
                             <div class="small text-muted">@item.Unit</div>
                         </td>
                         <td>@(item.WarehouseName ?? "—")</td>
-                        <td><span class="sp-status sp-status-neutral">@item.MovementType</span></td>
+                        <td><span class="sp-status sp-status-neutral">@L[item.MovementType.ToString()]</span></td>
                         <td class="col-num font-monospace @(item.QuantityChange < 0 ? "text-danger" : null)" style="@(item.QuantityChange >= 0 ? "color:var(--sp-primary)" : null)">
                             @(item.QuantityChange > 0 ? "+" : "")@item.QuantityChange.ToString("0.###")
                         </td>
@@ -133,4 +137,5 @@
             </tbody>
         </table>
     </div>
+        <partial name="_Pager" model="Model.Page" />
 </div>

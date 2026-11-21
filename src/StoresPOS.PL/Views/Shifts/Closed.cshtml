@@ -6,7 +6,7 @@
 }
 
 @* Journey H step "print report": the report prints automatically once, then the user finishes. *@
-<div class="shift-gate" @(Model.AutoPrint ? Html.Raw($"data-print-on-load=\"{reportUrl}\"") : null)>
+<div class="shift-gate" data-format-base="@reportUrl" @(Model.AutoPrint ? Html.Raw($"data-print-on-load=\"{reportUrl}\"") : null)>
     <div class="shift-gate__card shift-gate__card--wide">
         <div class="alert alert-success" role="status">
             @string.Format(L["Shift #{0} closed."].Value, Model.Shift.Id)
@@ -30,8 +30,9 @@
                     <button type="submit" class="btn sp-btn-primary shift-gate__primary" autofocus>@L["Finish and sign out"]</button>
                 </form>
             }
-            <button type="button" class="btn sp-btn-secondary shift-gate__secondary" data-print-url="@reportUrl">@L["Print report again"]</button>
-            <a class="btn sp-btn-secondary shift-gate__secondary" asp-controller="Receipts" asp-action="Shift" asp-route-id="@Model.Shift.Id" target="_blank">@L["Preview"]</a>
+            <partial name="_PaperFormatPicker" model="StoresPOS.BLL.Models.PrintDocumentType.Shift" />
+            <button type="button" class="btn sp-btn-secondary shift-gate__secondary" data-print-url="@reportUrl" data-format-base="@reportUrl">@L["Print report again"]</button>
+            <a class="btn sp-btn-secondary shift-gate__secondary" href="@reportUrl" data-format-base="@reportUrl" target="_blank">@L["Preview"]</a>
         </div>
     </div>
 </div>

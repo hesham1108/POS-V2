@@ -10,6 +10,11 @@ public class SalesIndexViewModel
     public DateTime? To { get; set; }
     public PaymentMethod? Method { get; set; }
     public int? ShiftId { get; set; }
-    public IReadOnlyList<SalesInvoiceListItemDto> Invoices { get; set; } = [];
-    public decimal Total => Invoices.Sum(x => x.Total);
+    public int? CashierId { get; set; }
+    public int? ProductId { get; set; }
+    public PagedResult<SalesInvoiceListItemDto> Page { get; set; } = new();
+    public IReadOnlyList<SalesInvoiceListItemDto> Invoices => Page.Items;
+
+    /// <summary>Total of every matching invoice (all pages).</summary>
+    public decimal Total => Page.Sum ?? 0m;
 }

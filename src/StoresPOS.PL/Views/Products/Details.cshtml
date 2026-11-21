@@ -1,13 +1,13 @@
 @model ProductListItemViewModel
 @{
-    ViewData["Section"] = "Products and categories";
-    ViewData["Title"] = Model.NameEn;
+    ViewData["Section"] = L["Products and categories"].Value;
+    ViewData["Title"] = Ui.Name(Model.NameEn, Model.NameAr);
     ViewData["Subtitle"] = Model.NameAr;
 }
 
 @section PageActions {
-    <a class="btn sp-btn-secondary" asp-action="Index">Back</a>
-    <a class="btn sp-btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back"]</a>
+    <a class="btn sp-btn-primary" asp-action="Edit" asp-route-id="@Model.Id">@L["Edit"]</a>
 }
 
 <partial name="_PageHeader" />
@@ -15,35 +15,35 @@
 
 <div class="sp-card p-4" style="max-width: 720px;">
     <dl class="row mb-0">
-        <dt class="col-sm-4">Barcode</dt>
+        <dt class="col-sm-4">@L["Barcode"]</dt>
         <dd class="col-sm-8 font-monospace">@(Model.Barcode ?? "—")</dd>
 
-        <dt class="col-sm-4">Unit</dt>
+        <dt class="col-sm-4">@L["Unit"]</dt>
         <dd class="col-sm-8">@Model.Unit</dd>
 
-        <dt class="col-sm-4">Category</dt>
+        <dt class="col-sm-4">@L["Category"]</dt>
         <dd class="col-sm-8">@(Model.CategoryName ?? "—")</dd>
 
-        <dt class="col-sm-4">Purchase price</dt>
+        <dt class="col-sm-4">@L["Purchase price"]</dt>
         <dd class="col-sm-8 font-monospace">@Model.PurchasePrice.ToString("N2") EGP</dd>
 
-        <dt class="col-sm-4">Retail</dt>
+        <dt class="col-sm-4">@L["Retail"]</dt>
         <dd class="col-sm-8 font-monospace">@Model.RetailPrice.ToString("N2") EGP</dd>
 
-        <dt class="col-sm-4">Wholesale</dt>
+        <dt class="col-sm-4">@L["Wholesale"]</dt>
         <dd class="col-sm-8 font-monospace">@Model.WholesalePrice.ToString("N2") EGP</dd>
 
-        <dt class="col-sm-4">Stock</dt>
+        <dt class="col-sm-4">@L["Stock"]</dt>
         <dd class="col-sm-8">
             <span class="font-monospace">@Model.StockQuantity.ToString("0.###")</span>
-            <span class="text-muted">(threshold @Model.LowStockThreshold.ToString("0.###"))</span>
+            <span class="text-muted">(@L["Threshold"] @Model.LowStockThreshold.ToString("0.###"))</span>
             @if (Model.IsLowStock)
             {
-                <span class="badge text-bg-warning ms-1">Low stock</span>
+                <span class="badge text-bg-warning ms-1">@L["Low stock"]</span>
             }
         </dd>
 
-        <dt class="col-sm-4">Status</dt>
-        <dd class="col-sm-8">@(Model.IsActive ? "Active" : "Inactive")</dd>
+        <dt class="col-sm-4">@L["Status"]</dt>
+        <dd class="col-sm-8">@(Model.IsActive ? L["Active"] : L["Inactive"])</dd>
     </dl>
 </div>
