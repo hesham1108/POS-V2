@@ -147,6 +147,10 @@
         }))
     </script>
     <script src="~/js/settings.js" asp-append-version="true"></script>
+    @if (Model.Tab == "appearance")
+    {
+        <script src="~/js/appearance.js" asp-append-version="true"></script>
+    }
     @if (Model.Tab == "templates")
     {
         <script src="~/js/templates.js" asp-append-version="true"></script>

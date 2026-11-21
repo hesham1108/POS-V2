@@ -1,0 +1,68 @@
+@* Shift gate: shown like a dialog over the till, with no sidebar, until the shift is opened or resumed. *@
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> StoreOptions
+@{
+    var store = StoreOptions.CurrentValue;
+    var isRtl = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    bool Can(string permission) => User.HasClaim(AppPermissions.ClaimType, permission);
+    var logo = store.EffectiveUiLogoPath;
+}
+<!DOCTYPE html>
+<html lang="@(isRtl ? "ar" : "en")" dir="@(isRtl ? "rtl" : "ltr")" data-theme="@(store.IsDarkTheme ? "dark" : "light")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @(isRtl ? store.NameAr : store.NameEn)</title>
+    <link rel="stylesheet" href="@Url.Content(isRtl ? "~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" : "~/lib/bootstrap/dist/css/bootstrap.min.css")" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
+    <partial name="_ThemeHead" />
+</head>
+<body class="gate-body">
+    <div class="gate-backdrop" aria-hidden="true">
+        <span></span><span></span><span></span>
+    </div>
+
+    <header class="gate-bar">
+        <span class="gate-bar__brand">
+            @if (!string.IsNullOrWhiteSpace(logo))
+            {
+                <img class="sp-brand-mark sp-brand-mark--img" src="~/@logo" alt="" />
+            }
+            else
+            {
+                <span class="sp-brand-mark" aria-hidden="true">SP</span>
+            }
+            <strong>@(isRtl ? store.NameAr : store.NameEn)</strong>
+        </span>
+        <div class="gate-bar__actions">
+            @await RenderSectionAsync("PageActions", required: false)
+            @if (Can(AppPermissions.DashboardView))
+            {
+                <a class="btn sp-btn-secondary" asp-controller="Home" asp-action="Index">@L["Dashboard"]</a>
+            }
+            <form asp-controller="Culture" asp-action="Set" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ui" value="@(isRtl ? "en" : "ar")" />
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                <button type="submit" class="btn sp-btn-secondary">@(isRtl ? "English" : "العربية")</button>
+            </form>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn sp-btn-secondary">@L["Logout"]</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="gate-main" role="main">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

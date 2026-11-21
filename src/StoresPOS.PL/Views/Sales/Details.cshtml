@@ -8,19 +8,32 @@
 
 @section PageActions {
     <a class="btn sp-btn-secondary" asp-action="Index">@L["Back to list"]</a>
-    <button type="button" class="btn sp-btn-primary" data-print-url="@Url.Action("Sale", "Receipts", new { id = Model.Id })">@L["Print 80 mm"]</button>
-    <button type="button" class="btn sp-btn-secondary" data-print-url="@Url.Action("SaleA4", "Receipts", new { id = Model.Id })">@L["Print A4"]</button>
-    <a class="btn sp-btn-secondary" asp-controller="Receipts" asp-action="Sale" asp-route-id="@Model.Id" target="_blank">@L["Preview 80 mm"]</a>
-    <a class="btn sp-btn-secondary" asp-controller="Receipts" asp-action="SaleA4" asp-route-id="@Model.Id" target="_blank">@L["Preview A4"]</a>
     @if (User.HasClaim(AppPermissions.ClaimType, AppPermissions.ReturnsCreate))
     {
         <a class="btn sp-btn-secondary" asp-controller="Returns" asp-action="Create" asp-route-saleId="@Model.Id">@L["Start return"]</a>
     }
+    <div class="dropdown">
+        <button type="button" class="btn sp-btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">@L["Print"]</button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><button type="button" class="dropdown-item" data-print-url="@Url.Action("Sale", "Receipts", new { id = Model.Id })">@L["Print 80 mm"]</button></li>
+            <li><button type="button" class="dropdown-item" data-print-url="@Url.Action("SaleA4", "Receipts", new { id = Model.Id })">@L["Print A4"]</button></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" asp-controller="Receipts" asp-action="Sale" asp-route-id="@Model.Id" target="_blank">@L["Preview 80 mm"]</a></li>
+            <li><a class="dropdown-item" asp-controller="Receipts" asp-action="SaleA4" asp-route-id="@Model.Id" target="_blank">@L["Preview A4"]</a></li>
+        </ul>
+    </div>
 }
 
 <partial name="_PageHeader" />
 
-<div class="shift-layout">
+<div class="sp-stat-strip">
+    <div class="sp-stat"><span class="sp-stat__label">@L["Total"]</span><strong class="sp-stat__value num-total">@Model.Total.ToString("N2") <small>@L["EGP"]</small></strong></div>
+    <div class="sp-stat"><span class="sp-stat__label">@L["Payment method"]</span><span class="sp-stat__value"><partial name="_PaymentChip" model="Model.PaymentMethod" /></span></div>
+    <div class="sp-stat"><span class="sp-stat__label">@L["Items"]</span><strong class="sp-stat__value num">@Model.Lines.Count</strong></div>
+    <div class="sp-stat"><span class="sp-stat__label">@L["Shift"]</span><strong class="sp-stat__value num">#@Model.ShiftId</strong></div>
+</div>
+
+<div class="shift-layout shift-layout--wide">
     <section class="sp-card p-0">
         <div class="table-responsive">
             <table class="table sp-table">
@@ -73,7 +86,6 @@
             </div>
             <div><dt>@L["Sale type"]</dt><dd>@(Model.SaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</dd></div>
             <div><dt>@L["Shift"]</dt><dd class="num">#@Model.ShiftId</dd></div>
-            <div><dt>@L["Customer"]</dt><dd>@L["Walk-in customer"]</dd></div>
             <div><dt>@L["Subtotal"]</dt><dd class="num">@Model.Subtotal.ToString("N2")</dd></div>
             <div><dt>@L["Discount"]</dt><dd class="num">@Model.DiscountAmount.ToString("N2")@(Model.DiscountBy is null ? "" : " · " + Model.DiscountBy)</dd></div>
         </dl>

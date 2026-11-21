@@ -2705,4 +2705,40 @@
   <data name="License active." xml:space="preserve">
     <value>الترخيص مفعّل.</value>
   </data>
+  <data name="Close menu" xml:space="preserve">
+    <value>إغلاق القائمة</value>
+  </data>
+  <data name="Open menu" xml:space="preserve">
+    <value>فتح القائمة</value>
+  </data>
+  <data name="Invoice or return number" xml:space="preserve">
+    <value>رقم الفاتورة أو المرتجع</value>
+  </data>
+  <data name="Find the invoice" xml:space="preserve">
+    <value>ابحث عن الفاتورة</value>
+  </data>
+  <data name="Scan the barcode on the receipt or type the invoice number, for example 14." xml:space="preserve">
+    <value>امسح الباركود على الإيصال أو اكتب رقم الفاتورة، مثلًا 14.</value>
+  </data>
+  <data name="Deactivate this category?" xml:space="preserve">
+    <value>تعطيل هذه الفئة؟</value>
+  </data>
+  <data name="Deactivate this product?" xml:space="preserve">
+    <value>تعطيل هذا الصنف؟</value>
+  </data>
+  <data name="Confirm this purchase? Stock and selling prices will update." xml:space="preserve">
+    <value>تأكيد فاتورة الشراء دي؟ المخزون وأسعار البيع هتتحدث.</value>
+  </data>
+  <data name="Names, barcode, unit and category" xml:space="preserve">
+    <value>الأسماء والباركود والوحدة والفئة</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>المظهر</value>
+  </data>
+  <data name="Main color" xml:space="preserve">
+    <value>اللون الأساسي</value>
+  </data>
+  <data name="Pick a color" xml:space="preserve">
+    <value>اختر لونًا</value>
+  </data>
 </root>

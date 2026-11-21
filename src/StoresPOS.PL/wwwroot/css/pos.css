@@ -3486,3 +3486,56 @@ html:not([dir="rtl"]) .pos-print-tiles__check { right: -8px; }
 .pos-pay-btn__method { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.1rem 0.55rem; border-radius: 999px; background: rgba(255, 255, 255, 0.18); font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
 .pos-pay-btn__method:empty { display: none; }
 .pos-pay-btn__method .pos-icon { width: 16px; height: 16px; }
+
+
+/* ---------- POS rail: cleaner, calmer (Phase 26) ---------- */
+.pos-shell { grid-template-columns: 88px minmax(0, 1fr); }
+.pos-rail {
+  gap: 0.25rem;
+  padding: 0.9rem 0.55rem;
+  background: var(--pos-surface);
+}
+.pos-rail__brand { margin-block-end: 0.75rem; padding-block-end: 0.75rem; border-block-end: 1px solid var(--pos-border); }
+.pos-rail__logo { width: 42px; height: 42px; border-radius: 11px; font-size: 1rem; }
+.pos-rail__name { font-size: 0.72rem; letter-spacing: 0.02em; color: var(--pos-muted, var(--sp-text-muted)); }
+.pos-rail__link {
+  gap: 0.25rem;
+  padding: 0.6rem 0.2rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--pos-muted, var(--sp-text-muted));
+}
+.pos-rail__link .pos-icon { width: 21px; height: 21px; }
+.pos-rail__link:hover { background: var(--pos-chip); color: var(--pos-strong); }
+.pos-rail__link.is-active { box-shadow: none; }
+.pos-menu-btn { display: none; }
+
+@media (max-width: 991.98px) {
+  .pos-shell { grid-template-columns: minmax(0, 1fr); }
+  .pos-rail {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    inset-inline-start: 0;
+    width: 96px;
+    height: 100vh;
+    height: 100dvh;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0.9rem 0.55rem;
+    border-block-end: 0;
+    border-inline-end: 1px solid var(--pos-border);
+    z-index: 1045;
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform .22s ease;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, .25);
+  }
+  html[dir="rtl"] .pos-rail { transform: translateX(105%); }
+  body.sidebar-open .pos-rail { transform: none; visibility: visible; }
+  .pos-rail__brand { margin-inline: 0; }
+  .pos-menu-btn { display: inline-flex; }
+  .pos-rail .app-sidebar__close { display: none; }
+}

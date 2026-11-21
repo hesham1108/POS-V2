@@ -12,6 +12,9 @@
         css.Append($"--sp-primary:{s.UiPrimaryColor};");
         css.Append($"--sp-success:{s.UiPrimaryColor};");
         css.Append($"--sp-focus:{s.UiPrimaryColor};");
+        css.Append($"--sp-primary-hover:color-mix(in srgb,{s.UiPrimaryColor} 85%,#000);");
+        css.Append($"--sp-primary-soft:color-mix(in srgb,{s.UiPrimaryColor} 12%,transparent);");
+        css.Append($"--sp-primary-border:color-mix(in srgb,{s.UiPrimaryColor} 40%,transparent);");
     }
     if (!string.IsNullOrWhiteSpace(s.UiSidebarColor))
     {
@@ -34,5 +37,5 @@
 }
 @if (css.Length > 0)
 {
-    <style>:root { @Html.Raw(css.ToString()) }</style>
+    <style>:root, html[data-theme] { @Html.Raw(css.ToString()) }</style>
 }

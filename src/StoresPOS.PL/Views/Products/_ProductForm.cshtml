@@ -1,12 +1,19 @@
 @model ProductFormViewModel
 
-<div class="sp-card p-4">
+<div class="sp-form-wrap">
     <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post" id="product-form" class="sp-form">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="Id" />
 
-        <h2 class="h6 sp-page-title mb-3">@L["Product details"]</h2>
+        <section class="sp-card sp-form-section">
+        <header class="sp-form-section__head">
+            <span class="sp-form-section__icon"><partial name="_PosIcon" model='"box"' /></span>
+            <div>
+                <h2 class="sp-form-section__title">@L["Product details"]</h2>
+                <p class="sp-form-section__hint">@L["Names, barcode, unit and category"]</p>
+            </div>
+        </header>
         <div class="row g-3">
             <div class="col-md-4">
                 <label asp-for="NameAr" class="form-label"></label>
@@ -42,9 +49,16 @@
             </div>
         </div>
 
-        <hr class="my-4" />
+        </section>
 
-        <h2 class="h6 sp-page-title mb-3">@L["Pricing"]</h2>
+        <section class="sp-card sp-form-section">
+        <header class="sp-form-section__head">
+            <span class="sp-form-section__icon"><partial name="_PosIcon" model='"coins"' /></span>
+            <div>
+                <h2 class="sp-form-section__title">@L["Pricing"]</h2>
+                <p class="sp-form-section__hint">@L["Edit sell price or markup % — the other updates automatically"]</p>
+            </div>
+        </header>
         <div class="row g-3 mb-3">
             <div class="col-md-4">
                 <label asp-for="PurchasePrice" class="form-label"></label>
@@ -98,6 +112,8 @@
                 (@L["changes with purchases, sales and stock adjustments"])
             </p>
         }
+
+        </section>
 
         <partial name="_FormActions" model="@(Url.Action("Index"))" />
     </form>

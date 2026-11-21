@@ -151,9 +151,11 @@
                     <label class="btn sp-btn-secondary" for="preview-a4">A4</label>
                 </div>
             </div>
-            <iframe id="receipt-preview" title="@L["Preview"]" class="sp-receipt-preview"
-                    data-url-80="@Url.Action("Sample80", "Receipts")"
-                    data-url-a4="@Url.Action("SampleA4", "Receipts")"></iframe>
+            <div class="sp-preview-stage">
+                <iframe id="receipt-preview" title="@L["Preview"]" class="sp-receipt-preview"
+                        data-url-80="@Url.Action("Sample80", "Receipts")"
+                        data-url-a4="@Url.Action("SampleA4", "Receipts")"></iframe>
+            </div>
         </div>
     </div>
 </section>

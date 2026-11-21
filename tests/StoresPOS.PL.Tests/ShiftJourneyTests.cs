@@ -149,7 +149,9 @@ public class ShiftJourneyTests : IClassFixture<ShiftJourneyTests.AppFactory>
         Assert.Contains("dir=\"rtl\"", gate.Html);
         Assert.Contains("href=\"/lib/bootstrap/dist/css/bootstrap.rtl.min.css\"", gate.Html);
         Assert.Contains("افتح وردية لبدء البيع", gate.Html);
-        Assert.Contains("الورديات", gate.Html); // sidebar
+        // The gate is a dialog over a plain backdrop: no sidebar until the shift is open.
+        Assert.DoesNotContain("app-sidebar", gate.Html);
+        Assert.Contains("gate-bar", gate.Html);
     }
 
     internal sealed record Page(string Url, string Html);

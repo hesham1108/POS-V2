@@ -10,20 +10,55 @@
             <label asp-for="Form.NameAr" class="form-label"></label>
             <input asp-for="Form.NameAr" class="form-control" dir="rtl" />
         </div>
-        <div class="col-md-4">
-            <label asp-for="Form.UiTheme" class="form-label"></label>
-            <select asp-for="Form.UiTheme" class="form-select">
-                <option value="light">@L["Light"]</option>
-                <option value="dark">@L["Dark"]</option>
-            </select>
+        <div class="col-12">
+            <label class="form-label d-block">@L["Theme"]</label>
+            @{
+                var theme = string.Equals(Model.Form.UiTheme, "dark", StringComparison.OrdinalIgnoreCase) ? "dark" : "light";
+            }
+            <div class="sp-theme-cards" role="radiogroup" aria-label="@L["Theme"]">
+                <label class="sp-theme-card sp-theme-card--light">
+                    <input type="radio" name="Form.UiTheme" value="light" checked="@(theme == "light")" data-theme-choice />
+                    <span class="sp-theme-card__preview" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span class="sp-theme-card__name">@L["Light"]</span>
+                </label>
+                <label class="sp-theme-card sp-theme-card--dark">
+                    <input type="radio" name="Form.UiTheme" value="dark" checked="@(theme == "dark")" data-theme-choice />
+                    <span class="sp-theme-card__preview" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span class="sp-theme-card__name">@L["Dark"]</span>
+                </label>
+            </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <label asp-for="Form.UiPrimaryColor" class="form-label"></label>
-            <input asp-for="Form.UiPrimaryColor" class="form-control" placeholder="#0f6751" />
+            <div class="sp-color-field" data-color-field data-fallback="#1559d6">
+                <div class="sp-swatches" role="group" aria-label="@L["Main color"]">
+                    @foreach (var c in new[] { "#1559d6", "#0f6751", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#ca8a04", "#0891b2", "#475569" })
+                    {
+                        <button type="button" class="sp-swatch" style="--c:@c" data-swatch="@c" aria-label="@L["Pick a color"]"></button>
+                    }
+                </div>
+                <div class="sp-color-input">
+                    <input type="color" class="sp-color-picker" data-color-picker aria-label="@L["Pick a color"]" />
+                    <input asp-for="Form.UiPrimaryColor" class="form-control" placeholder="#1559d6" data-color-text maxlength="7" />
+                    <button type="button" class="btn sp-btn-secondary" data-color-reset>@L["Default"]</button>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <label asp-for="Form.UiSidebarColor" class="form-label"></label>
-            <input asp-for="Form.UiSidebarColor" class="form-control" placeholder="#1a1d26" />
+            <div class="sp-color-field" data-color-field data-fallback="#ffffff" data-target="sidebar">
+                <div class="sp-swatches" role="group" aria-label="@L["Sidebar color"]">
+                    @foreach (var c in new[] { "#ffffff", "#f1f5f9", "#1a1d26", "#0f172a", "#14213d", "#0f3d2e", "#3b0764", "#450a0a", "#1f2937" })
+                    {
+                        <button type="button" class="sp-swatch" style="--c:@c" data-swatch="@c" aria-label="@L["Pick a color"]"></button>
+                    }
+                </div>
+                <div class="sp-color-input">
+                    <input type="color" class="sp-color-picker" data-color-picker aria-label="@L["Pick a color"]" />
+                    <input asp-for="Form.UiSidebarColor" class="form-control" placeholder="#1a1d26" data-color-text maxlength="7" />
+                    <button type="button" class="btn sp-btn-secondary" data-color-reset>@L["Default"]</button>
+                </div>
+            </div>
         </div>
         <div class="col-md-6">
             <label class="form-label">@L["UI logo"]</label>

@@ -73,7 +73,7 @@ public class ReturnService : IReturnService
         // A bare number ("15") is accepted as S-000015.
         if (int.TryParse(number, NumberStyles.None, CultureInfo.InvariantCulture, out var seq))
         {
-            number = SalesService.FormatInvoiceNumber(seq);
+            number = SalesService.FormatInvoiceNumber(seq, Store.InvoiceNumberPrefix);
         }
 
         return await _db.SalesInvoices
@@ -383,9 +383,17 @@ public class ReturnService : IReturnService
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var term = filter.Search.Trim();
-            query = query.Where(x =>
-                x.ReturnNumber.Contains(term)
-                || (x.OriginalSalesInvoice.InvoiceNumber != null && x.OriginalSalesInvoice.InvoiceNumber.Contains(term)));
+            // A bare number finds the return with that number or the one made from that invoice.
+            if (int.TryParse(term, NumberStyles.None, CultureInfo.InvariantCulture, out var seq))
+            {
+                query = query.Where(x => x.ReturnSequence == seq || x.OriginalSalesInvoice.InvoiceSequence == seq);
+            }
+            else
+            {
+                query = query.Where(x =>
+                    x.ReturnNumber.Contains(term)
+                    || (x.OriginalSalesInvoice.InvoiceNumber != null && x.OriginalSalesInvoice.InvoiceNumber.Contains(term)));
+            }
         }
 
         return query

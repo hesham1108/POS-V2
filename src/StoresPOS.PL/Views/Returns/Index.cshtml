@@ -26,7 +26,7 @@
 <partial name="_PageHeader" />
 <partial name="_Flash" />
 
-<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = "R-000001 / S-000001", Chips = listChips, Page = Model.Page, ShowSearch = true }' />
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = "", Chips = listChips, Page = Model.Page, ShowSearch = false }' />
 
 
 @if (printUrl is not null)
@@ -38,12 +38,15 @@
     </div>
 }
 
-<div class="sp-card p-3 mb-4">
+<div class="sp-card sp-filter-card mb-4">
     <form method="get" class="sp-filter-row">
-        @if (!string.IsNullOrEmpty(Model.Search))
-        {
-            <input type="hidden" name="q" value="@Model.Search" />
-        }
+        <div class="sp-filter-row__field sp-filter-row__field--grow">
+            <label class="form-label" for="q">@L["Invoice or return number"]</label>
+            <div class="sp-input-icon">
+                <partial name="_PosIcon" model='"search"' />
+                <input type="search" class="form-control num" id="q" name="q" value="@Model.Search" placeholder="14" inputmode="numeric" autocomplete="off" />
+            </div>
+        </div>
         <div class="sp-filter-row__field">
             <label class="form-label" for="from">@L["From"]</label>
             <input class="form-control" type="date" id="from" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />

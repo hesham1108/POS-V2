@@ -261,6 +261,22 @@
 - pos.js not touched (plan §9); the POS view now passes the two cheque messages as `data-msg-*`
 - Not done: printed documents still use the store's receipt language on purpose (Settings), not the screen language
 
+### Phase 26 — UI polish round (client feedback)
+
+- **Menu**: on narrow screens the sidebar (and the POS rail) slides in from the side with a menu button and backdrop instead of stacking on top; slim scrollbar that shows on hover (`sidebar.js`)
+- **Shift gate** is a dialog over a plain backdrop with no sidebar (`_GateLayout`): open / resume the shift, then the till. Back to Dashboard (if allowed), language and logout stay in a small bar
+- **POS rail** shows Cash-outs, Returns (if allowed) and Shifts for the cashier; the Cash-out button under Collect still opens the form directly. Rail restyled (calmer icons, smaller labels). `pos.css` touched on purpose (task asked for the POS sidebar look)
+- **Invoice search by number**: `14` or `000014` finds the invoice (by its sequence, so 14 does not also match 140); text still matches anywhere. Returns lookup accepts the bare number and now uses the configured invoice prefix. Placeholders show numbers, no `S-`
+- **Returns**: one filter card (number + dates + refund method), spaced buttons; "new return" is a centred lookup card
+- **Products**: one filter card (search merged in); add/edit form in two cards (details, pricing). Confirm texts of Products / Categories / Purchases were hard-coded English → translated
+- **Tables / fonts**: `.font-monospace` now uses the app font with tabular numbers (no typewriter font in tables); buttons in tables, filters and the top bar never touch
+- **Invoice details**: summary tiles, wider items table, Print dropdown (80 mm / A4 / previews); removed the duplicated Customer row
+- **Appearance**: theme cards (Light / Dark) with instant preview; colour palettes for the main and sidebar colours + picker + hex, with live preview (`appearance.js`); custom colour now also applies in dark theme and derives hover / soft / border shades
+- **80 mm preview in Settings was blank**: `dataset.url80` is undefined for `data-url-80` — fixed; the preview sits on a paper stage and fits the receipt height
+- **A4 documents**: accent follows the store colour, rounded striped table, totals card, amount-in-words band, paper look on screen
+- Payment methods: adding already worked (top button); POS lists new active methods
+- Tests: `UiRefreshTests` (cashier rail, number search, off-canvas menu, appearance tab); gate test updated (no sidebar). PL 73/73, BLL 134/134
+
 ### Test host isolation (found while running the tests)
 
 - Tests used this PC's `App_Data/store-settings.json` and real Windows printers → `PosJourneyTests.Scan_Pay` failed here and the printer list made runs slow. `Program.cs` accepts an optional `AppDataPath` setting; the test host uses its own temp folder and a fake printer service. PL suite: ~60 s → ~6 s, all green
@@ -284,7 +300,7 @@
 | --- | --- |
 | `dotnet build StoresPOS.sln` | Succeeded |
 | `dotnet test tests/StoresPOS.BLL.Tests` | Passed 134/134 |
-| `dotnet test tests/StoresPOS.PL.Tests` | Passed 70/70 |
+| `dotnet test tests/StoresPOS.PL.Tests` | Passed 73/73 |
 | `dotnet ef database update` | Applied through `ProductAverageCost` (dev DB, at app start) |
 
 ## Next Recommended Task

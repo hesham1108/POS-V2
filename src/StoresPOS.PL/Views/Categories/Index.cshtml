@@ -71,7 +71,7 @@
                             @if (item.IsActive)
                             {
                                 <form asp-action="Deactivate" asp-route-id="@item.Id" method="post" class="d-inline"
-                                      onsubmit="return confirm('Deactivate this category?');">
+                                      onsubmit="return confirm('@L["Deactivate this category?"]');">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-sm btn-outline-danger">@L["Deactivate"]</button>
                                 </form>

@@ -28,7 +28,7 @@
     {
         <a class="btn sp-btn-secondary" asp-action="Edit" asp-route-id="@Model.Id">@L["Edit"]</a>
         <form asp-action="Confirm" asp-route-id="@Model.Id" method="post"
-              onsubmit="return confirm('Confirm this purchase? Stock and selling prices will update.');"
+              onsubmit="return confirm('@L["Confirm this purchase? Stock and selling prices will update."]');"
               class="d-inline-flex flex-wrap align-items-center gap-2">
             @Html.AntiForgeryToken()
             <select name="receivedIntoWarehouseId" class="form-select form-select-sm" asp-items="warehouseItems" title="@L["Warehouse"]"></select>

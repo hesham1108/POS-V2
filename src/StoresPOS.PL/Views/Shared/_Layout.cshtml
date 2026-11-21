@@ -30,7 +30,8 @@
 {
     <div class="app-shell">
         @* Sidebar order matches Hesham mockups *@
-        <aside class="app-sidebar" aria-label="@L["Main navigation"]">
+        <aside class="app-sidebar" id="app-sidebar" aria-label="@L["Main navigation"]">
+            <button type="button" class="app-sidebar__close" data-sidebar-toggle aria-label="@L["Close menu"]">&times;</button>
             <a class="app-sidebar__brand" asp-controller="Home" asp-action="Index">
                 @{
                     var brandLogo = store.EffectiveUiLogoPath;
@@ -200,9 +201,13 @@
             </div>
         </aside>
 
+        <div class="app-backdrop" data-sidebar-toggle></div>
         <div class="app-main">
             <header class="app-topbar">
                 <div class="app-topbar__lead">
+                    <button type="button" class="app-menu-btn" data-sidebar-toggle aria-controls="app-sidebar" aria-label="@L["Open menu"]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                    </button>
                     @{
                         var pageTitle = ViewData["Title"] as string;
                         var showSection = !string.IsNullOrWhiteSpace(sectionLabel)
@@ -242,6 +247,7 @@ else
     <script src="~/js/toast.js" asp-append-version="true"></script>
     <script src="~/js/print-frame.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/sidebar.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

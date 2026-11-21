@@ -161,10 +161,22 @@
 
     function loadPreview() {
         if (!preview) return;
-        var base = previewFormat() === 'A4' ? preview.dataset.urlA4 : preview.dataset.url80;
+        var base = previewFormat() === 'A4' ? preview.getAttribute('data-url-a4') : preview.getAttribute('data-url-80');
         preview.classList.toggle('is-a4', previewFormat() === 'A4');
         // Setting a new src cancels the iframe's previous navigation, so only the latest preview loads.
         preview.src = base + '?' + previewQuery();
+    }
+
+    // Fit the paper to its content (80 mm is a long strip; A4 keeps a page-shaped frame).
+    if (preview) {
+        preview.addEventListener('load', function () {
+            try {
+                var doc = preview.contentDocument;
+                if (!doc || !doc.body) return;
+                if (previewFormat() === 'A4') { preview.style.height = ''; return; }
+                preview.style.height = Math.min(Math.max(doc.documentElement.scrollHeight + 8, 320), 1100) + 'px';
+            } catch (e) { /* cross-origin should not happen */ }
+        });
     }
 
     function schedulePreview(delay) {

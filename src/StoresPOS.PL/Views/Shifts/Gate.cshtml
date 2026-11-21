@@ -1,5 +1,6 @@
 @model ShiftGateViewModel
 @{
+    Layout = "_GateLayout";
     ViewData["Section"] = L["Shifts"].Value;
     ViewData["Title"] = L["Shift"].Value;
     var gate = Model.Gate;
@@ -18,9 +19,9 @@
     @if (gate.State == ShiftGateState.NoOpenShift)
     {
         @* Journey A *@
-        <div class="sp-card shift-gate__card">
+        <div class="sp-card shift-gate__card shift-gate__dialog" role="dialog" aria-modal="true" aria-labelledby="gate-title">
             <span class="sp-status sp-status-neutral">@L["No open shift"]</span>
-            <h1 class="shift-gate__title">@L["Open a shift to start selling"]</h1>
+            <h1 class="shift-gate__title" id="gate-title">@L["Open a shift to start selling"]</h1>
             <p class="shift-gate__lead">@L["There is no open shift. Enter the cash in the drawer, or leave it empty to start at 0.00."]</p>
 
             <form asp-action="Open" method="post" novalidate>

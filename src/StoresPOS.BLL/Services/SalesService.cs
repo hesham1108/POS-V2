@@ -724,7 +724,15 @@ public class SalesService : ISalesService
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var term = filter.Search.Trim();
-            query = query.Where(x => x.InvoiceNumber != null && x.InvoiceNumber.Contains(term));
+            // A bare number ("14" or "000014") is the invoice's own number; text still matches anywhere in it.
+            if (int.TryParse(term, NumberStyles.None, CultureInfo.InvariantCulture, out var seq))
+            {
+                query = query.Where(x => x.InvoiceSequence == seq);
+            }
+            else
+            {
+                query = query.Where(x => x.InvoiceNumber != null && x.InvoiceNumber.Contains(term));
+            }
         }
 
         if (filter.FromUtc.HasValue)

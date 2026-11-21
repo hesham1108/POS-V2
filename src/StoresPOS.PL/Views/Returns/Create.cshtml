@@ -24,14 +24,21 @@
 
 @if (inv is null)
 {
-    <div class="sp-card p-4" style="max-width: 32rem">
-        <form method="get" asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-            <label class="form-label" for="number">@L["Invoice number"]</label>
-            <input class="form-control form-control-lg num" id="number" name="number" value="@Model.Number"
-                   placeholder="S-000001" autocomplete="off" autofocus />
-            <button type="submit" class="btn sp-btn-primary mt-3">@L["Find invoice"]</button>
-        </form>
+    <div class="sp-lookup">
+        <div class="sp-card sp-lookup__card">
+            <span class="sp-lookup__icon" aria-hidden="true"><partial name="_PosIcon" model='"undo"' /></span>
+            <h2 class="sp-lookup__title">@L["Find the invoice"]</h2>
+            <p class="sp-lookup__lead">@L["Scan the barcode on the receipt or type the invoice number, for example 14."]</p>
+            <form method="get" asp-action="Create" class="sp-lookup__form">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <label class="visually-hidden" for="number">@L["Invoice number"]</label>
+                <div class="sp-lookup__row">
+                    <input class="form-control form-control-lg num" id="number" name="number" value="@Model.Number"
+                           placeholder="14" inputmode="numeric" autocomplete="off" autofocus />
+                    <button type="submit" class="btn sp-btn-primary btn-lg">@L["Find invoice"]</button>
+                </div>
+            </form>
+        </div>
     </div>
     return;
 }

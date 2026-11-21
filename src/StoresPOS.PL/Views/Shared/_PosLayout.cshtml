@@ -23,7 +23,9 @@
 <body class="pos-body">
     <div class="pos-shell">
         @* Narrow icon rail (right side in Arabic). Links follow the same permissions as the main sidebar. *@
-        <nav class="pos-rail" aria-label="@L["POS"]">
+        <div class="app-backdrop" data-sidebar-toggle></div>
+        <nav class="pos-rail" id="pos-rail" aria-label="@L["POS"]">
+            <button type="button" class="app-sidebar__close" data-sidebar-toggle aria-label="@L["Close menu"]">&times;</button>
             <a class="pos-rail__brand" asp-controller="Pos" asp-action="Index">
                 @{
                     var posLogo = store.EffectiveUiLogoPath;
@@ -48,6 +50,24 @@
             <a class="pos-rail__link is-active" asp-controller="Pos" asp-action="Index" aria-current="page">
                 <partial name="_PosIcon" model='"cart"' /><span>@L["POS"]</span>
             </a>
+            @if (Can(AppPermissions.ReturnsCreate) || Can(AppPermissions.ReportsView))
+            {
+                <a class="pos-rail__link" asp-controller="Returns" asp-action="Index">
+                    <partial name="_PosIcon" model='"undo"' /><span>@L["Returns"]</span>
+                </a>
+            }
+            @if (Can(AppPermissions.CashOutsCreate) || Can(AppPermissions.ReportsView))
+            {
+                <a class="pos-rail__link" asp-controller="CashOuts" asp-action="Index">
+                    <partial name="_PosIcon" model='"coins"' /><span>@L["Cash-outs"]</span>
+                </a>
+            }
+            @if (Can(AppPermissions.ShiftsOpenResume))
+            {
+                <a class="pos-rail__link" asp-controller="Shifts" asp-action="Current">
+                    <partial name="_PosIcon" model='"clock"' /><span>@L["Shifts"]</span>
+                </a>
+            }
             @if (Can(AppPermissions.CatalogManage))
             {
                 <a class="pos-rail__link" asp-controller="Products" asp-action="Index">
@@ -76,6 +96,9 @@
 
         <div class="pos-stage">
             <header class="pos-header">
+                <button type="button" class="app-menu-btn pos-menu-btn" data-sidebar-toggle aria-controls="pos-rail" aria-label="@L["Open menu"]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                </button>
                 <h1 class="pos-header__title">@L["POS"]</h1>
                 <span class="pos-shift-badge"><span class="pos-shift-badge__dot" aria-hidden="true"></span>@L["Shift open"] <span class="num">#@shiftId</span></span>
                 <span class="pos-header__sep" aria-hidden="true"></span>
@@ -160,6 +183,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/toast.js" asp-append-version="true"></script>
     <script src="~/js/print-frame.js" asp-append-version="true"></script>
+    <script src="~/js/sidebar.js" asp-append-version="true"></script>
     @if (Can(AppPermissions.CashOutsCreate))
     {
         <partial name="_CashOutModal" />
