@@ -45,8 +45,10 @@
             <dd class="col-sm-7 num" dir="ltr">@(c.Phone ?? "—")</dd>
             <dt class="col-sm-5">@L["Address"]</dt>
             <dd class="col-sm-7">@(c.Address ?? "—")</dd>
-            <dt class="col-sm-5">@L["Default sale type"]</dt>
-            <dd class="col-sm-7">@(c.DefaultSaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</dd>
+            <dt class="col-sm-5">@L["Customer type"]</dt>
+            <dd class="col-sm-7"><partial name="_CustomerTypeBadge" model="c.CustomerType" /></dd>
+            <dt class="col-sm-5">@L["Default price level"]</dt>
+            <dd class="col-sm-7">@(c.DefaultSaleType == SaleType.Wholesale ? L["Wholesale price"] : L["Retail price"])</dd>
             <dt class="col-sm-5">@L["Notes"]</dt>
             <dd class="col-sm-7">@(c.Notes ?? "—")</dd>
             <dt class="col-sm-5">@L["Status"]</dt>
@@ -66,7 +68,7 @@
         else
         {
             <div class="table-responsive">
-                <table class="table align-middle mb-0">
+                <table class="table sp-table">
                     <thead>
                         <tr>
                             <th>@L["Invoice"]</th>
@@ -125,7 +127,7 @@
     }
     else
     {
-        <table class="table align-middle mb-0">
+        <table class="table sp-table">
             <thead><tr><th>@L["Number"]</th><th>@L["Due date"]</th><th class="text-end">@L["Amount"]</th><th>@L["Status"]</th></tr></thead>
             <tbody>
             @foreach (var ch in Model.Cheques)

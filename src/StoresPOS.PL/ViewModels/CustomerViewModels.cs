@@ -25,7 +25,11 @@ public class CustomerFormViewModel
     [StringLength(1000)]
     public string? Notes { get; set; }
 
-    [Display(Name = "Default sale type")]
+    [Display(Name = "Customer type")]
+    public CustomerType CustomerType { get; set; } = CustomerType.Retail;
+
+    /// <summary>Price level used when this customer is picked in the POS (separate from the type).</summary>
+    [Display(Name = "Default price level")]
     public SaleType DefaultSaleType { get; set; } = SaleType.Retail;
 
     [Display(Name = "Active")]
@@ -35,8 +39,12 @@ public class CustomerFormViewModel
 public class CustomerIndexViewModel
 {
     public string? Search { get; set; }
+    public CustomerType? CustomerType { get; set; }
     public bool IncludeInactive { get; set; }
     public IReadOnlyList<CustomerDto> Customers { get; set; } = [];
+
+    /// <summary>Paging/sort state of the list (Phase 20).</summary>
+    public IPagedResult Page { get; set; } = new PagedResult<object>();
 }
 
 public class CustomerDetailsViewModel

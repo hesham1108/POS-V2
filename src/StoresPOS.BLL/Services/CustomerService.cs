@@ -27,6 +27,22 @@ public class CustomerService : ICustomerService
         CancellationToken cancellationToken = default)
     {
         filter ??= new CustomerListFilterDto();
+        var take = filter.Take <= 0 ? 500 : Math.Min(filter.Take, 2000);
+        return await BuildListQuery(filter).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public static readonly string[] SortColumns =
+        [nameof(CustomerDto.Name), nameof(CustomerDto.Phone), nameof(CustomerDto.CustomerType)];
+
+    public Task<PagedResult<CustomerDto>> GetPageAsync(
+        CustomerListFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default) =>
+        BuildListQuery(filter).ToPagedAsync(list, SortColumns, allowAnyPageSize: list.PageSize > 100, cancellationToken: cancellationToken);
+
+    private IQueryable<CustomerDto> BuildListQuery(CustomerListFilterDto? filter)
+    {
+        filter ??= new CustomerListFilterDto();
         var query = _db.Customers.AsNoTracking().AsQueryable();
         if (!filter.IncludeInactive)
         {
@@ -39,8 +55,12 @@ public class CustomerService : ICustomerService
             query = query.Where(x => x.Name.Contains(term) || (x.Phone != null && x.Phone.Contains(term)));
         }
 
-        var take = filter.Take <= 0 ? 500 : Math.Min(filter.Take, 2000);
-        return await Project(query.OrderBy(x => x.Name).Take(take)).ToListAsync(cancellationToken);
+        if (filter.CustomerType is { } type && Enum.IsDefined(type))
+        {
+            query = query.Where(x => x.CustomerType == type);
+        }
+
+        return Project(query.OrderBy(x => x.Name));
     }
 
     public async Task<CustomerDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
@@ -66,11 +86,47 @@ public class CustomerService : ICustomerService
                 Id = x.Id,
                 Name = x.Name,
                 Phone = x.Phone,
-                DefaultSaleType = x.DefaultSaleType
+                DefaultSaleType = x.DefaultSaleType,
+                CustomerType = x.CustomerType
             })
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<CustomerOptionPageDto> SearchPageAsync(
+        string? term,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var query = _db.Customers.AsNoTracking().Where(x => x.IsActive);
+        if (!string.IsNullOrWhiteSpace(term))
+        {
+            var t = term.Trim();
+            query = query.Where(x => x.Name.Contains(t) || (x.Phone != null && x.Phone.Contains(t)));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var pages = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize));
+        page = Math.Clamp(page, 1, pages);
+
+        var items = await query
+            .OrderBy(x => x.Name)
+            .ThenBy(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new CustomerOptionDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Phone = x.Phone,
+                DefaultSaleType = x.DefaultSaleType,
+                CustomerType = x.CustomerType
+            })
+            .ToListAsync(cancellationToken);
+
+        return new CustomerOptionPageDto { Items = items, Page = page, PageSize = pageSize, TotalCount = total };
+    }
     public async Task<CustomerDto> CreateAsync(CustomerUpsertDto dto, CancellationToken cancellationToken = default)
     {
         var phone = await ValidateAsync(dto, null, cancellationToken);
@@ -81,6 +137,7 @@ public class CustomerService : ICustomerService
             Address = NormalizeOptional(dto.Address),
             Notes = NormalizeOptional(dto.Notes),
             DefaultSaleType = Enum.IsDefined(dto.DefaultSaleType) ? dto.DefaultSaleType : SaleType.Retail,
+            CustomerType = Enum.IsDefined(dto.CustomerType) ? dto.CustomerType : CustomerType.Retail,
             IsActive = dto.IsActive,
             CreatedAtUtc = _time.GetUtcNow().UtcDateTime
         };
@@ -101,6 +158,7 @@ public class CustomerService : ICustomerService
         entity.Address = NormalizeOptional(dto.Address);
         entity.Notes = NormalizeOptional(dto.Notes);
         entity.DefaultSaleType = Enum.IsDefined(dto.DefaultSaleType) ? dto.DefaultSaleType : SaleType.Retail;
+        entity.CustomerType = Enum.IsDefined(dto.CustomerType) ? dto.CustomerType : CustomerType.Retail;
         entity.IsActive = dto.IsActive;
         entity.UpdatedAtUtc = _time.GetUtcNow().UtcDateTime;
 
@@ -127,6 +185,7 @@ public class CustomerService : ICustomerService
             Address = x.Address,
             Notes = x.Notes,
             DefaultSaleType = x.DefaultSaleType,
+            CustomerType = x.CustomerType,
             IsActive = x.IsActive,
             CreatedAtUtc = x.CreatedAtUtc,
             InvoiceCount = _db.SalesInvoices.Count(s => s.CustomerId == x.Id && s.Status == SalesInvoiceStatus.Completed),

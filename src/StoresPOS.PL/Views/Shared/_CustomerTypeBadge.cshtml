@@ -1,0 +1,11 @@
+@model CustomerType
+@* Customer classification chip: retail (green) / wholesale (blue) / company (purple). *@
+@{
+    var (css, text) = Model switch
+    {
+        CustomerType.Wholesale => ("sp-ctype sp-ctype--wholesale", L["Wholesale"].Value),
+        CustomerType.Company => ("sp-ctype sp-ctype--company", L["Company"].Value),
+        _ => ("sp-ctype sp-ctype--retail", L["Retail"].Value)
+    };
+}
+<span class="@css">@text</span>

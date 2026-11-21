@@ -5,6 +5,7 @@ using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.DAL.Entities;
 using StoresPOS.PL.Extensions;
 using StoresPOS.PL.ViewModels;
 
@@ -38,13 +39,26 @@ public class CustomersController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? search, bool includeInactive = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(string? search, CustomerType? type, bool includeInactive = false, [FromQuery] ListQuery? list = null, CancellationToken cancellationToken = default)
     {
-        var list = await _customers.GetListAsync(
-            new CustomerListFilterDto { Search = search, IncludeInactive = includeInactive },
+        list ??= new ListQuery();
+        search = list.Term ?? search;
+        var page = await _customers.GetPageAsync(
+            new CustomerListFilterDto { Search = search, CustomerType = type, IncludeInactive = includeInactive },
+            list.ForRequest(Request),
             cancellationToken);
 
-        return View(new CustomerIndexViewModel { Search = search, IncludeInactive = includeInactive, Customers = list });
+        if (Request.WantsCsv())
+        {
+            return CsvExport.File("customers", page.Items,
+                (_l["Name"].Value, x => x.Name),
+                (_l["Mobile"].Value, x => x.Phone),
+                (_l["Customer type"].Value, x => x.CustomerType.ToString()),
+                (_l["Address"].Value, x => x.Address),
+                (_l["Active"].Value, x => x.IsActive));
+        }
+
+        return View(new CustomerIndexViewModel { Search = search, CustomerType = type, IncludeInactive = includeInactive, Customers = page.Items, Page = page });
     }
 
     [HttpGet]
@@ -108,6 +122,7 @@ public class CustomersController : Controller
             Address = c.Address,
             Notes = c.Notes,
             DefaultSaleType = c.DefaultSaleType,
+            CustomerType = c.CustomerType,
             IsActive = c.IsActive
         });
     }
@@ -163,6 +178,7 @@ public class CustomersController : Controller
         Address = model.Address,
         Notes = model.Notes,
         DefaultSaleType = model.DefaultSaleType,
+        CustomerType = model.CustomerType,
         IsActive = model.IsActive
     };
 }

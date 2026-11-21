@@ -1,25 +1,45 @@
-@model IReadOnlyList<CustomerOptionDto>
-@if (Model.Count == 0)
+@model CustomerOptionPageDto
+@if (Model.Items.Count == 0)
 {
     <p class="pos-customers__empty">@L["No customers match. Add one below."]</p>
 }
 else
 {
-    <ul>
-        @foreach (var c in Model)
+    <ul class="pos-cust-grid">
+        @foreach (var c in Model.Items)
         {
+            var ws = c.DefaultSaleType == SaleType.Wholesale;
+            var initial = string.IsNullOrWhiteSpace(c.Name) ? "?" : c.Name.Trim()[..1];
             <li>
-                <button type="button" data-customer-id="@c.Id">
-                    <span>
+                <button type="button" class="pos-cust-card" data-customer-id="@c.Id">
+                    <span class="pos-cust-card__avatar" aria-hidden="true">@initial</span>
+                    <span class="pos-cust-card__body">
                         <strong>@c.Name</strong>
-                        <small class="num" dir="ltr">@(c.Phone ?? "")</small>
+                        <small><span class="num" dir="ltr">@(string.IsNullOrWhiteSpace(c.Phone) ? "—" : c.Phone)</span> · @(ws ? L["Wholesale price"] : L["Retail price"])</small>
                     </span>
-                    @if (c.DefaultSaleType == SaleType.Wholesale)
-                    {
-                        <span class="sp-status sp-status-info">@L["Wholesale"]</span>
-                    }
+                    <partial name="_CustomerTypeBadge" model="c.CustomerType" />
                 </button>
             </li>
         }
     </ul>
+}
+@if (Model.TotalCount > 0)
+{
+    var pages = Model.TotalPages;
+    var from = Math.Max(1, Math.Min(Model.Page - 2, pages - 4));
+    var to = Math.Min(pages, from + 4);
+    <nav class="pos-cust-pager" aria-label="@L["Customers"]">
+        <span class="pos-cust-pager__info">@string.Format(L["Showing {0} of {1} customers"].Value, Model.Items.Count, Model.TotalCount)</span>
+        @if (pages > 1)
+        {
+            <span class="pos-cust-pager__pages">
+                <button type="button" class="pos-pager__btn" data-customer-page="@(Model.Page - 1)" aria-label="@L["Previous"]" @(Model.Page <= 1 ? "disabled" : null)><partial name="_PosIcon" model='"chev-right"' /></button>
+                @for (var n = from; n <= to; n++)
+                {
+                    <button type="button" class="num @(n == Model.Page ? "is-active" : null)" data-customer-page="@n" @(n == Model.Page ? "aria-current=page" : null)>@n</button>
+                }
+                <button type="button" class="pos-pager__btn" data-customer-page="@(Model.Page + 1)" aria-label="@L["Next"]" @(Model.Page >= pages ? "disabled" : null)><partial name="_PosIcon" model='"chev-left"' /></button>
+            </span>
+        }
+    </nav>
 }

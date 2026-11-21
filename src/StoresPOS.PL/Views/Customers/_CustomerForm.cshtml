@@ -1,7 +1,7 @@
 @model CustomerFormViewModel
 
 <div class="sp-card p-4" style="max-width: 720px;">
-    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post">
+    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" method="post" class="sp-form">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="Id" />
@@ -22,10 +22,19 @@
                 <input asp-for="Address" class="form-control" />
             </div>
             <div class="col-md-6">
+                <label asp-for="CustomerType" class="form-label"></label>
+                <select asp-for="CustomerType" class="form-select" data-customer-type>
+                    <option value="@((int)CustomerType.Retail)">@L["Retail"]</option>
+                    <option value="@((int)CustomerType.Wholesale)">@L["Wholesale"]</option>
+                    <option value="@((int)CustomerType.Company)">@L["Company"]</option>
+                </select>
+                <div class="form-text">@L["Used to sort customers in lists and reports. It does not change prices by itself."]</div>
+            </div>
+            <div class="col-md-6">
                 <label asp-for="DefaultSaleType" class="form-label"></label>
-                <select asp-for="DefaultSaleType" class="form-select">
-                    <option value="@((int)SaleType.Retail)">@L["Retail"]</option>
-                    <option value="@((int)SaleType.Wholesale)">@L["Wholesale"]</option>
+                <select asp-for="DefaultSaleType" class="form-select" data-price-level data-touched="@(Model.Id.HasValue ? "1" : "0")">
+                    <option value="@((int)SaleType.Retail)">@L["Retail price"]</option>
+                    <option value="@((int)SaleType.Wholesale)">@L["Wholesale price"]</option>
                 </select>
                 <div class="form-text">@L["Picking this customer in the POS switches the invoice to this price list."]</div>
             </div>
@@ -41,9 +50,20 @@
             </div>
         </div>
 
-        <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
-            <a class="btn sp-btn-secondary" asp-action="@(Model.Id.HasValue ? "Details" : "Index")" asp-route-id="@Model.Id">@L["Cancel"]</a>
-        </div>
+        <partial name="_FormActions" model="@(Model.Id.HasValue ? Url.Action("Details", new { id = Model.Id }) : Url.Action("Index"))" />
     </form>
 </div>
+
+@* New customer: the price level follows the type until the user changes it by hand. *@
+<script>
+    (() => {
+        const type = document.querySelector("[data-customer-type]");
+        const level = document.querySelector("[data-price-level]");
+        if (!type || !level) return;
+        level.addEventListener("change", () => { level.dataset.touched = "1"; });
+        type.addEventListener("change", () => {
+            if (level.dataset.touched === "1") return;
+            level.value = type.value === "2" ? "2" : "1";
+        });
+    })();
+</script>

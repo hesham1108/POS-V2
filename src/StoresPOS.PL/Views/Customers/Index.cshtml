@@ -1,5 +1,7 @@
 @model CustomerIndexViewModel
+@using StoresPOS.PL.Extensions
 @{
+    var listChips = ListUrl.SearchChip(Context.Request, L["Search"].Value).Concat(ListUrl.Chips(Context.Request, ("type", L["Customer type"].Value, null), ("includeInactive", L["Include inactive"].Value, null))).ToList();
     ViewData["Section"] = L["Customers"].Value;
     ViewData["Title"] = L["Customers"].Value;
     ViewData["Subtitle"] = L["Sales without a customer go to the walk-in customer"].Value;
@@ -12,11 +14,23 @@
 <partial name="_PageHeader" />
 <partial name="_Flash" />
 
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = L["Name or mobile"].Value, Chips = listChips, Page = Model.Page, ShowSearch = true }' />
+
+
 <div class="sp-card p-3 mb-4">
     <form method="get" class="sp-filter-row">
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <input type="hidden" name="q" value="@Model.Search" />
+        }
         <div class="sp-filter-row__field">
-            <label class="form-label" for="search">@L["Search"]</label>
-            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="@L["Name or mobile"]" />
+            <label class="form-label" for="type">@L["Customer type"]</label>
+            <select class="form-select" id="type" name="type">
+                <option value="">@L["All"]</option>
+                <option value="@((int)CustomerType.Retail)" selected="@(Model.CustomerType == CustomerType.Retail)">@L["Retail"]</option>
+                <option value="@((int)CustomerType.Wholesale)" selected="@(Model.CustomerType == CustomerType.Wholesale)">@L["Wholesale"]</option>
+                <option value="@((int)CustomerType.Company)" selected="@(Model.CustomerType == CustomerType.Company)">@L["Company"]</option>
+            </select>
         </div>
         <label class="sp-filter-row__check form-check" for="includeInactive">
             <input class="form-check-input" type="checkbox" name="includeInactive" value="true" id="includeInactive"
@@ -32,7 +46,7 @@
 
 @if (Model.Customers.Count == 0)
 {
-    var empty = string.IsNullOrWhiteSpace(Model.Search)
+    var empty = string.IsNullOrWhiteSpace(Model.Search) && Model.CustomerType is null
         ? (L["No customers yet"].Value, L["Add customers here or from the POS with F4. Sales without one use the walk-in customer."].Value)
         : (L["No customers found"].Value, L["Try another name or mobile number."].Value);
     <partial name="_EmptyState" model="empty" />
@@ -40,13 +54,14 @@
 else
 {
     <div class="sp-card">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+        <div class="table-responsive sp-table-scroll">
+            <table class="table sp-table">
                 <thead>
                     <tr>
-                        <th>@L["Customer"]</th>
-                        <th>@L["Mobile"]</th>
-                        <th>@L["Default sale type"]</th>
+                        <partial name="_SortTh" model='new SortHeader("Name", L["Customer"].Value, Model.Page)' />
+                        <partial name="_SortTh" model='new SortHeader("Phone", L["Mobile"].Value, Model.Page)' />
+                        <partial name="_SortTh" model='new SortHeader("CustomerType", L["Customer type"].Value, Model.Page)' />
+                        <th>@L["Default price level"]</th>
                         <th class="text-end">@L["Invoices"]</th>
                         <th class="text-end">@L["Net purchases"]</th>
                         <th>@L["Last purchase"]</th>
@@ -60,7 +75,8 @@ else
                         <tr>
                             <td><a class="fw-semibold" asp-action="Details" asp-route-id="@c.Id">@c.Name</a></td>
                             <td class="num">@(c.Phone ?? "—")</td>
-                            <td>@(c.DefaultSaleType == SaleType.Wholesale ? L["Wholesale"] : L["Retail"])</td>
+                            <td><partial name="_CustomerTypeBadge" model="c.CustomerType" /></td>
+                            <td>@(c.DefaultSaleType == SaleType.Wholesale ? L["Wholesale price"] : L["Retail price"])</td>
                             <td class="text-end num">@c.InvoiceCount</td>
                             <td class="text-end num">@c.NetTotal.ToString("N2")</td>
                             <td class="num">@(c.LastPurchaseAtUtc?.ToLocalTime().ToString("yyyy/MM/dd") ?? "—")</td>
@@ -91,5 +107,6 @@ else
                 </tbody>
             </table>
         </div>
+        <partial name="_Pager" model="Model.Page" />
     </div>
 }
