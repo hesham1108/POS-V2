@@ -1,0 +1,14 @@
+@model ReportPageViewModel
+@* Filters for reports that only need a period (Phase 23). *@
+<div class="sp-card p-3 mb-4 report-filters">
+    <form method="get" class="sp-filter-row">
+        <partial name="_DateRange" model="Model" />
+        @foreach (var kv in Context.Request.Query.Where(q => q.Key is not ("from" or "to" or "export")))
+        {
+            <input type="hidden" name="@kv.Key" value="@kv.Value" />
+        }
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-primary">@L["Filter"]</button>
+        </div>
+    </form>
+</div>

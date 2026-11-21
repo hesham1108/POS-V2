@@ -57,6 +57,11 @@
     </form>
 </div>
 
+@if (Model.Chart is not null)
+{
+    <partial name="_ReportChart" model="Model.Chart" />
+}
+
 <div class="sp-kpis mb-4">
     <div class="sp-kpi sp-kpi--primary">
         <span class="sp-kpi__label">@L["Stock value at cost"]</span>
@@ -85,7 +90,7 @@
     }
     else
     {
-        <table class="table align-middle mb-0">
+        <table class="table sp-table">
             <thead><tr><th>@L["Type"]</th><th class="text-end">@L["Movements"]</th><th class="text-end">@L["Qty in"]</th><th class="text-end">@L["Qty out"]</th></tr></thead>
             <tbody>
                 @foreach (var m in r.Movements)
@@ -111,7 +116,7 @@ else
 {
     <section class="sp-card">
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead>
                     <tr>
                         <th>@L["Product"]</th>
@@ -155,4 +160,8 @@ else
             </table>
         </div>
     </section>
+}
+
+@section Scripts {
+    <partial name="_ReportScripts" />
 }

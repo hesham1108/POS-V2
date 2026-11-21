@@ -1,0 +1,13 @@
+@model ReportDelta
+@* Change against the previous period (Phase 23). *@
+@if (Model.Previous != 0m)
+{
+    var pct = Math.Round((Model.Current - Model.Previous) / Math.Abs(Model.Previous) * 100m, 1);
+    var up = pct >= 0;
+    var cls = pct == 0 ? "dash-delta--flat" : up == Model.UpIsGood ? "dash-delta--up" : "dash-delta--down";
+    <span class="dash-delta @cls num" title="@string.Format(L["Previous period: {0}"].Value, Model.Previous.ToString("N2"))">@(pct == 0 ? "■" : up ? "▲" : "▼") @Math.Abs(pct).ToString("0.#")%</span>
+}
+else if (Model.Current != 0m)
+{
+    <span class="dash-delta dash-delta--new">@L["New"]</span>
+}

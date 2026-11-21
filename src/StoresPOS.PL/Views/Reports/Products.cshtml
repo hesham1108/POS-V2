@@ -1,0 +1,96 @@
+@model AnalysisReportViewModel<ProductPerformanceReportDto>
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Product performance"].Value;
+    ViewData["Subtitle"] = L["Best and worst sellers in the period, and stock that is not moving"].Value;
+    var r = Model.Report;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    string SalesListUrl(int productId) => Url.Action("Index", "Sales", new { productId, from = Model.From.ToString("yyyy-MM-dd"), to = Model.To.ToString("yyyy-MM-dd") })!;
+}
+@section PageActions { <partial name="_PrintButton" /> }
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+<partial name="_DateOnlyFilters" model="Model" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Products sold"]</span><strong class="sp-kpi__value num">@r.ProductsSold</strong></div>
+    <div class="sp-kpi @(r.Dead.Count > 0 ? "sp-kpi--warn" : null)"><span class="sp-kpi__label">@string.Format(L["Not sold for {0} days"].Value, r.DeadDays)</span><strong class="sp-kpi__value num">@r.Dead.Count</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Value of slow stock (cost)"]</span><strong class="sp-kpi__value num">@r.DeadStockValue.ToString("N2")</strong></div>
+</div>
+
+@if (Model.Chart is not null) { <partial name="_ReportChart" model="Model.Chart" /> }
+
+<div class="report-grid mb-4">
+    @foreach (var (title, rows) in new[] { (L["Best sellers"].Value, r.Best), (L["Worst sellers"].Value, r.Worst) })
+    {
+        <section class="sp-card p-4">
+            <h2 class="shift-section-title">@title</h2>
+            @if (rows.Count == 0)
+            {
+                <p class="text-muted mb-0">@L["No sales in this period"]</p>
+            }
+            else
+            {
+                <table class="table sp-table sp-table--compact">
+                    <thead><tr><th>@L["Product"]</th><th class="col-num">@L["Qty"]</th><th class="col-num">@L["Sales"]</th><th class="col-num">@L["Stock"]</th></tr></thead>
+                    <tbody>
+                        @foreach (var p in rows)
+                        {
+                            <tr>
+                                <td><a class="report-drill" href="@SalesListUrl(p.ProductId)">@(isAr ? p.NameAr : p.NameEn)</a></td>
+                                <td class="col-num num">@p.Quantity.ToString("0.###") @p.Unit</td>
+                                <td class="col-num num">@p.Sales.ToString("N2")</td>
+                                <td class="col-num num">@p.Stock.ToString("0.###")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    }
+</div>
+
+<section class="sp-card">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 pb-0">
+        <h2 class="shift-section-title mb-0">@string.Format(L["Not sold for {0} days"].Value, r.DeadDays)</h2>
+        <form method="get" class="d-flex gap-2 align-items-center no-print">
+            <input type="hidden" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="to" value="@Model.To.ToString("yyyy-MM-dd")" />
+            <label class="form-label mb-0" for="days">@L["Days"]</label>
+            <select id="days" name="days" class="form-select form-select-sm" onchange="this.form.submit()">
+                @foreach (var d in new[] { 30, 60, 90, 180, 365 })
+                {
+                    <option value="@d" selected="@(d == r.DeadDays)">@d</option>
+                }
+            </select>
+        </form>
+    </div>
+    @if (r.Dead.Count == 0)
+    {
+        <p class="text-muted p-3 mb-0">@L["Every product in stock sold recently."]</p>
+    }
+    else
+    {
+        <div class="table-responsive sp-table-scroll">
+            <table class="table sp-table">
+                <thead><tr><th>@L["Product"]</th><th class="col-num">@L["Stock"]</th><th class="col-num">@L["Value at cost"]</th><th>@L["Last sold"]</th><th class="col-num">@L["Days since sale"]</th></tr></thead>
+                <tbody>
+                    @foreach (var p in r.Dead)
+                    {
+                        <tr>
+                            <td>@(isAr ? p.NameAr : p.NameEn)</td>
+                            <td class="col-num num">@p.Stock.ToString("0.###") @p.Unit</td>
+                            <td class="col-num num">@p.StockCostValue.ToString("N2")</td>
+                            <td class="num">@(p.LastSoldUtc?.ToLocalTime().ToString("yyyy/MM/dd") ?? L["Never"].Value)</td>
+                            <td class="col-num num">@(p.DaysSinceSale?.ToString() ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot><tr><th>@L["Total"]</th><th></th><th class="col-num num">@r.DeadStockValue.ToString("N2")</th><th></th><th></th></tr></tfoot>
+            </table>
+        </div>
+    }
+</section>
+
+@section Scripts { <partial name="_ReportScripts" /> }

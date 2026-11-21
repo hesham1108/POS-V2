@@ -35,6 +35,11 @@
     </form>
 </div>
 
+@if (Model.Chart is not null)
+{
+    <partial name="_ReportChart" model="Model.Chart" />
+}
+
 @if (r.InvoiceCount == 0)
 {
     var empty = (L["No purchases in this period"].Value, L["Only confirmed purchase invoices are counted."].Value);
@@ -61,7 +66,7 @@ else
     <div class="report-grid mb-4">
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By supplier"]</h2>
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead><tr><th>@L["Supplier"]</th><th class="text-end">@L["Invoices"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
                 <tbody>
                     @foreach (var s in r.BySupplier)
@@ -79,7 +84,7 @@ else
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By product"]</h2>
             <div class="table-responsive">
-                <table class="table align-middle mb-0">
+                <table class="table sp-table">
                     <thead><tr><th>@L["Product"]</th><th class="text-end">@L["Qty"]</th><th class="text-end">@L["Avg cost"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
                     <tbody>
                         @foreach (var p in r.ByProduct)
@@ -99,7 +104,7 @@ else
 
     <section class="sp-card">
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead>
                     <tr>
                         <th>@L["Invoice"]</th>
@@ -130,4 +135,8 @@ else
             </table>
         </div>
     </section>
+}
+
+@section Scripts {
+    <partial name="_ReportScripts" />
 }

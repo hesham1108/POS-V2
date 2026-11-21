@@ -62,9 +62,11 @@ public class CustomersAndReportsJourneyTests : IClassFixture<AppFactory>
         // Back office.
         var admin = _factory.CreateBrowser();
         var home = await LoginAsync(admin, "admin", "Admin@12345");
-        Assert.Contains("Stock alerts", home.Html);
+        Assert.Contains("Net sales", home.Html);
         Assert.Contains("78.00", home.Html);
-        Assert.Contains("S-000001", home.Html);           // recent activity
+        var dashDetails = await GetAsync(admin, "/Home/Details");
+        Assert.Contains("S-000001", dashDetails.Html);    // activity timeline (loaded after the page)
+        Assert.Contains("Running low", dashDetails.Html);
         Assert.Contains("href=\"/Customers\"", home.Html); // sidebar link enabled
         Assert.Contains("href=\"/Reports/Sales\"", home.Html);
 
@@ -144,8 +146,8 @@ public class CustomersAndReportsJourneyTests : IClassFixture<AppFactory>
         ar.DefaultRequestHeaders.Add("Cookie", ".AspNetCore.Culture=c%3Den-US%7Cuic%3Dar");
         var home = await LoginAsync(ar, "admin", "Admin@12345");
         Assert.Contains("dir=\"rtl\"", home.Html);
-        Assert.Contains("مبيعات اليوم", home.Html);
-        Assert.Contains("تنبيهات المخزون", home.Html);
+        Assert.Contains("صافي المبيعات", home.Html);
+        Assert.Contains("قاربت تخلص", (await GetAsync(ar, "/Home/Details")).Html);
         Assert.Contains("تقرير المبيعات", (await GetAsync(ar, "/Reports/Sales")).Html);
         Assert.Contains("سجل الورديات", (await GetAsync(ar, "/Shifts/Index")).Html);
     }

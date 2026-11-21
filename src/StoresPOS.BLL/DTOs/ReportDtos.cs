@@ -27,6 +27,14 @@ public class SalesReportFilterDto : ReportFilterBaseDto
     public PaymentMethod? PaymentMethod { get; set; }
     public SaleType? SaleType { get; set; }
 
+    /// <summary>
+    /// Customer group by the customer's CURRENT type: <see cref="WalkInGroup"/> (0) = invoices with no customer,
+    /// 1/2/3 = <see cref="DAL.Entities.CustomerType"/>. Null = all.
+    /// </summary>
+    public int? CustomerGroup { get; set; }
+
+    public const int WalkInGroup = 0;
+
     /// <summary>Includes sub-categories. Only matching lines are counted.</summary>
     public int? CategoryId { get; set; }
 }
@@ -87,6 +95,12 @@ public class SalesReportDto
     public IReadOnlyList<PaymentMethodAmountDto> ByMethod { get; set; } = [];
     public IReadOnlyList<NamedAmountDto> ByCashier { get; set; } = [];
     public IReadOnlyList<NamedAmountDto> BySaleType { get; set; } = [];
+
+    /// <summary>By the customer's current type. Id: 0 = no customer (walk-in), 1 retail, 2 wholesale, 3 company.</summary>
+    public IReadOnlyList<NamedAmountDto> ByCustomerType { get; set; } = [];
+
+    /// <summary>Named customers by net sales (walk-in invoices are left out).</summary>
+    public IReadOnlyList<NamedAmountDto> TopCustomers { get; set; } = [];
     public IReadOnlyList<DailyAmountDto> ByDay { get; set; } = [];
     public IReadOnlyList<TopProductDto> TopProducts { get; set; } = [];
 }

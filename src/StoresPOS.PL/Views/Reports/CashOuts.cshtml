@@ -34,6 +34,11 @@
     </form>
 </div>
 
+@if (Model.Chart is not null)
+{
+    <partial name="_ReportChart" model="Model.Chart" />
+}
+
 @if (r.Items.Count == 0)
 {
     var empty = (L["No cash-outs found"].Value, L["Cash taken out of the drawer appears here."].Value);
@@ -52,7 +57,7 @@ else
     <div class="report-grid mb-4">
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By user"]</h2>
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead><tr><th>@L["User"]</th><th class="text-end">@L["Count"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
                 <tbody>
                     @foreach (var u in r.ByUser)
@@ -64,7 +69,7 @@ else
         </section>
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By reason"]</h2>
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead><tr><th>@L["Reason"]</th><th class="text-end">@L["Count"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
                 <tbody>
                     @foreach (var x in r.ByReason)
@@ -78,7 +83,7 @@ else
 
     <section class="sp-card">
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead>
                     <tr>
                         <th>@L["Date"]</th>
@@ -109,4 +114,8 @@ else
             </table>
         </div>
     </section>
+}
+
+@section Scripts {
+    <partial name="_ReportScripts" />
 }

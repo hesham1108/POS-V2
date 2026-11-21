@@ -1,7 +1,30 @@
 @model ReportPageViewModel
-@* Printed only: what the report covers and when it was printed. *@
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> StoreOptions
+@* Printed only (A4): store header, what the report covers and when it was printed. *@
+@{
+    var store = StoreOptions.CurrentValue;
+    var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar" ? "ar" : "en";
+}
 <div class="report-meta">
-    <strong>@ViewData["Title"]</strong> ·
-    <span class="num">@Model.From.ToString("yyyy/MM/dd") – @Model.To.ToString("yyyy/MM/dd")</span> ·
-    @L["Printed"] <span class="num">@DateTime.Now.ToString("yyyy/MM/dd HH:mm")</span> · @User.Identity?.Name
+    <div class="report-meta__store">
+        <strong>@store.NameFor(lang)</strong>
+        @if (!string.IsNullOrWhiteSpace(store.AddressFor(lang)))
+        {
+            <span> · @store.AddressFor(lang)</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(store.Phone))
+        {
+            <span> · <bdi dir="ltr">@store.Phone</bdi></span>
+        }
+        @if (!string.IsNullOrWhiteSpace(store.TaxNumber))
+        {
+            <span> · @L["Tax no."] <bdi dir="ltr">@store.TaxNumber</bdi></span>
+        }
+    </div>
+    <strong>@ViewData["Title"]</strong>
+    @if (Model.HasDateRange)
+    {
+        <span> · <span class="num">@Model.From.ToString("yyyy/MM/dd") – @Model.To.ToString("yyyy/MM/dd")</span></span>
+    }
+    · @L["Printed"] <span class="num">@DateTime.Now.ToString("yyyy/MM/dd HH:mm")</span> · @User.Identity?.Name
 </div>

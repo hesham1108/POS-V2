@@ -8,6 +8,9 @@
     var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
     var methods = await PaymentMethods.ListAsync(includeInactive: true);
     var maxDay = r.ByDay.Count == 0 ? 0 : r.ByDay.Max(x => x.Amount);
+    var prev = Model.Previous;
+    // Drill-down: the sales list with the same period (and filter) applied.
+    string SalesListUrl(object extra) => Url.Action("Index", "Sales", new RouteValueDictionary(extra) { ["from"] = Model.From.ToString("yyyy-MM-dd"), ["to"] = Model.To.ToString("yyyy-MM-dd") })!;
 }
 
 @section PageActions {
@@ -50,6 +53,16 @@
             </select>
         </div>
         <div class="sp-filter-row__field">
+            <label class="form-label" for="customerGroup">@L["Customer type"]</label>
+            <select class="form-select" id="customerGroup" name="customerGroup">
+                <option value="">@L["All"]</option>
+                <option value="@((int)CustomerType.Retail)" selected="@(Model.CustomerGroup == (int)CustomerType.Retail)">@L["Retail"]</option>
+                <option value="@((int)CustomerType.Wholesale)" selected="@(Model.CustomerGroup == (int)CustomerType.Wholesale)">@L["Wholesale"]</option>
+                <option value="@((int)CustomerType.Company)" selected="@(Model.CustomerGroup == (int)CustomerType.Company)">@L["Company"]</option>
+                <option value="@SalesReportFilterDto.WalkInGroup" selected="@(Model.CustomerGroup == SalesReportFilterDto.WalkInGroup)">@L["No customer (walk-in)"]</option>
+            </select>
+        </div>
+        <div class="sp-filter-row__field">
             <label class="form-label" for="categoryId">@L["Category"]</label>
             <select class="form-select" id="categoryId" name="categoryId">
                 <option value="">@L["All"]</option>
@@ -66,6 +79,11 @@
     </form>
 </div>
 
+@if (Model.Chart is not null)
+{
+    <partial name="_ReportChart" model="Model.Chart" />
+}
+
 @if (r.InvoiceCount == 0 && r.ReturnsCount == 0)
 {
     var empty = (L["No sales in this period"].Value, L["Change the dates or filters to see sales."].Value);
@@ -73,38 +91,42 @@
 }
 else
 {
+    <p class="text-muted small mb-2">@string.Format(L["Compared with {0} – {1}"].Value, Model.PreviousFrom.ToString("yyyy/MM/dd"), Model.PreviousTo.ToString("yyyy/MM/dd"))</p>
     <div class="sp-kpis mb-4">
         <div class="sp-kpi sp-kpi--primary">
-            <span class="sp-kpi__label">@L["Net sales"]</span>
+            <span class="sp-kpi__label">@L["Net sales"] <partial name="_Delta" model="new ReportDelta(r.NetSales, prev.NetSales)" /></span>
             <strong class="sp-kpi__value num">@r.NetSales.ToString("N2")</strong>
             <span class="sp-kpi__hint">@string.Format(L["{0} invoices · average {1}"].Value, r.InvoiceCount, r.AverageInvoice.ToString("N2"))</span>
         </div>
         <div class="sp-kpi">
-            <span class="sp-kpi__label">@L["Discounts"]</span>
+            <span class="sp-kpi__label">@L["Discounts"] <partial name="_Delta" model="new ReportDelta(r.Discounts, prev.Discounts, UpIsGood: false)" /></span>
             <strong class="sp-kpi__value num">@r.Discounts.ToString("N2")</strong>
             <span class="sp-kpi__hint">@string.Format(L["Before discounts {0}"].Value, r.GrossSales.ToString("N2"))</span>
         </div>
         <div class="sp-kpi @(r.ReturnsCount > 0 ? "sp-kpi--warn" : null)">
-            <span class="sp-kpi__label">@L["Returns"]</span>
+            <span class="sp-kpi__label">@L["Returns"] <partial name="_Delta" model="new ReportDelta(r.ReturnsAmount, prev.ReturnsAmount, UpIsGood: false)" /></span>
             <strong class="sp-kpi__value num">@r.ReturnsAmount.ToString("N2")</strong>
             <span class="sp-kpi__hint">@string.Format(L["{0} returns"].Value, r.ReturnsCount)</span>
         </div>
         <div class="sp-kpi">
-            <span class="sp-kpi__label">@L["After returns"]</span>
+            <span class="sp-kpi__label">@L["After returns"] <partial name="_Delta" model="new ReportDelta(r.NetAfterReturns, prev.NetAfterReturns)" /></span>
             <strong class="sp-kpi__value num">@r.NetAfterReturns.ToString("N2")</strong>
-            <span class="sp-kpi__hint">@string.Format(L["Cost {0}"].Value, r.Cost.ToString("N2"))</span>
+            <span class="sp-kpi__hint">@string.Format(L["Average invoice {0}"].Value, r.AverageInvoice.ToString("N2"))</span>
         </div>
-        <div class="sp-kpi @(r.Profit < 0 ? "sp-kpi--bad" : null)">
-            <span class="sp-kpi__label">@L["Gross profit"]</span>
-            <strong class="sp-kpi__value num" dir="ltr">@r.Profit.ToString("N2")</strong>
-            <span class="sp-kpi__hint">@(r.MarginPercent.HasValue ? string.Format(L["Margin {0}%"].Value, r.MarginPercent.Value.ToString("0.0")) : "—")</span>
-        </div>
+        @if (Model.CanSeeProfit)
+        {
+            <a class="sp-kpi @(r.Profit < 0 ? "sp-kpi--bad" : null)" asp-action="Profit" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")">
+                <span class="sp-kpi__label">@L["Gross profit"] <partial name="_Delta" model="new ReportDelta(r.Profit, prev.Profit)" /></span>
+                <strong class="sp-kpi__value num" dir="ltr">@r.Profit.ToString("N2")</strong>
+                <span class="sp-kpi__hint">@(r.MarginPercent.HasValue ? string.Format(L["Margin {0}%"].Value, r.MarginPercent.Value.ToString("0.0")) : "—") · @string.Format(L["Cost {0}"].Value, r.Cost.ToString("N2"))</span>
+            </a>
+        }
     </div>
 
     <div class="report-grid mb-4">
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By payment method"]</h2>
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead><tr><th>@L["Method"]</th><th class="text-end">@L["Invoices"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
                 <tbody>
                     @foreach (var m in r.ByMethod)
@@ -121,13 +143,13 @@ else
 
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By cashier"]</h2>
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead><tr><th>@L["Cashier"]</th><th class="text-end">@L["Invoices"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
                 <tbody>
                     @foreach (var c in r.ByCashier)
                     {
                         <tr>
-                            <td>@c.Name</td>
+                            <td><a class="report-drill" href="@SalesListUrl(new { cashierId = c.Id })">@c.Name</a></td>
                             <td class="text-end num">@c.Count</td>
                             <td class="text-end num">@c.Amount.ToString("N2")</td>
                         </tr>
@@ -137,7 +159,7 @@ else
             @if (r.BySaleType.Count > 1)
             {
                 <h3 class="h6 mt-4">@L["By sale type"]</h3>
-                <table class="table align-middle mb-0">
+                <table class="table sp-table">
                     <tbody>
                         @foreach (var s in r.BySaleType)
                         {
@@ -153,6 +175,60 @@ else
         </section>
     </div>
 
+    <div class="report-grid mb-4">
+        <section class="sp-card p-4">
+            <h2 class="shift-section-title">@L["By customer type"]</h2>
+            <p class="text-muted small mb-2">@L["Grouped by each customer's current type."]</p>
+            <table class="table sp-table">
+                <thead><tr><th>@L["Customer type"]</th><th class="text-end">@L["Invoices"]</th><th class="text-end">@L["Amount"]</th><th class="text-end">%</th></tr></thead>
+                <tbody>
+                    @foreach (var g in r.ByCustomerType)
+                    {
+                        var share = r.NetSales == 0 ? 0m : g.Amount * 100m / r.NetSales;
+                        <tr>
+                            <td>
+                                @if (g.Id == SalesReportFilterDto.WalkInGroup)
+                                {
+                                    <span class="sp-ctype">@L["No customer (walk-in)"]</span>
+                                }
+                                else
+                                {
+                                    <partial name="_CustomerTypeBadge" model="(CustomerType)g.Id!.Value" />
+                                }
+                            </td>
+                            <td class="text-end num">@g.Count</td>
+                            <td class="text-end num">@g.Amount.ToString("N2")</td>
+                            <td class="text-end num">@share.ToString("0.0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <section class="sp-card p-4">
+            <h2 class="shift-section-title">@L["Top customers"]</h2>
+            @if (r.TopCustomers.Count == 0)
+            {
+                <p class="text-muted mb-0">@L["No sales to named customers in this period."]</p>
+            }
+            else
+            {
+                <table class="table sp-table">
+                    <thead><tr><th>@L["Customer"]</th><th class="text-end">@L["Invoices"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in r.TopCustomers)
+                        {
+                            <tr>
+                                <td><a asp-controller="Customers" asp-action="Details" asp-route-id="@c.Id">@c.Name</a></td>
+                                <td class="text-end num">@c.Count</td>
+                                <td class="text-end num">@c.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    </div>
     <div class="report-grid">
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["Top products"]</h2>
@@ -163,23 +239,29 @@ else
             else
             {
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
+                    <table class="table sp-table">
                         <thead>
                             <tr>
                                 <th>@L["Product"]</th>
                                 <th class="text-end">@L["Qty"]</th>
                                 <th class="text-end">@L["Amount"]</th>
-                                <th class="text-end">@L["Profit"]</th>
+                                @if (Model.CanSeeProfit)
+                                {
+                                    <th class="text-end">@L["Profit"]</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var p in r.TopProducts)
                             {
                                 <tr>
-                                    <td>@(isAr ? p.NameAr : p.NameEn)</td>
+                                    <td><a class="report-drill" href="@SalesListUrl(new { productId = p.ProductId })">@(isAr ? p.NameAr : p.NameEn)</a></td>
                                     <td class="text-end num">@p.Quantity.ToString("0.###") @p.Unit</td>
                                     <td class="text-end num">@p.Amount.ToString("N2")</td>
-                                    <td class="text-end num @(p.Profit < 0 ? "text-danger" : null)"><span dir="ltr">@p.Profit.ToString("N2")</span></td>
+                                    @if (Model.CanSeeProfit)
+                                    {
+                                        <td class="text-end num @(p.Profit < 0 ? "text-danger" : null)"><span dir="ltr">@p.Profit.ToString("N2")</span></td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -191,7 +273,7 @@ else
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By day"]</h2>
             <div class="table-responsive">
-                <table class="table align-middle mb-0">
+                <table class="table sp-table">
                     <thead><tr><th>@L["Date"]</th><th class="text-end">@L["Invoices"]</th><th class="text-end">@L["Amount"]</th><th class="no-print"></th></tr></thead>
                     <tbody>
                         @foreach (var d in r.ByDay)
@@ -212,5 +294,12 @@ else
         </section>
     </div>
 
-    <p class="text-muted small mt-3">@L["Profit uses the purchase price saved on each line when it was sold."]</p>
+    @if (Model.CanSeeProfit)
+    {
+        <p class="text-muted small mt-3">@L["Profit uses the weighted average cost saved on each line when it was sold."]</p>
+    }
+}
+
+@section Scripts {
+    <partial name="_ReportScripts" />
 }

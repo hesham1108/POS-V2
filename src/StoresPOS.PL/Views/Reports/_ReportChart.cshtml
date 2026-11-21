@@ -1,0 +1,19 @@
+@model ReportChart
+@* One report chart (Phase 23): data in JSON, drawn by wwwroot/js/reports.js with the local Chart.js. *@
+@{
+    var json = System.Text.Json.JsonSerializer.Serialize(new
+    {
+        type = Model.Type,
+        labels = Model.Labels,
+        horizontal = Model.Horizontal,
+        timeAxis = Model.TimeAxis,
+        series = Model.Series.Select(s => new { label = s.Label, values = s.Values, muted = s.Muted })
+    });
+}
+@if (Model.Labels.Count > 0)
+{
+    <section class="sp-card p-4 mb-4 report-chart">
+        <h2 class="shift-section-title">@Model.Title</h2>
+        <div class="report-chart__box report-chart__box--@Model.Type"><canvas data-report-chart="@json" role="img" aria-label="@Model.Title"></canvas></div>
+    </section>
+}

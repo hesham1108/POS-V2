@@ -1,1 +1,5 @@
+@using StoresPOS.PL.Extensions
+@* Report actions (Phase 23): Excel and CSV with the filters on screen, A4 print. *@
+<a class="btn sp-btn-secondary" href="@ListUrl.With(Context.Request, ("export", "xlsx"))" download>@L["Excel"]</a>
+<a class="btn sp-btn-secondary" href="@ListUrl.With(Context.Request, ("export", "csv"))" download>@L["CSV"]</a>
 <button type="button" class="btn sp-btn-secondary" onclick="window.print()">@L["Print"]</button>

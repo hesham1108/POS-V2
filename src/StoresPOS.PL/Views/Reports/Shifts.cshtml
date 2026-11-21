@@ -40,6 +40,11 @@
     </form>
 </div>
 
+@if (Model.Chart is not null)
+{
+    <partial name="_ReportChart" model="Model.Chart" />
+}
+
 @if (r.ShiftCount == 0)
 {
     var empty = (L["No shifts in this period"].Value, L["Shifts are listed by the day they were opened."].Value);
@@ -74,7 +79,7 @@ else
 
     <section class="sp-card p-4" style="max-width: 720px;">
         <h2 class="shift-section-title">@L["Sales by cashier"]</h2>
-        <table class="table align-middle mb-0">
+        <table class="table sp-table">
             <thead><tr><th>@L["Cashier"]</th><th class="text-end">@L["Invoices"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
             <tbody>
                 @foreach (var c in r.ByCashier)
@@ -94,4 +99,8 @@ else
             </tfoot>
         </table>
     </section>
+}
+
+@section Scripts {
+    <partial name="_ReportScripts" />
 }

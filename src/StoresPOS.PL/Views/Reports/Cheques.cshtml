@@ -19,13 +19,13 @@
         <partial name="_DateRange" model="Model" />
         <div class="sp-filter-row__field">
             <label class="form-label">@L["Direction"]</label>
-            <select class="form-select" name="direction" asp-items="Html.GetEnumSelectList<ChequeDirection>()">
+            <select class="form-select" name="direction" asp-items='Ui.EnumItems<ChequeDirection>(L, d => d == ChequeDirection.In ? "Receivable" : "Payable")'>
                 <option value="">@L["All"]</option>
             </select>
         </div>
         <div class="sp-filter-row__field">
             <label class="form-label">@L["Status"]</label>
-            <select class="form-select" name="status" asp-items="Html.GetEnumSelectList<ChequeStatus>()">
+            <select class="form-select" name="status" asp-items="Ui.EnumItems<ChequeStatus>(L)">
                 <option value="">@L["All"]</option>
             </select>
         </div>
@@ -35,6 +35,11 @@
         </div>
     </form>
 </div>
+
+@if (Model.Chart is not null)
+{
+    <partial name="_ReportChart" model="Model.Chart" />
+}
 
 @if (r.Rows.Count == 0)
 {
@@ -54,12 +59,12 @@ else
     <div class="report-grid mb-4">
         <section class="sp-card p-4">
             <h2 class="shift-section-title">@L["By status"]</h2>
-            <table class="table align-middle mb-0">
+            <table class="table sp-table">
                 <thead><tr><th>@L["Status"]</th><th class="text-end">@L["Count"]</th><th class="text-end">@L["Amount"]</th></tr></thead>
                 <tbody>
                 @foreach (var s in r.ByStatus)
                 {
-                    <tr><td>@s.Name</td><td class="text-end num">@s.Count</td><td class="text-end num">@s.Amount.ToString("N2")</td></tr>
+                    <tr><td>@L[s.Name]</td><td class="text-end num">@s.Count</td><td class="text-end num">@s.Amount.ToString("N2")</td></tr>
                 }
                 </tbody>
             </table>
@@ -67,7 +72,7 @@ else
     </div>
 
     <div class="sp-card p-0 overflow-hidden">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table sp-table">
             <thead>
                 <tr>
                     <th>@L["Number"]</th>
@@ -87,10 +92,14 @@ else
                     <td>@(row.CustomerName ?? row.SupplierName)</td>
                     <td class="num">@row.DueDate.ToString("yyyy/MM/dd")</td>
                     <td class="text-end num">@row.Amount.ToString("N2")</td>
-                    <td>@row.Status</td>
+                    <td>@L[row.Status.ToString()]</td>
                 </tr>
             }
             </tbody>
         </table>
     </div>
+}
+
+@section Scripts {
+    <partial name="_ReportScripts" />
 }

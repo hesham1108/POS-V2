@@ -10,7 +10,7 @@ namespace StoresPOS.BLL.Services;
 /// Reports load the rows of the requested range once and aggregate in memory: one store, bounded ranges,
 /// and the same code runs on SQL Server and the in-memory test provider.
 /// </summary>
-public class ReportService : IReportService
+public partial class ReportService : IReportService
 {
     private const int TopProductsCount = 10;
 
@@ -57,6 +57,19 @@ public class ReportService : IReportService
             invoices = invoices.Where(x => x.SaleType == filter.SaleType.Value);
         }
 
+        if (filter.CustomerGroup is { } group)
+        {
+            if (group == SalesReportFilterDto.WalkInGroup)
+            {
+                invoices = invoices.Where(x => x.CustomerId == null);
+            }
+            else
+            {
+                var type = (CustomerType)group;
+                invoices = invoices.Where(x => x.Customer != null && x.Customer.CustomerType == type);
+            }
+        }
+
         HashSet<int>? categoryIds = filter.CategoryId.HasValue
             ? await GetCategoryWithDescendantsAsync(filter.CategoryId.Value, cancellationToken)
             : null;
@@ -80,7 +93,10 @@ public class ReportService : IReportService
                 Method = i.SalesInvoice.PaymentMethod!.Value,
                 i.SalesInvoice.SaleType,
                 CashierId = i.SalesInvoice.CashierUserId,
-                CashierName = i.SalesInvoice.CashierUser.DisplayName
+                CashierName = i.SalesInvoice.CashierUser.DisplayName,
+                i.SalesInvoice.CustomerId,
+                CustomerName = i.SalesInvoice.Customer != null ? i.SalesInvoice.Customer.Name : null,
+                CustomerType = i.SalesInvoice.Customer != null ? (int?)i.SalesInvoice.Customer.CustomerType : null
             })
             .ToListAsync(cancellationToken);
 
@@ -105,7 +121,10 @@ public class ReportService : IReportService
             x.Method,
             x.SaleType,
             x.CashierId,
-            x.CashierName
+            x.CashierName,
+            x.CustomerId,
+            x.CustomerName,
+            CustomerGroup = x.CustomerType ?? SalesReportFilterDto.WalkInGroup
         }).ToList();
 
         // Returns made in the range against invoices that match the same filters.
@@ -134,6 +153,20 @@ public class ReportService : IReportService
         if (filter.SaleType.HasValue)
         {
             returnsQuery = returnsQuery.Where(r => r.SalesReturn.OriginalSalesInvoice.SaleType == filter.SaleType.Value);
+        }
+
+        if (filter.CustomerGroup is { } returnGroup)
+        {
+            if (returnGroup == SalesReportFilterDto.WalkInGroup)
+            {
+                returnsQuery = returnsQuery.Where(r => r.SalesReturn.OriginalSalesInvoice.CustomerId == null);
+            }
+            else
+            {
+                var type = (CustomerType)returnGroup;
+                returnsQuery = returnsQuery.Where(r => r.SalesReturn.OriginalSalesInvoice.Customer != null
+                    && r.SalesReturn.OriginalSalesInvoice.Customer.CustomerType == type);
+            }
         }
 
         var returnLines = await returnsQuery
@@ -191,6 +224,31 @@ public class ReportService : IReportService
                     Amount = g.Sum(x => x.Net)
                 })
                 .OrderBy(x => x.Id)
+                .ToList(),
+            ByCustomerType = rows
+                .GroupBy(x => x.CustomerGroup)
+                .Select(g => new NamedAmountDto
+                {
+                    Id = g.Key,
+                    Name = g.Key == SalesReportFilterDto.WalkInGroup ? "WalkIn" : ((CustomerType)g.Key).ToString(),
+                    Count = g.Select(x => x.SalesInvoiceId).Distinct().Count(),
+                    Amount = g.Sum(x => x.Net)
+                })
+                .OrderBy(x => x.Id == SalesReportFilterDto.WalkInGroup ? 99 : x.Id)
+                .ToList(),
+            TopCustomers = rows
+                .Where(x => x.CustomerId.HasValue)
+                .GroupBy(x => new { Id = x.CustomerId!.Value, x.CustomerName })
+                .Select(g => new NamedAmountDto
+                {
+                    Id = g.Key.Id,
+                    Name = g.Key.CustomerName ?? string.Empty,
+                    Count = g.Select(x => x.SalesInvoiceId).Distinct().Count(),
+                    Amount = g.Sum(x => x.Net)
+                })
+                .OrderByDescending(x => x.Amount)
+                .ThenBy(x => x.Name)
+                .Take(TopProductsCount)
                 .ToList(),
             ByDay = rows
                 .GroupBy(x => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(x.CompletedAtUtc, DateTimeKind.Utc), zone).Date)

@@ -1,0 +1,58 @@
+@model AnalysisReportViewModel<ProfitReportDto>
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Profit report"].Value;
+    ViewData["Subtitle"] = L["Net of discounts and returns · cost = weighted average cost at the time of sale"].Value;
+    var r = Model.Report;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+@section PageActions { <partial name="_PrintButton" /> }
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+<partial name="_DateOnlyFilters" model="Model" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Net sales"]</span><strong class="sp-kpi__value num">@r.Sales.ToString("N2")</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Cost"]</span><strong class="sp-kpi__value num">@r.Cost.ToString("N2")</strong></div>
+    <div class="sp-kpi sp-kpi--primary @(r.Profit < 0 ? "sp-kpi--bad" : null)"><span class="sp-kpi__label">@L["Gross profit"]</span><strong class="sp-kpi__value num" dir="ltr">@r.Profit.ToString("N2")</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Margin %"]</span><strong class="sp-kpi__value num">@(r.MarginPercent?.ToString("0.0") ?? "—")</strong></div>
+</div>
+
+@if (Model.Chart is not null) { <partial name="_ReportChart" model="Model.Chart" /> }
+
+<div class="report-grid">
+    @foreach (var (title, first, rows) in new[] { (L["By product"].Value, L["Product"].Value, r.ByProduct), (L["By category"].Value, L["Category"].Value, r.ByCategory) })
+    {
+        <section class="sp-card">
+            <h2 class="shift-section-title p-3 pb-0">@title</h2>
+            @if (rows.Count == 0)
+            {
+                <p class="text-muted p-3 mb-0">@L["No sales in this period"]</p>
+            }
+            else
+            {
+                <div class="table-responsive sp-table-scroll">
+                    <table class="table sp-table sp-table--compact">
+                        <thead><tr><th>@first</th><th class="col-num">@L["Net sales"]</th><th class="col-num">@L["Cost"]</th><th class="col-num">@L["Gross profit"]</th><th class="col-num">%</th></tr></thead>
+                        <tbody>
+                            @foreach (var p in rows)
+                            {
+                                <tr>
+                                    <td>@(isAr ? p.NameAr : p.NameEn)</td>
+                                    <td class="col-num num">@p.Sales.ToString("N2")</td>
+                                    <td class="col-num num">@p.Cost.ToString("N2")</td>
+                                    <td class="col-num num @(p.Profit < 0 ? "text-danger" : null)" dir="ltr">@p.Profit.ToString("N2")</td>
+                                    <td class="col-num num">@(p.MarginPercent?.ToString("0.0") ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot><tr><th>@L["Total"]</th><th class="col-num num">@r.Sales.ToString("N2")</th><th class="col-num num">@r.Cost.ToString("N2")</th><th class="col-num num" dir="ltr">@r.Profit.ToString("N2")</th><th class="col-num num">@(r.MarginPercent?.ToString("0.0") ?? "—")</th></tr></tfoot>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@section Scripts { <partial name="_ReportScripts" /> }

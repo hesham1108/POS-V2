@@ -1,0 +1,72 @@
+@model AnalysisReportViewModel<ChequeAgingReportDto>
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Cheque aging"].Value;
+    ViewData["Subtitle"] = string.Format(L["Pending cheques as of {0}"].Value, Model.Report.AsOfLocal.ToString("yyyy/MM/dd"));
+    var r = Model.Report;
+    string Age(string key) => key switch
+    {
+        "notdue" => L["Not due yet"].Value,
+        "90+" => L["Over 90 days late"].Value,
+        _ => string.Format(L["{0} days late"].Value, key)
+    };
+}
+@section PageActions { <partial name="_PrintButton" /> }
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi @(r.OverdueIn > 0 ? "sp-kpi--warn" : null)"><span class="sp-kpi__label">@L["Overdue receivable"]</span><strong class="sp-kpi__value num">@r.OverdueIn.ToString("N2")</strong></div>
+    <div class="sp-kpi @(r.OverdueOut > 0 ? "sp-kpi--warn" : null)"><span class="sp-kpi__label">@L["Overdue payable"]</span><strong class="sp-kpi__value num">@r.OverdueOut.ToString("N2")</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Pending cheques"]</span><strong class="sp-kpi__value num">@r.Rows.Count</strong></div>
+</div>
+
+@if (Model.Chart is not null) { <partial name="_ReportChart" model="Model.Chart" /> }
+
+<section class="sp-card mb-4">
+    <div class="table-responsive">
+        <table class="table sp-table">
+            <thead><tr><th>@L["Age"]</th><th class="col-num">@L["Receivable count"]</th><th class="col-num">@L["Receivable"]</th><th class="col-num">@L["Payable count"]</th><th class="col-num">@L["Payable"]</th></tr></thead>
+            <tbody>
+                @foreach (var b in r.Buckets)
+                {
+                    <tr>
+                        <td>@Age(b.Key)</td>
+                        <td class="col-num num">@b.InCount</td>
+                        <td class="col-num num">@b.InAmount.ToString("N2")</td>
+                        <td class="col-num num">@b.OutCount</td>
+                        <td class="col-num num">@b.OutAmount.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if (r.Rows.Count > 0)
+{
+    <section class="sp-card">
+        <div class="table-responsive sp-table-scroll">
+            <table class="table sp-table">
+                <thead><tr><th>@L["Number"]</th><th>@L["Direction"]</th><th>@L["Customer / supplier"]</th><th>@L["Bank"]</th><th>@L["Due date"]</th><th class="col-num">@L["Days late"]</th><th class="col-num">@L["Amount"]</th></tr></thead>
+                <tbody>
+                    @foreach (var c in r.Rows)
+                    {
+                        <tr>
+                            <td><a class="num" asp-controller="Cheques" asp-action="Details" asp-route-id="@c.Id">@c.Number</a></td>
+                            <td><span class="dash-tag @(c.Incoming ? "dash-tag--in" : "dash-tag--out")">@(c.Incoming ? L["Receivable"] : L["Payable"])</span></td>
+                            <td>@(c.PartyName ?? "—")</td>
+                            <td>@(c.Bank ?? "—")</td>
+                            <td class="num">@c.DueDate.ToString("yyyy/MM/dd")</td>
+                            <td class="col-num num @(c.DaysOverdue > 0 ? "text-danger fw-semibold" : null)">@(c.DaysOverdue > 0 ? c.DaysOverdue.ToString() : "—")</td>
+                            <td class="col-num num">@c.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@section Scripts { <partial name="_ReportScripts" /> }

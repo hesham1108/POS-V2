@@ -1,4 +1,33 @@
 @model ReportPageViewModel
+@using StoresPOS.PL.Extensions
+@inject TimeProvider Clock
+@*
+    Date range + quick presets (Phase 23). Presets keep every other filter. Dates are store-local, "to" inclusive.
+*@
+@{
+    var today = TimeZoneInfo.ConvertTime(Clock.GetUtcNow(), Clock.LocalTimeZone).Date;
+    var monthStart = new DateTime(today.Year, today.Month, 1);
+    var presets = new (string Label, DateTime From, DateTime To)[]
+    {
+        (L["Today"].Value, today, today),
+        (L["Yesterday"].Value, today.AddDays(-1), today.AddDays(-1)),
+        (L["7 days"].Value, today.AddDays(-6), today),
+        (L["This month"].Value, monthStart, today),
+        (L["Last month"].Value, monthStart.AddMonths(-1), monthStart.AddDays(-1)),
+        (L["This year"].Value, new DateTime(today.Year, 1, 1), today)
+    };
+}
+<div class="sp-filter-row__field report-presets-field">
+    <span class="form-label">@L["Period"]</span>
+    <div class="report-presets">
+        @foreach (var p in presets)
+        {
+            var on = p.From == Model.From && p.To == Model.To;
+            <a class="@(on ? "is-active" : "")" aria-current="@(on ? "true" : null)"
+               href="@ListUrl.With(Context.Request, ("from", p.From.ToString("yyyy-MM-dd")), ("to", p.To.ToString("yyyy-MM-dd")))">@p.Label</a>
+        }
+    </div>
+</div>
 <div class="sp-filter-row__field">
     <label class="form-label" for="from">@L["From"]</label>
     <input class="form-control" type="date" id="from" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />

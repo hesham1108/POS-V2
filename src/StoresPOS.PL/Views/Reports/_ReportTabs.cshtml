@@ -1,12 +1,23 @@
 @{
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
     string Css(string name) => string.Equals(action, name, StringComparison.OrdinalIgnoreCase) ? "is-active" : "";
+    var canProfit = User.HasClaim(AppPermissions.ClaimType, AppPermissions.ProfitView);
 }
 <nav class="report-tabs" aria-label="@L["Reports"]">
     <a class="@Css("Sales")" asp-action="Sales">@L["Sales"]</a>
+    @if (canProfit)
+    {
+        <a class="@Css("Profit")" asp-action="Profit">@L["Profit"]</a>
+    }
+    <a class="@Css("Hours")" asp-action="Hours">@L["Busy hours"]</a>
+    <a class="@Css("Products")" asp-action="Products">@L["Product performance"]</a>
+    <a class="@Css("Audit")" asp-action="Audit">@L["Discounts and price changes"]</a>
+    <a class="@Css("Tax")" asp-action="Tax">@L["VAT"]</a>
     <a class="@Css("Purchases")" asp-action="Purchases">@L["Purchases"]</a>
     <a class="@Css("Inventory")" asp-action="Inventory">@L["Inventory"]</a>
     <a class="@Css("Shifts")" asp-action="Shifts">@L["Shifts"]</a>
+    <a class="@Css("Drawer")" asp-action="Drawer">@L["Drawer differences"]</a>
     <a class="@Css("CashOuts")" asp-action="CashOuts">@L["Cash-outs"]</a>
     <a class="@Css("Cheques")" asp-action="Cheques">@L["Cheques"]</a>
+    <a class="@Css("ChequeAging")" asp-action="ChequeAging">@L["Cheque aging"]</a>
 </nav>

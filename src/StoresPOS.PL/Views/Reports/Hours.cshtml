@@ -1,0 +1,61 @@
+@model AnalysisReportViewModel<SalesTimeReportDto>
+@using StoresPOS.BLL.Services
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Sales by hour and day"].Value;
+    ViewData["Subtitle"] = L["When the store is busy — plan cashiers for the busy hours"].Value;
+    var r = Model.Report;
+    var heatMax = r.Heat.SelectMany(x => x).DefaultIfEmpty(0).Max();
+    var hours = Enumerable.Range(0, 24).Where(h => r.ByHour[h].Count > 0).DefaultIfEmpty(9).ToList();
+    var first = Math.Min(hours.Min(), 9);
+    var last = Math.Max(hours.Max(), 21);
+    string Day(int d) => System.Globalization.CultureInfo.CurrentUICulture.DateTimeFormat.GetDayName((DayOfWeek)d);
+    var busiest = r.ByHour.OrderByDescending(x => x.Amount).First();
+    var busiestDay = r.ByWeekday.OrderByDescending(x => x.Amount).First();
+}
+@section PageActions { <partial name="_PrintButton" /> }
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+<partial name="_DateOnlyFilters" model="Model" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Invoices"]</span><strong class="sp-kpi__value num">@r.InvoiceCount</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Total"]</span><strong class="sp-kpi__value num">@r.Total.ToString("N2")</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Busiest hour"]</span><strong class="sp-kpi__value num">@(r.Total == 0 ? "—" : busiest.Name + ":00")</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Busiest day"]</span><strong class="sp-kpi__value">@(r.Total == 0 ? "—" : Day(busiestDay.Id!.Value))</strong></div>
+</div>
+
+@if (Model.Chart is not null) { <partial name="_ReportChart" model="Model.Chart" /> }
+
+<section class="sp-card mb-4">
+    <h2 class="shift-section-title p-3 pb-0">@L["Hour by day"]</h2>
+    <div class="table-responsive">
+        <table class="table sp-table sp-table--compact report-heat">
+            <thead>
+                <tr>
+                    <th>@L["Day"]</th>
+                    @for (var h = first; h <= last; h++) { <th class="text-center">@h.ToString("00")</th> }
+                    <th class="col-num">@L["Total"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var i = 0; i < r.Heat.Length; i++)
+                {
+                    <tr>
+                        <td>@Day((int)ReportService.WeekOrder[i])</td>
+                        @for (var h = first; h <= last; h++)
+                        {
+                            var v = r.Heat[i][h];
+                            var alpha = heatMax == 0 ? 0 : Math.Round((double)(v / heatMax) * 0.85, 2);
+                            <td class="heat" style="background: rgba(21, 89, 214, @alpha.ToString(System.Globalization.CultureInfo.InvariantCulture)); color: @(alpha > 0.45 ? "#fff" : "inherit")" title="@v.ToString("N2")">@(v == 0 ? "" : v.ToString("N0"))</td>
+                        }
+                        <td class="col-num num">@r.ByWeekday[i].Amount.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@section Scripts { <partial name="_ReportScripts" /> }

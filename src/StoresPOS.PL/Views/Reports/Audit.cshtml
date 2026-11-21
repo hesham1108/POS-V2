@@ -1,0 +1,108 @@
+@model AnalysisReportViewModel<DiscountAuditReportDto>
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Discounts and price changes"].Value;
+    ViewData["Subtitle"] = L["Who gave discounts, changed prices, dropped carts or made returns"].Value;
+    var r = Model.Report;
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    string SalesListUrl(int userId) => Url.Action("Index", "Sales", new { cashierId = userId, from = Model.From.ToString("yyyy-MM-dd"), to = Model.To.ToString("yyyy-MM-dd") })!;
+}
+@section PageActions { <partial name="_PrintButton" /> }
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+<partial name="_DateOnlyFilters" model="Model" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Discounts"]</span><strong class="sp-kpi__value num">@r.DiscountTotal.ToString("N2")</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Price changes"]</span><strong class="sp-kpi__value num" dir="ltr">@r.OverrideTotal.ToString("N2")</strong><span class="sp-kpi__hint">@L["Below the catalog price"]</span></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Cancelled carts"]</span><strong class="sp-kpi__value num">@r.CancelledTotal</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Returns"]</span><strong class="sp-kpi__value num">@r.ReturnsTotal.ToString("N2")</strong></div>
+</div>
+
+@if (Model.Chart is not null) { <partial name="_ReportChart" model="Model.Chart" /> }
+
+@if (r.Users.Count == 0)
+{
+    <partial name="_EmptyState" model='(L["Nothing in this period"].Value, L["Change the dates to see activity."].Value)' />
+}
+else
+{
+    <section class="sp-card mb-4">
+        <div class="table-responsive">
+            <table class="table sp-table">
+                <thead>
+                    <tr>
+                        <th>@L["User"]</th>
+                        <th class="col-num">@L["Invoices"]</th>
+                        <th class="col-num">@L["Discounts"]</th>
+                        <th class="col-num">@L["Discount amount"]</th>
+                        <th class="col-num">@L["Price changes"]</th>
+                        <th class="col-num">@L["Price change amount"]</th>
+                        <th class="col-num">@L["Cancelled carts"]</th>
+                        <th class="col-num">@L["Returns"]</th>
+                        <th class="col-num">@L["Returns amount"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in r.Users)
+                    {
+                        <tr>
+                            <td><a class="report-drill" href="@SalesListUrl(u.UserId)">@u.Name</a></td>
+                            <td class="col-num num">@u.Invoices</td>
+                            <td class="col-num num">@u.DiscountCount</td>
+                            <td class="col-num num">@u.DiscountAmount.ToString("N2")</td>
+                            <td class="col-num num">@u.OverrideLines</td>
+                            <td class="col-num num" dir="ltr">@u.OverrideAmount.ToString("N2")</td>
+                            <td class="col-num num">@u.CancelledCount</td>
+                            <td class="col-num num">@u.ReturnsCount</td>
+                            <td class="col-num num">@u.ReturnsAmount.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>@L["Total"]</th>
+                        <th class="col-num num">@r.Users.Sum(x => x.Invoices)</th>
+                        <th class="col-num num">@r.Users.Sum(x => x.DiscountCount)</th>
+                        <th class="col-num num">@r.DiscountTotal.ToString("N2")</th>
+                        <th class="col-num num">@r.Users.Sum(x => x.OverrideLines)</th>
+                        <th class="col-num num" dir="ltr">@r.OverrideTotal.ToString("N2")</th>
+                        <th class="col-num num">@r.CancelledTotal</th>
+                        <th class="col-num num">@r.Users.Sum(x => x.ReturnsCount)</th>
+                        <th class="col-num num">@r.ReturnsTotal.ToString("N2")</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+
+    @if (r.Overrides.Count > 0)
+    {
+        <section class="sp-card">
+            <h2 class="shift-section-title p-3 pb-0">@L["Price changes"]</h2>
+            <div class="table-responsive sp-table-scroll">
+                <table class="table sp-table">
+                    <thead><tr><th>@L["Invoice"]</th><th>@L["Date"]</th><th>@L["Product"]</th><th class="col-num">@L["Qty"]</th><th class="col-num">@L["Catalog price"]</th><th class="col-num">@L["Charged price"]</th><th class="col-num">@L["Difference"]</th><th>@L["By"]</th></tr></thead>
+                    <tbody>
+                        @foreach (var o in r.Overrides)
+                        {
+                            <tr>
+                                <td><a class="num" asp-controller="Sales" asp-action="Details" asp-route-id="@o.InvoiceId">@o.InvoiceNumber</a></td>
+                                <td class="num">@o.AtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                                <td>@(isAr ? o.ProductNameAr : o.ProductNameEn)</td>
+                                <td class="col-num num">@o.Quantity.ToString("0.###")</td>
+                                <td class="col-num num">@o.CatalogPrice.ToString("N2")</td>
+                                <td class="col-num num">@o.ChargedPrice.ToString("N2")</td>
+                                <td class="col-num num" dir="ltr">@o.Difference.ToString("N2")</td>
+                                <td>@o.ByName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}
+
+@section Scripts { <partial name="_ReportScripts" /> }

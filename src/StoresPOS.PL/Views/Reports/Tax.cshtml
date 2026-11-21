@@ -1,0 +1,52 @@
+@model AnalysisReportViewModel<TaxReportDto>
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["VAT report"].Value;
+    ViewData["Subtitle"] = string.Format(L["VAT {0}% · {1}"].Value, Model.Report.VatPercent.ToString("0.##"), Model.Report.PricesIncludeVat ? L["VAT included in prices"].Value : L["VAT added on top of prices"].Value);
+    var r = Model.Report;
+}
+@section PageActions { <partial name="_PrintButton" /> }
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+<partial name="_DateOnlyFilters" model="Model" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["VAT in sales"]</span><strong class="sp-kpi__value num">@r.SalesVat.ToString("N2")</strong><span class="sp-kpi__hint">@string.Format(L["Sales {0}"].Value, r.Sales.ToString("N2"))</span></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["VAT in returns"]</span><strong class="sp-kpi__value num">@r.ReturnsVat.ToString("N2")</strong><span class="sp-kpi__hint">@string.Format(L["Returns {0}"].Value, r.Returns.ToString("N2"))</span></div>
+    <div class="sp-kpi sp-kpi--primary"><span class="sp-kpi__label">@L["Net VAT"]</span><strong class="sp-kpi__value num">@r.NetVat.ToString("N2")</strong></div>
+</div>
+
+@if (Model.Chart is not null) { <partial name="_ReportChart" model="Model.Chart" /> }
+
+@if (r.Days.Count == 0)
+{
+    <partial name="_EmptyState" model='(L["No sales in this period"].Value, L["Change the dates to see VAT."].Value)' />
+}
+else
+{
+    <section class="sp-card">
+        <div class="table-responsive sp-table-scroll">
+            <table class="table sp-table">
+                <thead><tr><th>@L["Date"]</th><th class="col-num">@L["Sales"]</th><th class="col-num">@L["VAT in sales"]</th><th class="col-num">@L["Returns"]</th><th class="col-num">@L["VAT in returns"]</th><th class="col-num">@L["Net VAT"]</th></tr></thead>
+                <tbody>
+                    @foreach (var d in r.Days)
+                    {
+                        <tr>
+                            <td class="num">@d.Date.ToString("yyyy/MM/dd")</td>
+                            <td class="col-num num">@d.Sales.ToString("N2")</td>
+                            <td class="col-num num">@d.SalesVat.ToString("N2")</td>
+                            <td class="col-num num">@d.Returns.ToString("N2")</td>
+                            <td class="col-num num">@d.ReturnsVat.ToString("N2")</td>
+                            <td class="col-num num">@d.NetVat.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot><tr><th>@L["Total"]</th><th class="col-num num">@r.Sales.ToString("N2")</th><th class="col-num num">@r.SalesVat.ToString("N2")</th><th class="col-num num">@r.Returns.ToString("N2")</th><th class="col-num num">@r.ReturnsVat.ToString("N2")</th><th class="col-num num">@r.NetVat.ToString("N2")</th></tr></tfoot>
+            </table>
+        </div>
+    </section>
+    <p class="text-muted small mt-3">@L["VAT is worked out per invoice at today's rate from Settings → Sales and tax."]</p>
+}
+
+@section Scripts { <partial name="_ReportScripts" /> }

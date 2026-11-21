@@ -62,6 +62,28 @@ public class CustomersAndReportsTests
     }
 
     [Fact]
+    public async Task Customer_SearchPage_PagesByName_AndClampsThePage()
+    {
+        await using var c = await CreateAsync();
+        for (var i = 1; i <= 14; i++)
+        {
+            await c.Customers.CreateAsync(new CustomerUpsertDto { Name = $"Client {i:00}", Phone = $"0102000{i:0000}" });
+        }
+
+        var first = await c.Customers.SearchPageAsync(null, 1, 12);
+        Assert.Equal(14, first.TotalCount);
+        Assert.Equal(2, first.TotalPages);
+        Assert.Equal(12, first.Items.Count);
+        Assert.Equal("Client 01", first.Items[0].Name);
+
+        var last = await c.Customers.SearchPageAsync("Client", 99, 12);
+        Assert.Equal(2, last.Page);
+        Assert.Equal(new[] { "Client 13", "Client 14" }, last.Items.Select(x => x.Name));
+
+        var byPhone = await c.Customers.SearchPageAsync("01020000007", 1, 12);
+        Assert.Equal("Client 07", Assert.Single(byPhone.Items).Name);
+    }
+    [Fact]
     public async Task Customer_Search_ByNameOrPhone_ActiveOnly()
     {
         await using var c = await CreateAsync();
@@ -212,6 +234,72 @@ public class CustomersAndReportsTests
         Assert.Equal(0, none.InvoiceCount);
     }
 
+    // ------------------------------------------------------------ customer type
+
+    [Fact]
+    public async Task CustomerType_IsSaved_SeparateFromPriceLevel_AndFilters()
+    {
+        await using var c = await CreateAsync();
+        var shop = await c.Customers.CreateAsync(new CustomerUpsertDto { Name = "Corner shop", CustomerType = CustomerType.Wholesale });
+        var firm = await c.Customers.CreateAsync(new CustomerUpsertDto { Name = "Nile Co", CustomerType = CustomerType.Company, DefaultSaleType = SaleType.Wholesale });
+        var mona = await c.Customers.CreateAsync(new CustomerUpsertDto { Name = "Mona" });
+
+        Assert.Equal(CustomerType.Wholesale, shop.CustomerType);
+        Assert.Equal(SaleType.Retail, shop.DefaultSaleType);          // the type does not force the price level
+        Assert.Equal(CustomerType.Company, firm.CustomerType);
+        Assert.Equal(SaleType.Wholesale, firm.DefaultSaleType);
+        Assert.Equal(CustomerType.Retail, mona.CustomerType);          // default
+
+        var companies = await c.Customers.GetListAsync(new CustomerListFilterDto { CustomerType = CustomerType.Company });
+        Assert.Equal("Nile Co", Assert.Single(companies).Name);
+        Assert.Equal(3, (await c.Customers.GetListAsync(new CustomerListFilterDto())).Count);
+
+        await c.Customers.UpdateAsync(mona.Id, new CustomerUpsertDto { Name = "Mona", CustomerType = CustomerType.Company });
+        Assert.Equal(2, (await c.Customers.GetListAsync(new CustomerListFilterDto { CustomerType = CustomerType.Company })).Count);
+
+        // Undefined values fall back to Retail; the POS picker carries the type.
+        var odd = await c.Customers.CreateAsync(new CustomerUpsertDto { Name = "Odd", CustomerType = (CustomerType)9 });
+        Assert.Equal(CustomerType.Retail, odd.CustomerType);
+        var page = await c.Customers.SearchPageAsync("Nile", 1, 12);
+        Assert.Equal(CustomerType.Company, Assert.Single(page.Items).CustomerType);
+    }
+
+    [Fact]
+    public async Task SalesReport_GroupsAndFilters_ByCustomerType()
+    {
+        await using var c = await CreateAsync();
+        var shop = await c.Customers.CreateAsync(new CustomerUpsertDto { Name = "Corner shop", CustomerType = CustomerType.Wholesale });
+        var firm = await c.Customers.CreateAsync(new CustomerUpsertDto { Name = "Nile Co", CustomerType = CustomerType.Company });
+
+        await c.Sales.AddProductAsync(c.Cashier, c.Oil, 1m);                 // 78 → wholesale-type customer (retail prices)
+        await c.Sales.SetCustomerAsync(c.Cashier, shop.Id);
+        await c.Sales.CompleteAsync(c.Cashier, new PaymentDto { Method = PaymentMethod.Cash, AmountPaid = 100m });
+
+        await c.Sales.AddProductAsync(c.Cashier, c.Tea, 1m);                 // 62 → company
+        await c.Sales.SetCustomerAsync(c.Cashier, firm.Id);
+        await c.Sales.CompleteAsync(c.Cashier, new PaymentDto { Method = PaymentMethod.Card });
+
+        await c.Sales.AddProductAsync(c.Cashier, c.Tea, 1m);                 // 62 → walk-in
+        await c.Sales.CompleteAsync(c.Cashier, new PaymentDto { Method = PaymentMethod.Card });
+
+        var r = await c.Reports.GetSalesAsync(new SalesReportFilterDto());
+        Assert.Equal(78m, r.ByCustomerType.Single(x => x.Id == (int)CustomerType.Wholesale).Amount);
+        Assert.Equal(62m, r.ByCustomerType.Single(x => x.Id == (int)CustomerType.Company).Amount);
+        Assert.Equal(62m, r.ByCustomerType.Single(x => x.Id == SalesReportFilterDto.WalkInGroup).Amount);
+        Assert.DoesNotContain(r.ByCustomerType, x => x.Id == (int)CustomerType.Retail);
+        Assert.Equal(r.NetSales, r.ByCustomerType.Sum(x => x.Amount));
+        Assert.Equal(new[] { "Corner shop", "Nile Co" }, r.TopCustomers.Select(x => x.Name));
+
+        Assert.Equal(62m, (await c.Reports.GetSalesAsync(new SalesReportFilterDto { CustomerGroup = (int)CustomerType.Company })).NetSales);
+        Assert.Equal(62m, (await c.Reports.GetSalesAsync(new SalesReportFilterDto { CustomerGroup = SalesReportFilterDto.WalkInGroup })).NetSales);
+        Assert.Equal(0, (await c.Reports.GetSalesAsync(new SalesReportFilterDto { CustomerGroup = (int)CustomerType.Retail })).InvoiceCount);
+
+        // Grouping follows the customer's CURRENT type.
+        await c.Customers.UpdateAsync(firm.Id, new CustomerUpsertDto { Name = "Nile Co", CustomerType = CustomerType.Retail });
+        var after = await c.Reports.GetSalesAsync(new SalesReportFilterDto());
+        Assert.Equal(62m, after.ByCustomerType.Single(x => x.Id == (int)CustomerType.Retail).Amount);
+    }
+
     // ------------------------------------------------------------ other reports
 
     [Fact]
@@ -340,6 +428,215 @@ public class CustomersAndReportsTests
         // Yesterday's figures are not today's.
         c.Clock.Now = c.Clock.Now.AddDays(1);
         Assert.Equal(0m, (await c.Dashboard.GetAsync()).TodaySales);
+    }
+
+    [Fact]
+    public async Task DashboardPeriods_CompareWithThePeriodBefore_AndBucketByHourOrDay()
+    {
+        await using var c = await CreateAsync();   // clock: 2026-11-19 10:00 (UTC store)
+        await c.Sales.AddProductAsync(c.Cashier, c.Oil, 1m);
+        await c.Sales.CompleteAsync(c.Cashier, new PaymentDto { Method = PaymentMethod.Cash, AmountPaid = 100m });
+        await c.Sales.AddProductAsync(c.Cashier, c.Tea, 1m);
+        await c.Sales.CompleteAsync(c.Cashier, new PaymentDto { Method = PaymentMethod.Card });
+        c.Clock.Now = c.Clock.Now.AddDays(1);      // now 2026-11-20
+
+        var today = await c.Dashboard.GetOverviewAsync(DashboardPeriod.Today);
+        Assert.Equal(0m, today.NetSales.Value);
+        Assert.Equal(140m, today.NetSales.Previous);
+        Assert.Equal(-100m, today.NetSales.ChangePercent);
+        Assert.Equal(2m, today.Invoices.Previous);
+        Assert.NotNull(today.Alerts.OldOpenShiftId);   // yesterday's shift still open
+
+        var yesterday = await c.Dashboard.GetOverviewAsync(DashboardPeriod.Yesterday);
+        Assert.Equal(140m, yesterday.NetSales.Value);
+        Assert.Null(yesterday.NetSales.ChangePercent);   // nothing the day before
+        Assert.Equal(70m, yesterday.AverageInvoice.Value);
+        Assert.Equal(140m, yesterday.NetSales.Trend.Sum());
+
+        var hourly = await c.Dashboard.GetChartsAsync(DashboardPeriod.Yesterday);
+        Assert.True(hourly.Hourly);
+        Assert.Equal(140m, hourly.Current[hourly.Labels.ToList().IndexOf("10")]);
+        Assert.Equal(2, hourly.PaymentMethods.Count);
+        Assert.Equal(78m, hourly.PaymentMethods[0].Amount);   // biggest slice first
+
+        var week = await c.Dashboard.GetChartsAsync(DashboardPeriod.Last7Days);
+        Assert.False(week.Hourly);
+        Assert.Equal(7, week.Labels.Count);
+        Assert.Equal(140m, week.Current[week.Labels.ToList().IndexOf("11/19")]);
+
+        var details = await c.Dashboard.GetDetailsAsync(DashboardPeriod.Yesterday);
+        Assert.Equal(c.Oil, details.TopProducts[0].ProductId);
+        Assert.Equal(78m, details.TopProducts[0].Sales);
+        var cashier = Assert.Single(details.Cashiers);
+        Assert.Equal(2, cashier.Invoices);
+        Assert.Equal(140m, cashier.Sales);
+        Assert.Equal(DashboardActivityKind.Sale, details.Activity[0].Kind);
+        Assert.Equal(c.Salt, Assert.Single(details.LowStock).ProductId);
+
+        var month = c.Dashboard.GetRange(DashboardPeriod.ThisMonth);
+        Assert.Equal(new DateTime(2026, 11, 1), month.FromLocal);
+        Assert.Equal(new DateTime(2026, 11, 21), month.ToLocal);
+        Assert.Equal(new DateTime(2026, 10, 1), month.PreviousFromLocal);
+        Assert.Equal(new DateTime(2026, 10, 21), month.PreviousToLocal);
+
+        var last30 = c.Dashboard.GetRange(DashboardPeriod.Last30Days);
+        Assert.Equal(30, (last30.ToLocal - last30.FromLocal).Days);
+        Assert.Equal(last30.FromLocal, last30.PreviousToLocal);
+    }
+
+    // ------------------------------------------------------------ Phase 23 reports
+
+    /// <summary>
+    /// Known data (2026-11-19, a Thursday, 10:00 UTC store):
+    /// manager sells oil 78 → price changed to 70 → 10 discount → 60 cash; cashier sells tea 62 by card;
+    /// manager refunds the tea (62) by card.
+    /// </summary>
+    private static async Task<(int OilInvoice, int TeaInvoice)> SeedPhase23Async(Ctx c)
+    {
+        var cart = await c.Sales.AddProductAsync(c.Manager, c.Oil, 1m);
+        await c.Sales.OverridePriceAsync(c.Manager, cart.Lines[0].Id, 70m);
+        await c.Sales.SetDiscountAsync(c.Manager, new DiscountDto { Amount = 10m });
+        var oil = (await c.Sales.CompleteAsync(c.Manager, new PaymentDto { Method = PaymentMethod.Cash, AmountPaid = 100m })).InvoiceId;
+        await c.Sales.AddProductAsync(c.Cashier, c.Tea, 1m);
+        var tea = (await c.Sales.CompleteAsync(c.Cashier, new PaymentDto { Method = PaymentMethod.Card })).InvoiceId;
+        await ReturnAsync(c, tea, c.Tea, 1m, PaymentMethod.Card);
+        return (oil, tea);
+    }
+
+    private static CashOutsReportFilterDto Day19 => new()
+    {
+        FromUtc = new DateTime(2026, 11, 19, 0, 0, 0, DateTimeKind.Utc),
+        ToUtc = new DateTime(2026, 11, 20, 0, 0, 0, DateTimeKind.Utc)
+    };
+
+    [Fact]
+    public async Task DiscountAudit_CountsDiscountsPriceChangesAndReturnsPerPerson()
+    {
+        await using var c = await CreateAsync();
+        await SeedPhase23Async(c);
+
+        var r = await c.Reports.GetDiscountAuditAsync(Day19);
+        var manager = r.Users.Single(x => x.UserId == c.Manager);
+        Assert.Equal(1, manager.Invoices);
+        Assert.Equal(1, manager.DiscountCount);
+        Assert.Equal(10m, manager.DiscountAmount);
+        Assert.Equal(1, manager.OverrideLines);
+        Assert.Equal(8m, manager.OverrideAmount);          // 78 catalog − 70 charged
+        Assert.Equal(1, manager.ReturnsCount);
+        Assert.Equal(62m, manager.ReturnsAmount);
+        Assert.Equal(1, r.Users.Single(x => x.UserId == c.Cashier).Invoices);
+        Assert.Equal(78m, Assert.Single(r.Overrides).CatalogPrice);
+    }
+
+    [Fact]
+    public async Task SalesByHour_PutsSalesInTheirLocalHourAndWeekday()
+    {
+        await using var c = await CreateAsync();
+        await SeedPhase23Async(c);
+
+        var r = await c.Reports.GetSalesTimeAsync(Day19);
+        Assert.Equal(2, r.ByHour[10].Count);
+        Assert.Equal(122m, r.ByHour[10].Amount);            // 60 + 62
+        Assert.Equal(122m, r.ByWeekday.Single(x => x.Id == (int)DayOfWeek.Thursday).Amount);
+        var thursday = Array.IndexOf(ReportService.WeekOrder, DayOfWeek.Thursday);
+        Assert.Equal(122m, r.Heat[thursday][10]);
+        Assert.Equal(r.Total, r.Heat.SelectMany(x => x).Sum());
+    }
+
+    [Fact]
+    public async Task Profit_IsNetOfDiscountsAndReturns_WithTheCostSavedOnTheLine()
+    {
+        await using var c = await CreateAsync();
+        await SeedPhase23Async(c);
+
+        var r = await c.Reports.GetProfitAsync(Day19);
+        Assert.Equal(60m, r.Sales);                         // 60 + 62 − 62 refunded
+        Assert.Equal(65m, r.Cost);                          // oil 65 + tea 50 − tea 50 returned
+        Assert.Equal(-5m, r.Profit);
+        var tea = r.ByProduct.Single(x => x.Id == c.Tea);
+        Assert.Equal(0m, tea.Sales);
+        Assert.Equal(0m, tea.Quantity);
+        Assert.Equal(r.Sales, r.ByCategory.Sum(x => x.Sales));
+        Assert.Equal(r.Profit, r.ByDay.Sum(x => x.Profit));
+    }
+
+    [Fact]
+    public async Task Vat_IsIncludedVatOfEachInvoiceLessReturns()
+    {
+        await using var c = await CreateAsync();
+        await SeedPhase23Async(c);
+
+        var r = await c.Reports.GetTaxAsync(Day19, 14m, pricesIncludeVat: true);
+        Assert.Equal(7.37m + 7.61m, r.SalesVat);            // 60 − 60/1.14 and 62 − 62/1.14
+        Assert.Equal(7.61m, r.ReturnsVat);
+        Assert.Equal(7.37m, r.NetVat);
+        Assert.Equal(122m * 14m / 100m - 62m * 14m / 100m, (await c.Reports.GetTaxAsync(Day19, 14m, pricesIncludeVat: false)).NetVat);
+    }
+
+    [Fact]
+    public async Task ProductPerformance_RanksSellers_AndFindsStockThatStoppedSelling()
+    {
+        await using var c = await CreateAsync();
+        await SeedPhase23Async(c);
+
+        var r = await c.Reports.GetProductPerformanceAsync(Day19, deadDays: 90);
+        Assert.Equal(2, r.ProductsSold);
+        Assert.Equal(c.Oil, r.Best[0].ProductId);           // line total 70 vs 62
+        Assert.DoesNotContain(r.Dead, x => x.ProductId == c.Oil);
+
+        c.Clock.Now = c.Clock.Now.AddDays(100);
+        var later = await c.Reports.GetProductPerformanceAsync(Day19, deadDays: 90);
+        Assert.Contains(later.Dead, x => x.ProductId == c.Oil && x.DaysSinceSale == 100);
+        Assert.Contains(later.Dead, x => x.ProductId == c.Tea);
+    }
+
+    [Fact]
+    public async Task Drawer_CountsEachShiftForEveryoneWhoWorkedIt()
+    {
+        await using var c = await CreateAsync();
+        var shift = await c.Db.Shifts.SingleAsync();
+        shift.Status = ShiftStatus.Closed;
+        shift.ClosedAtUtc = c.Clock.Now.UtcDateTime;
+        shift.ClosedByUserId = c.Manager;
+        shift.CashDifference = -20m;
+        shift.Reconciliation = ShiftReconciliation.Shortage;
+        await c.Db.SaveChangesAsync();
+
+        var r = await c.Reports.GetDrawerAsync(Day19);
+        Assert.Equal(2, r.Users.Count);
+        Assert.All(r.Users, u => { Assert.Equal(1, u.ShortageCount); Assert.Equal(-20m, u.ShortageTotal); Assert.Equal(100m, u.ShortagePercent); });
+        Assert.Equal(-20m, r.ShortageTotal);
+        Assert.Equal(2, Assert.Single(r.Shifts).Participants.Count);
+    }
+
+    [Fact]
+    public async Task ChequeAging_PutsPendingChequesInAgeBuckets()
+    {
+        await using var c = await CreateAsync();
+        var today = c.Clock.Now.UtcDateTime.Date;
+        c.Db.Cheques.AddRange(
+            new Cheque { Number = "A1", Amount = 100m, Direction = ChequeDirection.In, DueDate = today.AddDays(-40), CreatedByUserId = c.Manager },
+            new Cheque { Number = "A2", Amount = 50m, Direction = ChequeDirection.Out, DueDate = today.AddDays(5), CreatedByUserId = c.Manager },
+            new Cheque { Number = "A3", Amount = 30m, Direction = ChequeDirection.In, DueDate = today.AddDays(-200), CreatedByUserId = c.Manager },
+            new Cheque { Number = "A4", Amount = 999m, Direction = ChequeDirection.In, DueDate = today.AddDays(-10), CreatedByUserId = c.Manager, Status = ChequeStatus.Collected });
+        await c.Db.SaveChangesAsync();
+
+        var r = await c.Reports.GetChequeAgingAsync();
+        Assert.Equal(3, r.Rows.Count);                      // collected cheque left out
+        Assert.Equal(100m, r.Buckets.Single(b => b.Key == "31-60").InAmount);
+        Assert.Equal(30m, r.Buckets.Single(b => b.Key == "90+").InAmount);
+        Assert.Equal(50m, r.Buckets.Single(b => b.Key == "notdue").OutAmount);
+        Assert.Equal(130m, r.OverdueIn);
+        Assert.Equal(0m, r.OverdueOut);
+        Assert.Equal("A3", r.Rows[0].Number);              // latest first
+    }
+
+    [Fact]
+    public void WeightedAverageCost_BlendsStockOnHandWithTheNewPurchase()
+    {
+        Assert.Equal(60m, InventoryService.WeightedAverageCost(10m, 50m, 10m, 70m));
+        Assert.Equal(70m, InventoryService.WeightedAverageCost(0m, 50m, 10m, 70m));    // nothing on hand
+        Assert.Equal(53.3333m, InventoryService.WeightedAverageCost(20m, 50m, 10m, 60m));
     }
 
     // ------------------------------------------------------------ fixture

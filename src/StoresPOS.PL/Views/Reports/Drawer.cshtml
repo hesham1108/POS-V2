@@ -1,0 +1,74 @@
+@model AnalysisReportViewModel<DrawerReportDto>
+@{
+    ViewData["Section"] = L["Reports"].Value;
+    ViewData["Title"] = L["Drawer differences"].Value;
+    ViewData["Subtitle"] = L["Shortage and surplus at shift close, per person who worked the shift"].Value;
+    var r = Model.Report;
+}
+@section PageActions { <partial name="_PrintButton" /> }
+<partial name="_PageHeader" />
+<partial name="_ReportTabs" />
+<partial name="_ReportMeta" model="Model" />
+<partial name="_DateOnlyFilters" model="Model" />
+
+<div class="sp-kpis mb-4">
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Closed shifts"]</span><strong class="sp-kpi__value num">@r.Shifts.Count</strong></div>
+    <div class="sp-kpi @(r.ShortageTotal < 0 ? "sp-kpi--bad" : null)"><span class="sp-kpi__label">@L["Shortage"]</span><strong class="sp-kpi__value num" dir="ltr">@r.ShortageTotal.ToString("N2")</strong></div>
+    <div class="sp-kpi"><span class="sp-kpi__label">@L["Surplus"]</span><strong class="sp-kpi__value num">@r.SurplusTotal.ToString("N2")</strong></div>
+</div>
+
+@if (Model.Chart is not null) { <partial name="_ReportChart" model="Model.Chart" /> }
+
+@if (r.Shifts.Count == 0)
+{
+    <partial name="_EmptyState" model='(L["No closed shifts in this period"].Value, L["Change the dates to see drawer results."].Value)' />
+}
+else
+{
+    <section class="sp-card mb-4">
+        <div class="table-responsive">
+            <table class="table sp-table">
+                <thead><tr><th>@L["User"]</th><th class="col-num">@L["Shifts"]</th><th class="col-num">@L["Short"]</th><th class="col-num">@L["Shortage"]</th><th class="col-num">@L["Over"]</th><th class="col-num">@L["Surplus"]</th><th class="col-num">@L["Net"]</th><th class="col-num">@L["Short %"]</th></tr></thead>
+                <tbody>
+                    @foreach (var u in r.Users)
+                    {
+                        <tr>
+                            <td><a class="report-drill" asp-action="Shifts" asp-route-userId="@u.UserId" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")">@u.Name</a></td>
+                            <td class="col-num num">@u.Shifts</td>
+                            <td class="col-num num">@u.ShortageCount</td>
+                            <td class="col-num num @(u.ShortageTotal < 0 ? "text-danger" : null)" dir="ltr">@u.ShortageTotal.ToString("N2")</td>
+                            <td class="col-num num">@u.SurplusCount</td>
+                            <td class="col-num num">@u.SurplusTotal.ToString("N2")</td>
+                            <td class="col-num num" dir="ltr">@u.Net.ToString("N2")</td>
+                            <td class="col-num num">@u.ShortagePercent.ToString("0.#")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <p class="text-muted small">@L["A shift's difference counts for everyone who worked in it."]</p>
+
+    <section class="sp-card">
+        <h2 class="shift-section-title p-3 pb-0">@L["Shifts"]</h2>
+        <div class="table-responsive sp-table-scroll">
+            <table class="table sp-table sp-table--compact">
+                <thead><tr><th>@L["Shift"]</th><th>@L["Closed"]</th><th>@L["Closed by"]</th><th>@L["Participants"]</th><th class="col-num">@L["Difference"]</th></tr></thead>
+                <tbody>
+                    @foreach (var s in r.Shifts)
+                    {
+                        <tr>
+                            <td><a class="num" asp-controller="Shifts" asp-action="Details" asp-route-id="@s.ShiftId">#@s.ShiftId</a></td>
+                            <td class="num">@s.ClosedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                            <td>@s.ClosedBy</td>
+                            <td>@string.Join(L[", "].Value, s.Participants)</td>
+                            <td class="col-num num @(s.Difference < 0 ? "text-danger" : null)" dir="ltr">@s.Difference.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@section Scripts { <partial name="_ReportScripts" /> }
