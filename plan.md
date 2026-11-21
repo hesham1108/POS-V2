@@ -284,6 +284,14 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 - [x] End-to-end functional testing.
 - [x] Installation instructions.
 
+### Phase 16 — Printing studio, Appearance, Owner & Users
+
+- [x] Settings → Printing: Windows printer list / default / refresh; live 80 mm + A4 sample preview; layout toggles + font scale.
+- [x] Settings → Appearance: theme (light/dark), primary/sidebar colors, UI logo, favicon, store name branding in shell + login.
+- [x] Role `Owner` (super admin); promote first Admin on upgrade; `UserPermissions` per-user tab overrides.
+- [x] Users & Roles screen: CRUD users, custom tabs checkboxes, Manager/Cashier role matrix editor.
+- [x] POS “Reprint last” respects `DefaultReceiptFormat`.
+
 ---
 
 ## Open Decisions (proposals — confirm or replace)
@@ -300,7 +308,7 @@ Returns policy defaults: `Returns.Create` permission (Cashier OFF) + `Store:Retu
 | Backup | Daily auto + on every shift close; second disk/USB |
 | License | Offline device-bound license file we issue |
 | Numerals | Western digits on screen; receipt digits configurable |
-| Dark mode | Proposal promises it "for evening shifts"; tokens in `theme.css` make it cheap — confirm keep (Phase 11) or remove from proposal |
+| Dark mode | Kept — configurable from Settings → Appearance (Phase 16) |
 | Held invoices at close | Close screen lists held invoices: cancel all, or carry over to the next shift |
 
 | Customer / supplier credit (آجل) | "What we are owed / what we owe" currently = cheques only. Confirm whether open-account balances (sell or buy on credit, partial payments) are also wanted — that would add a party ledger to Phase 13 |
