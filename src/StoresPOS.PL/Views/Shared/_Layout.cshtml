@@ -1,5 +1,6 @@
-@inject Microsoft.Extensions.Options.IOptions<StoresPOS.BLL.Models.StoreSettings> StoreOptions
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> StoreOptions
 @{
+    var store = StoreOptions.CurrentValue;
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     bool IsCtrl(params string[] names) =>
         names.Any(n => string.Equals(controller, n, StringComparison.OrdinalIgnoreCase));
@@ -12,149 +13,169 @@
         ?? "StoresPOS";
 }
 <!DOCTYPE html>
-<html lang="@(isRtl ? "ar" : "en")" dir="@(isRtl ? "rtl" : "ltr")">
+<html lang="@(isRtl ? "ar" : "en")" dir="@(isRtl ? "rtl" : "ltr")" data-theme="@(store.IsDarkTheme ? "dark" : "light")" data-leave-text="@L["You have unsaved changes. Leave this page?"]">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - StoresPOS</title>
+    <title>@ViewData["Title"] - @(isRtl ? store.NameAr : store.NameEn)</title>
     @* "~/" is only resolved in literal attributes, so build the URL explicitly. *@
     <link rel="stylesheet" href="@Url.Content(isRtl ? "~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" : "~/lib/bootstrap/dist/css/bootstrap.min.css")" />
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
+    <partial name="_ThemeHead" />
 </head>
 <body>
 @if (User.Identity?.IsAuthenticated == true)
 {
     <div class="app-shell">
         @* Sidebar order matches Hesham mockups *@
-        <aside class="app-sidebar" aria-label="Main navigation">
+        <aside class="app-sidebar" aria-label="@L["Main navigation"]">
             <a class="app-sidebar__brand" asp-controller="Home" asp-action="Index">
-                <span class="sp-brand-mark" aria-hidden="true">SP</span>
+                @{
+                    var brandLogo = store.EffectiveUiLogoPath;
+                }
+                @if (!string.IsNullOrWhiteSpace(brandLogo))
+                {
+                    <img class="sp-brand-mark sp-brand-mark--img" src="~/@brandLogo" alt="" />
+                }
+                else
+                {
+                    <span class="sp-brand-mark" aria-hidden="true">SP</span>
+                }
                 <span>
-                    <strong>@(isRtl ? StoreOptions.Value.NameAr : StoreOptions.Value.NameEn)</strong>
+                    <strong>@(isRtl ? store.NameAr : store.NameEn)</strong>
                     <span>StoresPOS</span>
                 </span>
             </a>
 
             <nav class="app-sidebar__nav">
-                @* Order: docs/page-composition.md §24.3. Visibility follows permissions (plan.md roles matrix). *@
+                @* Grouped with icons. Visibility follows permissions (plan.md roles matrix). *@
                 @{
-                    var soon = L["Coming in a later phase"].Value;
                     var denied = L["No access"].Value;
                 }
                 @if (Can(AppPermissions.DashboardView))
                 {
-                    <a class="@NavClass(IsCtrl("Home"))" asp-controller="Home" asp-action="Index">@L["Dashboard"]</a>
+                    <a class="@NavClass(IsCtrl("Home"))" asp-controller="Home" asp-action="Index"><partial name="_PosIcon" model='"home"' />@L["Dashboard"]</a>
                 }
-
                 @if (Can(AppPermissions.PosUse))
                 {
-                    <a class="@NavClass(IsCtrl("Pos"))" asp-controller="Shifts" asp-action="Gate">@L["POS"]</a>
+                    <a class="@NavClass(IsCtrl("Pos"))" asp-controller="Shifts" asp-action="Gate"><partial name="_PosIcon" model='"cart"' />@L["POS"]</a>
                 }
-
                 @if (Can(AppPermissions.ShiftsOpenResume))
                 {
-                    <a class="@NavClass(IsCtrl("Shifts"))" asp-controller="Shifts" asp-action="Current">@L["Shifts"]</a>
+                    <a class="@NavClass(IsCtrl("Shifts"))" asp-controller="Shifts" asp-action="Current"><partial name="_PosIcon" model='"clock"' />@L["Shifts"]</a>
                 }
 
+                <p class="app-sidebar__section">@L["Sales"]</p>
                 @if (Can(AppPermissions.ReportsView))
                 {
-                    <a class="@NavClass(IsCtrl("Sales"))" asp-controller="Sales" asp-action="Index">@L["Sales invoices"]</a>
+                    <a class="@NavClass(IsCtrl("Sales"))" asp-controller="Sales" asp-action="Index"><partial name="_PosIcon" model='"receipt"' />@L["Sales invoices"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Sales invoices"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"receipt"' />@L["Sales invoices"]</span>
                 }
                 @if (Can(AppPermissions.ReturnsCreate) || Can(AppPermissions.ReportsView))
                 {
-                    <a class="@NavClass(IsCtrl("Returns"))" asp-controller="Returns" asp-action="Index">@L["Returns"]</a>
+                    <a class="@NavClass(IsCtrl("Returns"))" asp-controller="Returns" asp-action="Index"><partial name="_PosIcon" model='"undo"' />@L["Returns"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Returns"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"undo"' />@L["Returns"]</span>
                 }
                 @if (Can(AppPermissions.CashOutsCreate) || Can(AppPermissions.ReportsView))
                 {
-                    <a class="@NavClass(IsCtrl("CashOuts"))" asp-controller="CashOuts" asp-action="Index">@L["Cash-outs"]</a>
+                    <a class="@NavClass(IsCtrl("CashOuts"))" asp-controller="CashOuts" asp-action="Index"><partial name="_PosIcon" model='"coins"' />@L["Cash-outs"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Cash-outs"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"coins"' />@L["Cash-outs"]</span>
+                }
+                @if (Can(AppPermissions.ReportsView))
+                {
+                    <a class="@NavClass(IsCtrl("Customers"))" asp-controller="Customers" asp-action="Index"><partial name="_PosIcon" model='"users"' />@L["Customers"]</a>
+                    <a class="@NavClass(IsCtrl("Reports"))" asp-controller="Reports" asp-action="Sales"><partial name="_PosIcon" model='"chart"' />@L["Reports"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"users"' />@L["Customers"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"chart"' />@L["Reports"]</span>
                 }
 
+                <p class="app-sidebar__section">@L["Catalog"]</p>
                 @if (Can(AppPermissions.CatalogManage))
                 {
                     <a class="@NavClass(IsCtrl("Products", "Categories", "Inventory"))"
-                       asp-controller="Products" asp-action="Index">@L["Products and categories"]</a>
+                       asp-controller="Products" asp-action="Index"><partial name="_PosIcon" model='"box"' />@L["Products and categories"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Products and categories"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"box"' />@L["Products and categories"]</span>
                 }
-
                 @if (Can(AppPermissions.PurchasesManage))
                 {
                     <a class="@NavClass(IsCtrl("Purchases"))"
-                       asp-controller="Purchases" asp-action="Index">@L["Purchase invoices"]</a>
+                       asp-controller="Purchases" asp-action="Index"><partial name="_PosIcon" model='"file"' />@L["Purchase invoices"]</a>
                     <a class="@NavClass(IsCtrl("Suppliers"))"
-                       asp-controller="Suppliers" asp-action="Index">@L["Suppliers"]</a>
+                       asp-controller="Suppliers" asp-action="Index"><partial name="_PosIcon" model='"truck"' />@L["Suppliers"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Purchase invoices"]</span>
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Suppliers"]</span>
-                }
-
-                @if (Can(AppPermissions.ReportsView))
-                {
-                    <a class="@NavClass(IsCtrl("Customers"))" asp-controller="Customers" asp-action="Index">@L["Customers"]</a>
-                    <a class="@NavClass(IsCtrl("Reports"))" asp-controller="Reports" asp-action="Sales">@L["Reports"]</a>
-                }
-                else
-                {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Customers"]</span>
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Reports"]</span>
-                }
-                @if (Can(AppPermissions.TreasuriesView))
-                {
-                    <a class="@NavClass(IsCtrl("Treasuries"))" asp-controller="Treasuries" asp-action="Index">@L["Treasuries"]</a>
-                }
-                else
-                {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Treasuries"]</span>
-                }
-                @if (Can(AppPermissions.ChequesView))
-                {
-                    <a class="@NavClass(IsCtrl("Cheques"))" asp-controller="Cheques" asp-action="Index">@L["Cheques"]</a>
-                }
-                else
-                {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Cheques"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"file"' />@L["Purchase invoices"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"truck"' />@L["Suppliers"]</span>
                 }
                 @if (Can(AppPermissions.WarehousesView))
                 {
-                    <a class="@NavClass(IsCtrl("Warehouses"))" asp-controller="Warehouses" asp-action="Index">@L["Warehouses"]</a>
+                    <a class="@NavClass(IsCtrl("Warehouses"))" asp-controller="Warehouses" asp-action="Index"><partial name="_PosIcon" model='"warehouse"' />@L["Warehouses"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Warehouses"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"warehouse"' />@L["Warehouses"]</span>
                 }
-                <span class="app-sidebar__link is-disabled" title="@(Can(AppPermissions.UsersManage) ? soon : denied)">@L["Users and roles"]</span>
+
+                <p class="app-sidebar__section">@L["Finance"]</p>
+                @if (Can(AppPermissions.TreasuriesView))
+                {
+                    <a class="@NavClass(IsCtrl("Treasuries"))" asp-controller="Treasuries" asp-action="Index"><partial name="_PosIcon" model='"bank"' />@L["Treasuries"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"bank"' />@L["Treasuries"]</span>
+                }
+                @if (Can(AppPermissions.ChequesView))
+                {
+                    <a class="@NavClass(IsCtrl("Cheques"))" asp-controller="Cheques" asp-action="Index"><partial name="_PosIcon" model='"cheque"' />@L["Cheques"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"cheque"' />@L["Cheques"]</span>
+                }
                 @if (Can(AppPermissions.PaymentMethodsManage))
                 {
-                    <a class="@NavClass(IsCtrl("PaymentMethods"))" asp-controller="PaymentMethods" asp-action="Index">@L["Payment methods"]</a>
+                    <a class="@NavClass(IsCtrl("PaymentMethods"))" asp-controller="PaymentMethods" asp-action="Index"><partial name="_PosIcon" model='"card"' />@L["Payment methods"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Payment methods"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"card"' />@L["Payment methods"]</span>
+                }
+
+                <p class="app-sidebar__section">@L["Administration"]</p>
+                @if (Can(AppPermissions.UsersManage))
+                {
+                    <a class="@NavClass(IsCtrl("Users"))" asp-controller="Users" asp-action="Index"><partial name="_PosIcon" model='"shield"' />@L["Users and roles"]</a>
+                }
+                else
+                {
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"shield"' />@L["Users and roles"]</span>
                 }
                 @if (Can(AppPermissions.SettingsManage))
                 {
-                    <a class="@NavClass(IsCtrl("Settings"))" asp-controller="Settings" asp-action="Index">@L["Settings"]</a>
+                    <a class="@NavClass(IsCtrl("Settings"))" asp-controller="Settings" asp-action="Index"><partial name="_PosIcon" model='"settings"' />@L["Settings"]</a>
                 }
                 else
                 {
-                    <span class="app-sidebar__link is-disabled" title="@denied">@L["Settings"]</span>
+                    <span class="app-sidebar__link is-disabled" title="@denied"><partial name="_PosIcon" model='"settings"' />@L["Settings"]</span>
                 }
             </nav>
 
@@ -171,6 +192,7 @@
                     <input type="hidden" name="returnUrl" value="@returnUrl" />
                     <button type="submit" class="app-sidebar__logout">@(isRtl ? "English" : "العربية")</button>
                 </form>
+                <a class="app-sidebar__logout d-block text-decoration-none mb-2" asp-controller="Account" asp-action="ChangePassword">@L["Change password"]</a>
                 <form asp-controller="Account" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="app-sidebar__logout">@L["Logout"]</button>
@@ -217,6 +239,7 @@ else
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
     <script src="~/js/print-frame.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

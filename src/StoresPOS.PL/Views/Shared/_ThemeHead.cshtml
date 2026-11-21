@@ -1,0 +1,38 @@
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> ThemeStore
+@{
+    var s = ThemeStore.CurrentValue;
+    var uiLogo = s.EffectiveUiLogoPath;
+    if (!string.IsNullOrWhiteSpace(s.FaviconRelativePath))
+    {
+        <link rel="icon" href="~/@s.FaviconRelativePath" />
+    }
+    var css = new System.Text.StringBuilder();
+    if (!string.IsNullOrWhiteSpace(s.UiPrimaryColor))
+    {
+        css.Append($"--sp-primary:{s.UiPrimaryColor};");
+        css.Append($"--sp-success:{s.UiPrimaryColor};");
+        css.Append($"--sp-focus:{s.UiPrimaryColor};");
+    }
+    if (!string.IsNullOrWhiteSpace(s.UiSidebarColor))
+    {
+        css.Append($"--sp-sidebar:{s.UiSidebarColor};");
+        // The default sidebar is light; a dark custom colour needs light text.
+        var hex = s.UiSidebarColor.Trim().TrimStart('#');
+        if (hex.Length == 3)
+        {
+            hex = string.Concat(hex.Select(ch => $"{ch}{ch}"));
+        }
+        if (hex.Length == 6 && int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out var rgb))
+        {
+            var lum = (0.299 * ((rgb >> 16) & 255) + 0.587 * ((rgb >> 8) & 255) + 0.114 * (rgb & 255)) / 255;
+            if (lum < 0.5)
+            {
+                css.Append("--sp-sidebar-text:#d5d9e0;--sp-sidebar-strong:#ffffff;--sp-sidebar-muted:#9aa0a6;--sp-sidebar-hover:rgba(255,255,255,0.08);--sp-sidebar-border:rgba(255,255,255,0.12);");
+            }
+        }
+    }
+}
+@if (css.Length > 0)
+{
+    <style>:root { @Html.Raw(css.ToString()) }</style>
+}

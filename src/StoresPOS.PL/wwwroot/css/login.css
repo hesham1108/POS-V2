@@ -7,7 +7,7 @@
   place-items: center;
   padding: var(--sp-space-5);
   background:
-    radial-gradient(circle at top left, rgba(15, 103, 81, 0.08), transparent 40%),
+    radial-gradient(circle at top left, rgba(21, 89, 214, 0.08), transparent 40%),
     radial-gradient(circle at bottom right, rgba(26, 29, 38, 0.06), transparent 35%),
     var(--sp-bg);
   font-family: var(--sp-font);
@@ -43,6 +43,12 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   box-shadow: var(--sp-shadow-sm);
+}
+.login-brand-mark__logo--img {
+  object-fit: contain;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
 }
 
 .login-brand-mark__text {
@@ -132,7 +138,7 @@
 
 .login-form .form-control:focus {
   border-color: var(--sp-primary);
-  box-shadow: 0 0 0 0.2rem rgba(15, 103, 81, 0.15);
+  box-shadow: 0 0 0 0.2rem rgba(21, 89, 214, 0.18);
 }
 
 .login-form .form-label {

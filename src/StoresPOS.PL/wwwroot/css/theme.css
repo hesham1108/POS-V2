@@ -1,5 +1,64 @@
 /* StoresPOS design system — tokens + shared components (offline fonts) */
 
+/* Poppins: active Latin + numbers face. */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/poppins/poppins-latin-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/poppins/poppins-latin-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/poppins/poppins-latin-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/poppins/poppins-latin-700.woff2") format("woff2");
+}
+/* Geist: kept for comparison; switch by putting "Geist" first in --sp-font / --sp-font-display. */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/geist/geist-latin-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/geist/geist-latin-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/geist/geist-latin-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/geist/geist-latin-700.woff2") format("woff2");
+}
+
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -97,17 +156,19 @@
 
 /* ─── STEP 1: Design tokens (single source) ─── */
 :root {
-  --sp-primary: #0f6751;
-  --sp-primary-hover: #0c5543;
-  --sp-primary-soft: #e7f4ef;
-  --sp-primary-border: #b7ddd1;
+  --sp-primary: #1559d6;
+  --sp-primary-hover: #0f49b5;
+  --sp-primary-soft: #eaf1fe;
+  --sp-primary-border: #b9cff8;
 
-  --sp-sidebar: #1a1d26;
-  --sp-sidebar-text: #e8eaed;
-  --sp-sidebar-muted: #9aa0a6;
-  --sp-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sp-sidebar: #ffffff;
+  --sp-sidebar-text: #374151;
+  --sp-sidebar-strong: #111827;
+  --sp-sidebar-muted: #8a93a1;
+  --sp-sidebar-hover: rgba(17, 24, 39, 0.05);
+  --sp-sidebar-border: #e3e7ee;
 
-  --sp-bg: #f5f7fa;
+  --sp-bg: #f3f5f8;
   --sp-surface: #ffffff;
   --sp-surface-muted: #f8f9fa;
 
@@ -116,8 +177,8 @@
   --sp-text-muted: #6b7280;
   --sp-text-inverse: #ffffff;
 
-  --sp-border: #e5e7eb;
-  --sp-border-strong: #d1d5db;
+  --sp-border: #e3e7ee;
+  --sp-border-strong: #cfd6e1;
   --sp-focus: var(--sp-primary);
 
   --sp-warning: #d97706;
@@ -127,22 +188,27 @@
   --sp-info: #2563eb;
   --sp-info-soft: #e8effd;
   --sp-neutral-soft: #eef0f3;
-  --sp-success: #0f6751;
+  --sp-success: #16a34a;
+  --sp-success-soft: #e8f7ee;
 
   --sp-radius-sm: 8px;
-  --sp-radius-field: 8px;
+  --sp-radius-field: 10px;
   --sp-radius: 12px;
-  --sp-radius-lg: 16px;
-  --sp-radius-xl: 18px;
+  --sp-radius-lg: 14px;
+  --sp-radius-xl: 16px;
   --sp-radius-pill: 999px;
 
   --sp-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
   --sp-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 12px 32px -8px rgba(17, 24, 39, 0.10);
   --sp-shadow-lg: 0 18px 40px rgba(17, 24, 39, 0.08);
 
-  --sp-font: "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
-  --sp-font-display: "Manrope", "Inter", "Segoe UI", sans-serif;
-  --sp-font-ar: "IBM Plex Sans Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  /* Latin face first, then IBM Plex Sans Arabic: Latin letters + digits use the Latin face,
+     Arabic letters fall through to Plex. To compare another face (e.g. "Geist"), change these two only. */
+  --sp-font: "Poppins", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  --sp-font-display: "Poppins", "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
+  --sp-font-ar: var(--sp-font);
+  /* Numbers follow the UI face (tabular figures); JetBrains Mono stays only for code-like strings. */
+  --sp-font-num: var(--sp-font-display);
   --sp-font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
   --sp-font-size: 15px;
   --sp-line-height: 1.55;
@@ -162,6 +228,77 @@
   --sp-transition: 160ms ease;
 }
 
+html[data-theme="dark"] {
+  --sp-bg: #12141a;
+  --sp-surface: #1a1d26;
+  --sp-surface-muted: #22262f;
+  --sp-text: #e8eaed;
+  --sp-text-strong: #f3f4f6;
+  --sp-text-muted: #9aa0a6;
+  --sp-border: #2e3340;
+  --sp-border-strong: #3d4454;
+  color-scheme: dark;
+  --bs-body-color: var(--sp-text);
+  --bs-body-bg: var(--sp-bg);
+  --bs-border-color: var(--sp-border);
+  --bs-emphasis-color: var(--sp-text-strong);
+  --bs-secondary-color: var(--sp-text-muted);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--sp-border);
+  --sp-sidebar: #1a1d26;
+  --sp-sidebar-text: #c9ced6;
+  --sp-sidebar-strong: #f3f4f6;
+  --sp-sidebar-muted: #9aa0a6;
+  --sp-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sp-sidebar-border: #2e3340;
+  --sp-primary: #4a86f0;
+  --sp-primary-hover: #6a9cf3;
+  --sp-primary-border: rgba(74, 134, 240, 0.45);
+  --sp-success: #34d399;
+  --sp-success-soft: rgba(52, 211, 153, 0.14);
+  --sp-primary-soft: rgba(74, 134, 240, 0.16);
+  --sp-warning-soft: rgba(217, 119, 6, 0.18);
+  --sp-danger-soft: rgba(220, 38, 38, 0.18);
+  --sp-info-soft: rgba(37, 99, 235, 0.18);
+  --sp-neutral-soft: #22262f;
+  --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sp-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* Bootstrap 5.1 hard-codes light colours; map the ones we use to the dark tokens. */
+html[data-theme="dark"] .table {
+  color: var(--sp-text);
+  border-color: var(--sp-border);
+  --bs-table-hover-color: var(--sp-text);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme="dark"] .modal-content,
+html[data-theme="dark"] .dropdown-menu {
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  border-color: var(--sp-border);
+}
+
+html[data-theme="dark"] .modal-header,
+html[data-theme="dark"] .modal-footer,
+html[data-theme="dark"] .dropdown-divider {
+  border-color: var(--sp-border);
+}
+
+html[data-theme="dark"] .btn-close {
+  filter: invert(1) grayscale(1);
+}
+
+.sp-brand-mark--img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: transparent;
+  padding: 0;
+}
+
 [lang="ar"],
 .ar,
 html[dir="rtl"] body {
@@ -177,6 +314,17 @@ h1, h2, h3, h4,
 }
 
 .num,
+.num-total {
+  font-family: var(--sp-font-num);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: -0.01em;
+}
+
+.num-total {
+  font-weight: 600;
+}
+
 .font-monospace {
   font-variant-numeric: tabular-nums;
   font-family: var(--sp-font-mono);
@@ -399,7 +547,7 @@ h1, h2, h3, h4,
   flex-shrink: 0;
 }
 
-.sp-status-ok { background: var(--sp-primary-soft); color: var(--sp-primary); }
+.sp-status-ok { background: var(--sp-success-soft); color: var(--sp-success); }
 .sp-status-warn { background: var(--sp-warning-soft); color: var(--sp-warning); }
 .sp-status-bad { background: var(--sp-danger-soft); color: var(--sp-danger); }
 .sp-status-info { background: var(--sp-info-soft); color: var(--sp-info); }
