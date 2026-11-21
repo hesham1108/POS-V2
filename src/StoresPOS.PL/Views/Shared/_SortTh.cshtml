@@ -1,0 +1,18 @@
+@model SortHeader
+@using StoresPOS.PL.Extensions
+@*
+    Sortable column header (Phase 20). Clicking sorts on the server; clicking again flips the direction.
+    Usage: <partial name="_SortTh" model='new SortHeader("Total", L["Total"].Value, Model.Page, Numeric: true)' />
+*@
+@{
+    var active = string.Equals(Model.Page.Sort, Model.Key, StringComparison.OrdinalIgnoreCase);
+    var nextDir = active && !Model.Page.Descending ? "desc" : "asc";
+    var url = ListUrl.Reset(Context.Request, ("sort", Model.Key), ("dir", nextDir));
+    var aria = active ? (Model.Page.Descending ? "descending" : "ascending") : "none";
+}
+<th class="sp-th-sort @(Model.Numeric ? "col-num" : "") @(active ? "is-sorted" : "")" aria-sort="@aria">
+    <a href="@url">
+        <span>@Model.Label</span>
+        <span class="sp-sort-icon" aria-hidden="true">@(active ? (Model.Page.Descending ? "▼" : "▲") : "↕")</span>
+    </a>
+</th>

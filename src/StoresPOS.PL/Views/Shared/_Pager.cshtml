@@ -1,0 +1,46 @@
+@model IPagedResult
+@using StoresPOS.PL.Extensions
+@* Pager (Phase 20): rows x–y of n, page links, rows per page. Keeps every other filter in the URL. *@
+@{
+    var first = Model.TotalCount == 0 ? 0 : (Model.Page - 1) * Model.PageSize + 1;
+    var last = Math.Min(Model.TotalCount, Model.Page * Model.PageSize);
+    var pages = new SortedSet<int> { 1, Model.TotalPages };
+    for (var p = Model.Page - 2; p <= Model.Page + 2; p++)
+    {
+        if (p >= 1 && p <= Model.TotalPages) pages.Add(p);
+    }
+    string PageUrl(int p) => ListUrl.With(Context.Request, ("page", p == 1 ? null : p.ToString()));
+}
+<nav class="sp-pager" aria-label="@L["Pages"]">
+    <span class="sp-pager__info">@string.Format(L["{0}–{1} of {2}"].Value, first.ToString("N0"), last.ToString("N0"), Model.TotalCount.ToString("N0"))</span>
+    @if (Model.TotalPages > 1)
+    {
+        <ul class="sp-pager__pages">
+            <li><a class="sp-pager__link @(Model.Page <= 1 ? "is-disabled" : "")" href="@(Model.Page <= 1 ? null : PageUrl(Model.Page - 1))" aria-label="@L["Previous page"]">‹</a></li>
+            @{ var prev = 0; }
+            @foreach (var p in pages)
+            {
+                if (prev > 0 && p - prev > 1)
+                {
+                    <li><span class="sp-pager__gap">…</span></li>
+                }
+                <li><a class="sp-pager__link @(p == Model.Page ? "is-current" : "")" href="@PageUrl(p)" aria-current="@(p == Model.Page ? "page" : null)">@p.ToString("N0")</a></li>
+                prev = p;
+            }
+            <li><a class="sp-pager__link @(Model.Page >= Model.TotalPages ? "is-disabled" : "")" href="@(Model.Page >= Model.TotalPages ? null : PageUrl(Model.Page + 1))" aria-label="@L["Next page"]">›</a></li>
+        </ul>
+    }
+    <form method="get" class="sp-pager__size">
+        @foreach (var kv in Context.Request.Query.Where(q => !string.Equals(q.Key, "pageSize", StringComparison.OrdinalIgnoreCase) && !string.Equals(q.Key, "page", StringComparison.OrdinalIgnoreCase) && !string.Equals(q.Key, "export", StringComparison.OrdinalIgnoreCase) && !string.Equals(q.Key, "print", StringComparison.OrdinalIgnoreCase)))
+        {
+            <input type="hidden" name="@kv.Key" value="@kv.Value" />
+        }
+        <label class="visually-hidden" for="pager-size">@L["Rows per page"]</label>
+        <select id="pager-size" name="pageSize" class="form-select form-select-sm" onchange="this.form.submit()">
+            @foreach (var size in ListQuery.PageSizes)
+            {
+                <option value="@size" selected="@(size == Model.PageSize)">@string.Format(L["{0} per page"].Value, size)</option>
+            }
+        </select>
+    </form>
+</nav>

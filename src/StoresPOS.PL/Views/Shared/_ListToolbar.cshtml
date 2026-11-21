@@ -1,0 +1,42 @@
+@model ListToolbarModel
+@using StoresPOS.PL.Extensions
+@* List toolbar (Phase 20): server search (q), active filters as removable chips, CSV export, main add button. *@
+<div class="sp-list-toolbar">
+    @if (Model.ShowSearch)
+    {
+        <form method="get" class="sp-list-toolbar__search" role="search">
+            @foreach (var kv in Context.Request.Query.Where(q => q.Key is not ("q" or "page" or "export" or "print" or "search")))
+            {
+                <input type="hidden" name="@kv.Key" value="@kv.Value" />
+            }
+            <partial name="_PosIcon" model='"search"' />
+            <input type="search" name="q" value="@Model.Q" class="form-control" placeholder="@Model.SearchPlaceholder" aria-label="@L["Search"]" />
+        </form>
+    }
+    @if (Model.Chips.Count > 0)
+    {
+        <ul class="sp-chips" aria-label="@L["Active filters"]">
+            @foreach (var chip in Model.Chips)
+            {
+                <li class="sp-chip">
+                    <span>@chip.Label</span>
+                    <a href="@chip.RemoveUrl" class="sp-chip__remove" aria-label="@string.Format(L["Remove filter {0}"].Value, chip.Label)">×</a>
+                </li>
+            }
+        </ul>
+    }
+    <div class="sp-list-toolbar__actions">
+        @if (Model.Page is not null)
+        {
+            <span class="sp-list-toolbar__count">@string.Format(L["{0} results"].Value, Model.Page.TotalCount.ToString("N0"))</span>
+        }
+        @if (Model.ShowExport)
+        {
+            <a class="btn sp-btn-secondary" href="@ListUrl.Export(Context.Request)" download>@L["Export CSV"]</a>
+        }
+        @if (!string.IsNullOrEmpty(Model.AddUrl))
+        {
+            <a class="btn sp-btn-primary" href="@Model.AddUrl">@Model.AddLabel</a>
+        }
+    </div>
+</div>

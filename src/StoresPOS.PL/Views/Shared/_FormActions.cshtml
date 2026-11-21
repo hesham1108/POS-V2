@@ -1,0 +1,13 @@
+@model string?
+@*
+    Sticky save bar for <form class="sp-form"> (Phase 20). Model = cancel URL (null = no Cancel button).
+    site.js fills the state text and blocks double submits.
+*@
+<div class="sp-form__actions">
+    <span class="sp-form__state" data-clean="" data-dirty="@L["Unsaved changes"]" role="status"></span>
+    @if (!string.IsNullOrEmpty(Model))
+    {
+        <a class="btn sp-btn-secondary" href="@Model">@L["Cancel"]</a>
+    }
+    <button type="submit" class="btn sp-btn-primary">@L["Save"]</button>
+</div>
