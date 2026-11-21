@@ -1,0 +1,159 @@
+@model UsersIndexViewModel
+@using StoresPOS.PL.Extensions
+@{
+    var chips = ListUrl.SearchChip(Context.Request, L["Search"].Value)
+        .Concat(ListUrl.Chips(Context.Request,
+            ("roleId", L["Role"].Value, v => Model.Roles.FirstOrDefault(r => r.Id.ToString() == v)?.Name),
+            ("status", L["Status"].Value, v => v == "active" ? L["Active"].Value : L["Inactive"].Value)))
+        .ToList();
+    string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        // Arabic letters change shape when joined, so Arabic names show one letter.
+        if (parts.Length > 0 && parts[0].Any(ch => ch >= '؀' && ch <= 'ۿ'))
+        {
+            return parts[0][..1];
+        }
+
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant(),
+            _ => (parts[0][..1] + parts[^1][..1]).ToUpperInvariant()
+        };
+    }
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Roles">@L["Role defaults"]</a>
+    <a class="btn sp-btn-primary" asp-action="Create">@L["New user"]</a>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<partial name="_ListToolbar" model='new ListToolbarModel { Q = Model.Search, SearchPlaceholder = L["Name or username"].Value, Chips = chips, ShowExport = false }' />
+
+<div class="sp-card p-3 mb-4">
+    <form method="get" class="sp-filter-row">
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <input type="hidden" name="q" value="@Model.Search" />
+        }
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="roleId">@L["Role"]</label>
+            <select class="form-select" id="roleId" name="roleId">
+                <option value="">@L["All"]</option>
+                @foreach (var r in Model.Roles)
+                {
+                    <option value="@r.Id" selected="@(Model.RoleId == r.Id)">@r.Name</option>
+                }
+            </select>
+        </div>
+        <div class="sp-filter-row__field">
+            <label class="form-label" for="status">@L["Status"]</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">@L["All"]</option>
+                <option value="active" selected="@(Model.Status == "active")">@L["Active"]</option>
+                <option value="inactive" selected="@(Model.Status == "inactive")">@L["Inactive"]</option>
+            </select>
+        </div>
+        <div class="sp-filter-row__actions">
+            <button type="submit" class="btn sp-btn-primary">@L["Filter"]</button>
+            <a class="btn sp-btn-secondary" asp-action="Index">@L["Reset"]</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.Users.Count == 0)
+{
+    <partial name="_EmptyState" model='(L["No users"].Value, L["Change the filters or add a user."].Value)' />
+}
+else
+{
+    <div class="sp-card">
+        <div class="table-responsive">
+            <table class="table sp-table">
+                <thead>
+                    <tr>
+                        <th>@L["User"]</th>
+                        <th>@L["Role"]</th>
+                        <th>@L["Status"]</th>
+                        <th>@L["Last sign-in"]</th>
+                        <th class="text-end"><span class="visually-hidden">@L["Actions"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model.Users)
+                    {
+                        <tr class="@(u.IsActive ? "" : "sp-row-muted")">
+                            <td>
+                                <a class="sp-user-cell" asp-action="Edit" asp-route-id="@u.Id">
+                                    <span class="sp-avatar" aria-hidden="true">@Initials(u.DisplayName)</span>
+                                    <span>
+                                        <strong>@u.DisplayName</strong>
+                                        <small class="num">@u.Username</small>
+                                    </span>
+                                </a>
+                            </td>
+                            <td>
+                                @u.RoleName
+                                @if (u.HasCustomTabs)
+                                {
+                                    <span class="sp-status sp-status-info ms-1">@L["Custom permissions"]</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!u.IsActive)
+                                {
+                                    <span class="sp-status sp-status-neutral">@L["Inactive"]</span>
+                                }
+                                else if (u.IsLocked)
+                                {
+                                    <span class="sp-status sp-status-warn">@L["Locked"]</span>
+                                }
+                                else
+                                {
+                                    <span class="sp-status sp-status-ok">@L["Active"]</span>
+                                }
+                                @if (u.MustChangePassword)
+                                {
+                                    <span class="sp-status sp-status-warn ms-1">@L["Must change password"]</span>
+                                }
+                            </td>
+                            <td class="num">@(u.LastLoginAtUtc?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—")</td>
+                            <td class="sp-row-actions">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm sp-btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="@L["Actions"]">
+                                        <partial name="_PosIcon" model='"more-h"' />
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@u.Id">@L["Edit"]</a></li>
+                                        <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@u.Id" asp-route-tab="permissions">@L["Role and permissions"]</a></li>
+                                        <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@u.Id" asp-route-tab="security">@L["Reset password"]</a></li>
+                                        <li>
+                                            <form asp-action="SignOutEverywhere" asp-route-id="@u.Id" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="returnTo" value="list" />
+                                                <button type="submit" class="dropdown-item">@L["Sign out on every device"]</button>
+                                            </form>
+                                        </li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <form asp-action="SetActive" asp-route-id="@u.Id" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="active" value="@(!u.IsActive ? "true" : "false")" />
+                                                <input type="hidden" name="returnTo" value="list" />
+                                                <button type="submit" class="dropdown-item @(u.IsActive ? "text-danger" : "")">@(u.IsActive ? L["Deactivate"] : L["Activate"])</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

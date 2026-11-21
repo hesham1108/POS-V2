@@ -32,11 +32,12 @@ public class AuthServiceTests
 
         Assert.True(result.Succeeded);
         Assert.False(string.IsNullOrWhiteSpace(result.AccessToken));
-        Assert.Equal(AppRoles.Admin, result.Role);
+        Assert.Equal(AppRoles.Owner, result.Role);
         Assert.True(jwt.ValidateToken(result.AccessToken!, out var principal));
-        Assert.True(principal!.IsInRole(AppRoles.Admin));
+        Assert.True(principal!.IsInRole(AppRoles.Owner));
         Assert.True(principal.HasClaim(AppPermissions.ClaimType, AppPermissions.ShiftsClose));
         Assert.True(principal.HasClaim(AppPermissions.ClaimType, AppPermissions.SettingsManage));
+        Assert.True(principal.HasClaim(AppPermissions.ClaimType, AppPermissions.UsersManage));
     }
 
     [Fact]
@@ -64,6 +65,8 @@ public class AuthServiceTests
 
         var adminCount = await db.RolePermissions.CountAsync(x => x.Role.Name == AppRoles.Admin);
         Assert.Equal(AppPermissions.All.Length, adminCount);
+        var ownerCount = await db.RolePermissions.CountAsync(x => x.Role.Name == AppRoles.Owner);
+        Assert.Equal(AppPermissions.All.Length, ownerCount);
     }
 
     [Fact]

@@ -49,8 +49,16 @@ public class JwtTokenService : IJwtTokenService
             new(ClaimTypes.Name, user.Username),
             new("display_name", user.DisplayName),
             new(ClaimTypes.Role, user.Role.Name),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            // Phase 21: stamps let the app re-issue (permissions changed) or reject (signed out) old tokens.
+            new(AuthClaims.PermissionStamp, user.PermissionStamp.ToString()),
+            new(AuthClaims.SecurityStamp, user.SecurityStamp.ToString())
         };
+        if (user.MustChangePassword)
+        {
+            claims.Add(new Claim(AuthClaims.MustChangePassword, "1"));
+        }
+
         claims.AddRange(permissions.Distinct().Select(p => new Claim(AppPermissions.ClaimType, p)));
 
         var credentials = new SigningCredentials(

@@ -1,0 +1,280 @@
+@model UserEditViewModel
+@using System.Text.Json
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    var isNew = Model.Id is null;
+    var d = Model.Details;
+    var tabs = isNew
+        ? new[] { ("details", L["Details"].Value), ("permissions", L["Role and permissions"].Value) }
+        : new[] { ("details", L["Details"].Value), ("permissions", L["Role and permissions"].Value), ("security", L["Security"].Value), ("activity", L["Activity"].Value) };
+    var selected = Model.SelectedPermissions.ToHashSet();
+    var rolePermsJson = JsonSerializer.Serialize(Model.RolePermissions.ToDictionary(k => k.Key.ToString(), v => v.Value));
+    // Sidebar entries each permission opens (preview of what the user will see).
+    var sidebar = AppPermissions.NavTabs.Take(14).Select(t => new { p = t.Permission, label = isAr ? t.LabelAr : t.LabelEn });
+    string Ago(DateTime? utc) => utc?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—";
+    // Audit action labels: Arabic from the resx ("audit.<action>"), English here.
+    var auditEn = new Dictionary<string, string>
+    {
+        ["user.created"] = "User created", ["user.updated"] = "Details changed", ["user.permissions"] = "Permissions changed",
+        ["user.activated"] = "Activated", ["user.deactivated"] = "Deactivated", ["user.signout"] = "Signed out everywhere",
+        ["user.password"] = "Password", ["user.unlocked"] = "Unlocked", ["user.locked"] = "Locked", ["user.pin"] = "Approval PIN",
+        ["role.permissions"] = "Role permissions", ["role.created"] = "Role created"
+    };
+    string AuditLabel(string action)
+    {
+        var loc = L["audit." + action];
+        return !loc.ResourceNotFound ? loc.Value : auditEn.GetValueOrDefault(action, action);
+    }
+}
+
+@section PageActions {
+    <a class="btn sp-btn-secondary" asp-action="Index">@L["Back to users"]</a>
+}
+
+<partial name="_PageHeader" />
+<partial name="_Flash" />
+
+<nav class="sp-tabs mb-3" role="tablist" aria-label="@L["User"]">
+    @foreach (var (key, label) in tabs)
+    {
+        var href = isNew ? $"#{key}" : Url.Action("Edit", new { id = Model.Id, tab = key });
+        <a class="sp-tabs__link @(Model.Tab == key ? "is-active" : "")" href="@href" role="tab"
+           data-user-tab="@key" aria-selected="@(Model.Tab == key ? "true" : "false")">@label</a>
+    }
+</nav>
+
+<form asp-action="Save" method="post" class="sp-form" id="user-form" novalidate
+      data-role-perms="@rolePermsJson" data-sidebar="@JsonSerializer.Serialize(sidebar)">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Tab" id="user-tab-field" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    @* ---------------- Details ---------------- *@
+    <section class="sp-card p-4 sp-user-panel" data-user-panel="details" hidden="@(Model.Tab != "details")">
+        <div class="sp-form__section">
+            <h2 class="sp-form__title">@L["Details"]</h2>
+            <div class="sp-form__grid">
+                <div>
+                    <label asp-for="DisplayName" class="form-label"></label>
+                    <input asp-for="DisplayName" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="DisplayName" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control" autocomplete="off" dir="ltr" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                @if (isNew)
+                {
+                    <div>
+                        <label asp-for="Password" class="form-label required"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <div class="form-text">@L["At least 8 characters."]</div>
+                    </div>
+                    <div class="d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input asp-for="MustChangePassword" class="form-check-input" />
+                            <label asp-for="MustChangePassword" class="form-check-label"></label>
+                        </div>
+                    </div>
+                }
+                <div class="sp-form__full">
+                    <div class="form-check form-switch">
+                        <input asp-for="IsActive" class="form-check-input" role="switch" disabled="@(Model.IsSelf)" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                    @if (Model.IsSelf)
+                    {
+                        <input type="hidden" name="IsActive" value="true" />
+                        <div class="form-text">@L["You cannot deactivate your own account."]</div>
+                    }
+                </div>
+            </div>
+        </div>
+        @if (d is not null)
+        {
+            <div class="sp-form__section">
+                <dl class="sp-facts">
+                    <div><dt>@L["Created"]</dt><dd class="num">@Ago(d.CreatedAtUtc)</dd></div>
+                    <div><dt>@L["Last sign-in"]</dt><dd class="num">@Ago(d.LastLoginAtUtc)</dd></div>
+                </dl>
+            </div>
+        }
+    </section>
+
+    @* ---------------- Role and permissions ---------------- *@
+    <section class="sp-user-panel" data-user-panel="permissions" hidden="@(Model.Tab != "permissions")">
+        <div class="sp-perm-layout">
+            <div class="sp-card p-4">
+                <div class="sp-form__grid mb-3">
+                    <div>
+                        <label asp-for="RoleId" class="form-label"></label>
+                        <select asp-for="RoleId" class="form-select" id="role-select">
+                            @foreach (var r in Model.Roles)
+                            {
+                                <option value="@r.Id">@r.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-end">
+                        <div class="form-check form-switch mb-2">
+                            <input asp-for="UseCustomTabs" class="form-check-input" role="switch" id="use-custom" />
+                            <label class="form-check-label" for="use-custom">@L["Custom permissions for this user"]</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sp-perm-toolbar">
+                    <input type="search" class="form-control" id="perm-search" placeholder="@L["Search permissions"]" aria-label="@L["Search permissions"]" data-no-dirty />
+                    <button type="button" class="btn sp-btn-secondary" id="perm-reset-all">@L["Reset all to role"]</button>
+                </div>
+                <p class="form-text mb-3" id="perm-mode-hint"
+                   data-role="@L["Using the role's permissions. Turn on custom permissions to change them for this user."]"
+                   data-custom="@L["Custom: changes apply to this user only. Items that differ from the role are marked."]"></p>
+
+                @foreach (var group in AppPermissions.Groups)
+                {
+                    <fieldset class="sp-perm-group" data-perm-group="@group.Key">
+                        <legend class="sp-perm-group__head">
+                            <span>@(isAr ? group.LabelAr : group.LabelEn)</span>
+                            <label class="sp-perm-group__all">
+                                <input type="checkbox" class="form-check-input" data-group-all="@group.Key" data-no-dirty />
+                                @L["Select all"]
+                            </label>
+                        </legend>
+                        @foreach (var perm in group.Permissions)
+                        {
+                            var label = AppPermissions.LabelFor(perm);
+                            var id = "perm-" + perm.Replace('.', '-');
+                            <div class="sp-perm-item" data-perm-item="@perm" data-search="@(label.LabelEn) @(label.LabelAr) @perm">
+                                <input class="form-check-input" type="checkbox" name="SelectedPermissions" value="@perm" id="@id" checked="@selected.Contains(perm)" />
+                                <label class="form-check-label" for="@id">@(isAr ? label.LabelAr : label.LabelEn)</label>
+                                <span class="sp-perm-source" data-source-role="@L["From role"]" data-source-custom="@L["Custom"]"></span>
+                                <button type="button" class="btn btn-link btn-sm sp-perm-reset" data-perm-reset="@perm">@L["Back to role"]</button>
+                            </div>
+                        }
+                    </fieldset>
+                }
+            </div>
+
+            <aside class="sp-card p-4 sp-perm-preview" aria-live="polite">
+                <h2 class="sp-form__title">@L["What this user will see"]</h2>
+                <ul class="sp-perm-preview__list" id="perm-preview" data-empty="@L["No pages"]"></ul>
+            </aside>
+        </div>
+    </section>
+
+    <div data-user-panel-actions hidden="@(Model.Tab is "security" or "activity")">
+        <partial name="_FormActions" model="@Url.Action("Index")" />
+    </div>
+</form>
+
+@if (!isNew && d is not null)
+{
+    @* ---------------- Security (own forms) ---------------- *@
+    <section class="sp-user-panel" data-user-panel="security" hidden="@(Model.Tab != "security")">
+        <div class="sp-security-grid">
+            <div class="sp-card p-4">
+                <h2 class="sp-form__title">@L["Reset password"]</h2>
+                <form asp-action="ResetPassword" asp-route-id="@d.Id" method="post" class="sp-form" data-no-leave-warning>
+                    @Html.AntiForgeryToken()
+                    <label class="form-label" for="newPassword">@L["New password"]</label>
+                    <input type="password" class="form-control mb-1" id="newPassword" name="newPassword" autocomplete="new-password" minlength="8" required />
+                    <div class="form-text mb-2">@L["At least 8 characters. The user is signed out everywhere."]</div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="mustChange" name="mustChange" value="true" checked="@(!Model.IsSelf)" disabled="@Model.IsSelf" />
+                        <label class="form-check-label" for="mustChange">@L["Must change password at next sign-in"]</label>
+                    </div>
+                    <button type="submit" class="btn sp-btn-primary">@L["Reset password"]</button>
+                </form>
+            </div>
+
+            <div class="sp-card p-4">
+                <h2 class="sp-form__title">@L["Approval PIN"]</h2>
+                <p class="form-text">@(d.HasApprovalPin ? L["A PIN is set."] : L["No PIN yet."]) @L["4–6 digits, used to approve actions at the till."]</p>
+                <form asp-action="SetPin" asp-route-id="@d.Id" method="post" class="d-flex flex-wrap gap-2 align-items-end" data-no-leave-warning>
+                    @Html.AntiForgeryToken()
+                    <div>
+                        <label class="form-label" for="pin">@L["New PIN"]</label>
+                        <input type="password" class="form-control" id="pin" name="pin" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" autocomplete="off" style="max-width:140px" />
+                    </div>
+                    <button type="submit" class="btn sp-btn-primary">@L["Save PIN"]</button>
+                    @if (d.HasApprovalPin)
+                    {
+                        <button type="submit" class="btn sp-btn-secondary" name="remove" value="true">@L["Remove PIN"]</button>
+                    }
+                </form>
+            </div>
+
+            <div class="sp-card p-4">
+                <h2 class="sp-form__title">@L["Sign-in"]</h2>
+                <dl class="sp-facts mb-3">
+                    <div><dt>@L["Last sign-in"]</dt><dd class="num">@Ago(d.LastLoginAtUtc)</dd></div>
+                    <div><dt>@L["Status"]</dt><dd>@(d.LockedUntilUtc.HasValue ? string.Format(L["Locked until {0}"].Value, Ago(d.LockedUntilUtc)) : L["Not locked"].Value)</dd></div>
+                    <div><dt>@L["Must change password"]</dt><dd>@(d.MustChangePassword ? L["Yes"] : L["No"])</dd></div>
+                </dl>
+                <div class="d-flex flex-wrap gap-2">
+                    @if (d.LockedUntilUtc.HasValue)
+                    {
+                        <form asp-action="Unlock" asp-route-id="@d.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn sp-btn-secondary">@L["Unlock"]</button>
+                        </form>
+                    }
+                    @if (!Model.IsSelf)
+                    {
+                        <form asp-action="SetMustChange" asp-route-id="@d.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="mustChange" value="@(d.MustChangePassword ? "false" : "true")" />
+                            <button type="submit" class="btn sp-btn-secondary">@(d.MustChangePassword ? L["Don't require a new password"] : L["Require a new password"])</button>
+                        </form>
+                    }
+                    <form asp-action="SignOutEverywhere" asp-route-id="@d.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn sp-btn-secondary text-danger">@L["Sign out on every device"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @* ---------------- Activity ---------------- *@
+    <section class="sp-card sp-user-panel" data-user-panel="activity" hidden="@(Model.Tab != "activity")">
+        @if (Model.Activity.Count == 0)
+        {
+            <partial name="_EmptyState" model='(L["No activity yet"].Value, L["Changes to this user and changes they make to users and roles appear here."].Value)' />
+        }
+        else
+        {
+            <div class="table-responsive sp-table-scroll">
+                <table class="table sp-table">
+                    <thead>
+                        <tr>
+                            <th>@L["Date"]</th>
+                            <th>@L["By"]</th>
+                            <th>@L["Action"]</th>
+                            <th>@L["Details"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in Model.Activity)
+                        {
+                            <tr>
+                                <td class="num">@a.CreatedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                                <td>@a.ActorName</td>
+                                <td><span class="sp-status @(a.IsAboutThisUser ? "sp-status-info" : "sp-status-neutral")">@AuditLabel(a.Action)</span></td>
+                                <td dir="auto">@a.Details</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/users.js" asp-append-version="true"></script>
+}

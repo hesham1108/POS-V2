@@ -11,6 +11,12 @@ public class AuthResultDto
     public string? DisplayName { get; set; }
     public string? Role { get; set; }
 
+    /// <summary>Minutes until a locked account opens again (Phase 21); null when not locked.</summary>
+    public int? LockedMinutes { get; set; }
+
+    /// <summary>The user must choose a new password before using the app.</summary>
+    public bool MustChangePassword { get; set; }
+
     public static AuthResultDto Fail(string message) => new()
     {
         Succeeded = false,
