@@ -1,11 +1,60 @@
-﻿@model DashboardDto
+﻿@model DashboardOverviewDto
+@using StoresPOS.PL.Controllers
+@inject TimeProvider Clock
 @{
-    ViewData["Section"] = L["Dashboard"].Value;
-    ViewData["Title"] = L["Dashboard"].Value;
-    ViewData["Subtitle"] = string.Format(L["Today · {0}"].Value, Model.TodayLocal.ToString("yyyy/MM/dd"));
+    // Phase 22 dashboard — layout approved in docs/dashboard-mockup.html.
     var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
     bool Can(string permission) => User.HasClaim(AppPermissions.ClaimType, permission);
+    var key = HomeController.PeriodKey(Model.Range.Period);
+    var nowLocal = TimeZoneInfo.ConvertTime(Clock.GetUtcNow(), Clock.LocalTimeZone);
+    var name = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "";
+    var greeting = nowLocal.Hour < 12 ? L["Good morning, {0}"] : nowLocal.Hour < 17 ? L["Good afternoon, {0}"] : L["Good evening, {0}"];
+    var dateText = nowLocal.ToString(isAr ? "dddd d MMMM yyyy" : "dddd, d MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo(isAr ? "ar-EG" : "en-GB"));
+    var periods = new[] { ("today", L["Today"].Value), ("yesterday", L["Yesterday"].Value), ("7", L["7 days"].Value), ("30", L["30 days"].Value), ("month", L["This month"].Value) };
+    var a = Model.Alerts;
     var shift = Model.OpenShift;
+    var rangeText = Model.Range.IsSingleDay
+        ? Model.Range.FromLocal.ToString("yyyy/MM/dd")
+        : $"{Model.Range.FromLocal:yyyy/MM/dd} – {Model.Range.ToLocal.AddDays(-1):yyyy/MM/dd}";
+    ViewData["Section"] = L["Dashboard"].Value;
+    ViewData["Title"] = L["Dashboard"].Value;
+}
+
+@functions {
+    /// <summary>Small trend line for a KPI card (inline SVG, no script).</summary>
+    private static Microsoft.AspNetCore.Html.IHtmlContent Spark(IReadOnlyList<decimal> values, string color)
+    {
+        if (values.Count < 2 || values.All(v => v == 0))
+        {
+            return Microsoft.AspNetCore.Html.HtmlString.Empty;
+        }
+
+        var max = values.Max();
+        var min = Math.Min(0, values.Min());
+        var span = max - min == 0 ? 1 : max - min;
+        var step = 84d / (values.Count - 1);
+        var points = string.Join(" ", values.Select((v, i) =>
+            $"{(i * step).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)},{(26 - (double)((v - min) / span) * 24).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}"));
+        return new Microsoft.AspNetCore.Html.HtmlString(
+            $"<svg class=\"dash-spark\" viewBox=\"0 0 84 28\" aria-hidden=\"true\" preserveAspectRatio=\"none\"><polyline fill=\"none\" stroke=\"{color}\" stroke-width=\"2\" stroke-linejoin=\"round\" points=\"{points}\"/></svg>");
+    }
+}
+
+@{
+    Microsoft.AspNetCore.Html.IHtmlContent Delta(DashboardKpiDto k, bool upIsGood = true)
+    {
+        if (k.ChangePercent is not { } pct)
+        {
+            return new Microsoft.AspNetCore.Html.HtmlString(k.Value == 0 ? "" : $"<span class=\"dash-delta dash-delta--new\">{L["New"]}</span>");
+        }
+
+        var up = pct >= 0;
+        var good = up == upIsGood;
+        var cls = pct == 0 ? "dash-delta--flat" : good ? "dash-delta--up" : "dash-delta--down";
+        var arrow = pct == 0 ? "■" : up ? "▲" : "▼";
+        return new Microsoft.AspNetCore.Html.HtmlString(
+            $"<span class=\"dash-delta {cls} num\" title=\"{L["Compared with the previous period"]}\">{arrow} {Math.Abs(pct):0.#}%</span>");
+    }
 }
 
 @section PageActions {
@@ -19,240 +68,136 @@
     }
 }
 
-<partial name="_PageHeader" />
 <partial name="_Flash" />
 
-<div class="sp-kpis mb-4">
-    <a class="sp-kpi sp-kpi--primary" asp-controller="Reports" asp-action="Sales">
-        <span class="sp-kpi__label">@L["Today's sales"]</span>
-        <strong class="sp-kpi__value num">@Model.TodaySales.ToString("N2")</strong>
-        <span class="sp-kpi__hint">@string.Format(L["{0} invoices"].Value, Model.TodayInvoiceCount)</span>
-    </a>
-    <div class="sp-kpi">
-        <span class="sp-kpi__label">@L["Cash"]</span>
-        <strong class="sp-kpi__value num">@Model.TodayCash.ToString("N2")</strong>
-        <span class="sp-kpi__hint">@L["Enters the drawer"]</span>
-    </div>
-    <div class="sp-kpi">
-        <span class="sp-kpi__label">@L["Non-cash"]</span>
-        <strong class="sp-kpi__value num">@Model.TodayNonCash.ToString("N2")</strong>
-        <span class="sp-kpi__hint">@L["Visa / InstaPay / wallet"]</span>
-    </div>
-    <a class="sp-kpi @(Model.TodayReturnsCount > 0 ? "sp-kpi--warn" : null)" asp-controller="Returns" asp-action="Index">
-        <span class="sp-kpi__label">@L["Returns"]</span>
-        <strong class="sp-kpi__value num">@Model.TodayReturnsAmount.ToString("N2")</strong>
-        <span class="sp-kpi__hint">@string.Format(L["{0} returns"].Value, Model.TodayReturnsCount)</span>
-    </a>
-</div>
+<div class="dash" data-period="@key"
+     data-charts-url="@Url.Action("Charts", new { period = key })"
+     data-details-url="@Url.Action("Details", new { period = key })">
 
-<div class="report-grid mb-4">
-    @* Shift status *@
-    <section class="sp-card p-4">
-        <h2 class="shift-section-title">@L["Shift status"]</h2>
-        @if (shift is null)
+    @* ① Top bar *@
+    <header class="dash-top">
+        <div class="dash-top__title">
+            <h1>@string.Format(greeting.Value, name)</h1>
+            <p><span>@dateText</span></p>
+        </div>
+        <nav class="dash-periods" aria-label="@L["Period"]">
+            @foreach (var (k, label) in periods)
+            {
+                <a href="@Url.Action("Index", new { period = k == "today" ? null : k })" class="@(k == key ? "is-active" : "")" aria-current="@(k == key ? "page" : null)">@label</a>
+            }
+        </nav>
+        @if (shift is not null)
         {
-            <div class="dash-shift">
-                <div>
-                    <span class="sp-status sp-status-neutral">@L["No open shift"]</span>
-                    <p class="text-muted mb-0 mt-2">@L["Open a shift from the POS gate to start selling."]</p>
-                </div>
-                @if (Can(AppPermissions.ShiftsOpenResume))
-                {
-                    <a class="btn sp-btn-primary" asp-controller="Shifts" asp-action="Gate">@L["Open shift"]</a>
-                }
+            <a class="dash-chip dash-chip--ok" asp-controller="Shifts" asp-action="Current">@string.Format(L["Shift #{0} open · {1} cashiers"].Value, shift.Id, shift.Participants.Count)</a>
+        }
+        else
+        {
+            <span class="dash-chip dash-chip--neutral">@L["No open shift"]</span>
+        }
+    </header>
+
+    @* ② Alerts — only what needs action *@
+    @{
+        var anyAlert = a.OldOpenShiftId is not null || a.ChequesOverdue > 0 || a.ChequesDueToday > 0 || a.OutOfStock > 0
+                       || (Can(AppPermissions.SettingsManage) && (a.BackupTooOld || a.LicenseDaysLeft is <= 14));
+    }
+    @if (anyAlert)
+    {
+        <div class="dash-alerts" role="status">
+            @if (a.OldOpenShiftId is { } oldId)
+            {
+                <a class="dash-alert dash-alert--danger" asp-controller="Shifts" asp-action="Current">@string.Format(L["Shift #{0} is still open from an earlier day"].Value, oldId)</a>
+            }
+            @if (a.ChequesOverdue > 0)
+            {
+                <a class="dash-alert dash-alert--danger" asp-controller="Cheques" asp-action="Index" asp-route-overdueOnly="true"><b class="num">@a.ChequesOverdue</b> @L["cheques overdue"]</a>
+            }
+            @if (a.ChequesDueToday > 0)
+            {
+                <a class="dash-alert dash-alert--warn" asp-controller="Cheques" asp-action="Index"><b class="num">@a.ChequesDueToday</b> @L["cheques due today"]</a>
+            }
+            @if (a.OutOfStock > 0)
+            {
+                <a class="dash-alert dash-alert--warn" asp-controller="Inventory" asp-action="Index" asp-route-lowStockOnly="true"><b class="num">@a.OutOfStock</b> @L["items out of stock"]</a>
+            }
+            @if (Can(AppPermissions.SettingsManage) && a.BackupTooOld)
+            {
+                <a class="dash-alert dash-alert--info" asp-controller="Settings" asp-action="Index" asp-route-tab="backup">
+                    @(a.HoursSinceBackup is { } h ? string.Format(L["Last backup {0} hours ago"].Value, Math.Round(h)) : L["No backup found"].Value)
+                </a>
+            }
+            @if (Can(AppPermissions.SettingsManage) && a.LicenseDaysLeft is { } days && days <= 14)
+            {
+                <a class="dash-alert @(days < 0 ? "dash-alert--danger" : "dash-alert--warn")" asp-controller="Settings" asp-action="Index" asp-route-tab="license">
+                    @(days < 0 ? L["License expired"].Value : string.Format(L["License ends in {0} days"].Value, days))
+                </a>
+            }
+        </div>
+    }
+
+    @* ③ Key figures *@
+    <p class="dash-range text-muted">@rangeText · @L["compared with the period before"]</p>
+    <section class="dash-kpis" aria-label="@L["Key figures"]">
+        <a class="dash-kpi sp-card" asp-controller="Sales" asp-action="Index">
+            <span class="dash-kpi__label">@L["Net sales"]</span>
+            <span class="dash-kpi__value num">@Model.NetSales.Value.ToString("N2")</span>
+            <span class="dash-kpi__foot">@Delta(Model.NetSales) @Spark(Model.NetSales.Trend, "var(--sp-primary)")</span>
+        </a>
+        <a class="dash-kpi sp-card" asp-controller="Sales" asp-action="Index">
+            <span class="dash-kpi__label">@L["Invoices"]</span>
+            <span class="dash-kpi__value num">@Model.Invoices.Value.ToString("N0")</span>
+            <span class="dash-kpi__foot">@Delta(Model.Invoices) @Spark(Model.Invoices.Trend, "var(--sp-primary)")</span>
+        </a>
+        <div class="dash-kpi sp-card">
+            <span class="dash-kpi__label">@L["Average invoice"]</span>
+            <span class="dash-kpi__value num">@Model.AverageInvoice.Value.ToString("N2")</span>
+            <span class="dash-kpi__foot">@Delta(Model.AverageInvoice)</span>
+        </div>
+        <a class="dash-kpi sp-card" asp-controller="Shifts" asp-action="Current">
+            <span class="dash-kpi__label">@L["Cash in drawer"]</span>
+            <span class="dash-kpi__value num">@(Model.CashInDrawer?.ToString("N2") ?? "—")</span>
+            <span class="dash-kpi__foot text-muted">@(shift is null ? L["No open shift"] : string.Format(L["Expected for shift #{0}"].Value, shift.Id))</span>
+        </a>
+        <a class="dash-kpi sp-card" asp-controller="Returns" asp-action="Index">
+            <span class="dash-kpi__label">@L["Returns"]</span>
+            <span class="dash-kpi__value num">@Model.Returns.Value.ToString("N2")</span>
+            <span class="dash-kpi__foot">@Delta(Model.Returns, upIsGood: false) <span class="text-muted">@string.Format(L["{0} returns"].Value, Model.ReturnsCount)</span></span>
+        </a>
+    </section>
+
+    @* ④ Charts (loaded after the page) *@
+    <section class="dash-row dash-row--charts">
+        <article class="sp-card dash-panel">
+            <div class="dash-panel__head">
+                <h2>@(Model.Range.IsSingleDay ? L["Sales by hour"] : L["Sales by day"])</h2>
+                <span class="dash-legend"><i class="is-current"></i>@L["This period"] <i class="is-previous"></i>@L["Previous period"]</span>
             </div>
-        }
-        else
-        {
-            <div class="dash-shift mb-3">
-                <div>
-                    <strong>@string.Format(L["Shift #{0}"].Value, shift.Id)</strong>
-                    <partial name="_ShiftStatusChip" model="shift" />
-                    @if (shift.IsOld)
-                    {
-                        <span class="sp-status sp-status-warn">@L["Opened before today"]</span>
-                    }
-                    <div class="text-muted small mt-1">
-                        @L["Opened"] <span class="num">@shift.OpenedAtUtc.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span> · @shift.OpenedByDisplayName
-                    </div>
-                </div>
-                <a class="btn sp-btn-secondary" asp-controller="Shifts" asp-action="Current">@L["Current shift"]</a>
-            </div>
-            <dl class="shift-summary__rows">
-                <div><dt>@L["Expected in drawer"]</dt><dd class="num">@shift.ExpectedCash.ToString("N2")</dd></div>
-                <div><dt>@L["Invoices"]</dt><dd class="num">@shift.InvoiceCount</dd></div>
-                <div><dt>@L["Participants"]</dt><dd>@string.Join(L[", "].Value, shift.Participants.Select(p => p.DisplayName))</dd></div>
-                @if (shift.HeldInvoiceCount > 0)
-                {
-                    <div><dt>@L["Held invoices"]</dt><dd class="num">@shift.HeldInvoiceCount</dd></div>
-                }
-            </dl>
-        }
+            <div class="dash-chart dash-chart--bars"><canvas id="dash-sales" aria-label="@(Model.Range.IsSingleDay ? L["Sales by hour"] : L["Sales by day"])" role="img"></canvas></div>
+        </article>
+        <article class="sp-card dash-panel">
+            <div class="dash-panel__head"><h2>@L["Payment methods"]</h2></div>
+            <div class="dash-chart dash-chart--donut"><canvas id="dash-methods" aria-label="@L["Payment methods"]" role="img"></canvas></div>
+            <ul class="dash-method-list" id="dash-methods-list" data-empty="@L["No sales in this period"]"></ul>
+        </article>
     </section>
 
-    @* Cheques *@
-    <section class="sp-card p-4">
-        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-            <h2 class="shift-section-title">@L["Cheques"]</h2>
-            @if (Can(AppPermissions.ChequesView))
-            {
-                <a class="btn btn-sm sp-btn-secondary" asp-controller="Cheques" asp-action="Index">@L["Open"]</a>
-            }
-        </div>
-        @{
-            var ch = Model.Cheques;
-        }
-        <dl class="shift-summary__rows">
-            <div><dt>@L["Receivable overdue"]</dt><dd class="num">@ch.IncomingOverdue · @ch.IncomingOverdueAmount.ToString("N2")</dd></div>
-            <div><dt>@L["Receivable due today"]</dt><dd class="num">@ch.IncomingDueToday</dd></div>
-            <div><dt>@L["Receivable this week"]</dt><dd class="num">@ch.IncomingDueThisWeek</dd></div>
-            <div><dt>@L["Payable overdue"]</dt><dd class="num">@ch.OutgoingOverdue · @ch.OutgoingOverdueAmount.ToString("N2")</dd></div>
-            <div><dt>@L["Payable due today"]</dt><dd class="num">@ch.OutgoingDueToday</dd></div>
-            <div><dt>@L["Payable this week"]</dt><dd class="num">@ch.OutgoingDueThisWeek</dd></div>
-        </dl>
-    </section>
-
-    @* Treasuries *@
-    <section class="sp-card p-4">
-        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-            <h2 class="shift-section-title">@L["Treasuries"]</h2>
-            @if (Can(AppPermissions.TreasuriesView))
-            {
-                <a class="btn btn-sm sp-btn-secondary" asp-controller="Treasuries" asp-action="Index">@L["Open"]</a>
-            }
-        </div>
-        @if (Model.Treasuries.Count == 0)
-        {
-            <p class="text-muted mb-0">@L["No treasuries yet"]</p>
-        }
-        else
-        {
-            <dl class="shift-summary__rows">
-                @foreach (var t in Model.Treasuries.Take(6))
-                {
-                    var tName = isAr ? t.NameAr : t.NameEn;
-                    <div>
-                        <dt>@tName @(t.IsDefault ? $"({L["Default"].Value})" : null)</dt>
-                        <dd class="num">@t.Balance.ToString("N2")</dd>
-                    </div>
-                }
-            </dl>
-        }
-    </section>
-
-    @* Low stock *@
-    <section class="sp-card p-4">
-        <div class="d-flex justify-content-between align-items-start gap-2">
-            <h2 class="shift-section-title">@L["Stock alerts"]</h2>
-            @if (Model.LowStockCount > 0)
-            {
-                <span class="sp-status sp-status-warn">@string.Format(L["{0} low"].Value, Model.LowStockCount)</span>
-            }
-        </div>
-        @if (Model.LowStockCount == 0)
-        {
-            var empty = (L["Stock looks fine"].Value, L["No active product is at or below its low-stock level."].Value);
-            <partial name="_EmptyState" model="empty" />
-        }
-        else
-        {
-            <ul class="dash-list">
-                @foreach (var p in Model.LowStockTop)
-                {
-                    <li>
-                        <span>
-                            @(isAr ? p.NameAr : p.NameEn)
-                            <small>@string.Format(L["Low-stock level {0}"].Value, p.LowStockThreshold.ToString("0.###"))</small>
-                        </span>
-                        <span class="sp-status @(p.StockQuantity <= 0 ? "sp-status-bad" : "sp-status-warn") num">
-                            @p.StockQuantity.ToString("0.###") @p.Unit
-                        </span>
-                    </li>
-                }
-            </ul>
-            @if (Can(AppPermissions.CatalogManage))
-            {
-                <a class="btn btn-sm sp-btn-secondary mt-3" asp-controller="Inventory" asp-action="Index" asp-route-lowStockOnly="true">@L["See all low stock"]</a>
-            }
-        }
-    </section>
+    @* ⑤–⑦ Analysis, money, activity (HTML partial, loaded after the page) *@
+    <div id="dash-details" aria-busy="true">
+        <div class="dash-loading">@L["Loading…"]</div>
+    </div>
 </div>
 
-<h2 class="shift-section-title">@L["Recent activity"]</h2>
-<div class="report-grid">
-    <section class="sp-card p-4">
-        <h3 class="h6 mb-3">@L["Latest sales"]</h3>
-        @if (Model.RecentSales.Count == 0)
-        {
-            <p class="text-muted mb-0">@L["No sales yet."]</p>
-        }
-        else
-        {
-            <ul class="dash-list">
-                @foreach (var s in Model.RecentSales)
-                {
-                    <li>
-                        <span>
-                            <a class="num" asp-controller="Sales" asp-action="Details" asp-route-id="@s.Id">@s.InvoiceNumber</a>
-                            <small>@s.CompletedAtUtc.ToLocalTime().ToString("MM/dd HH:mm") · @s.CashierDisplayName · @(s.CustomerName ?? L["Walk-in customer"].Value)</small>
-                        </span>
-                        <strong class="num">@s.Total.ToString("N2")</strong>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
+<script id="dash-i18n" type="application/json">
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        lang = isAr ? "ar" : "en",
+        current = L["This period"].Value,
+        previous = L["Previous period"].Value,
+        failed = L["Could not load this part. Refresh the page to try again."].Value
+    }))
+</script>
 
-    <section class="sp-card p-4">
-        <h3 class="h6 mb-3">@L["Latest cash-outs"]</h3>
-        @if (Model.RecentCashOuts.Count == 0)
-        {
-            <p class="text-muted mb-0">@L["No cash-outs yet."]</p>
-        }
-        else
-        {
-            <ul class="dash-list">
-                @foreach (var c in Model.RecentCashOuts)
-                {
-                    <li>
-                        <span>
-                            @c.Reason
-                            <small>@c.CreatedAtUtc.ToLocalTime().ToString("MM/dd HH:mm") · @c.UserDisplayName · #@c.ShiftId</small>
-                        </span>
-                        <strong class="num">@c.Amount.ToString("N2")</strong>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
-
-    <section class="sp-card p-4">
-        <h3 class="h6 mb-3">@L["Latest confirmed purchases"]</h3>
-        @if (Model.RecentPurchases.Count == 0)
-        {
-            <p class="text-muted mb-0">@L["No confirmed purchases yet."]</p>
-        }
-        else
-        {
-            <ul class="dash-list">
-                @foreach (var p in Model.RecentPurchases)
-                {
-                    <li>
-                        <span>
-                            @if (Can(AppPermissions.PurchasesManage))
-                            {
-                                <a asp-controller="Purchases" asp-action="Details" asp-route-id="@p.Id">@p.InvoiceNumber</a>
-                            }
-                            else
-                            {
-                                @p.InvoiceNumber
-                            }
-                            <small>@p.InvoiceDate.ToString("yyyy/MM/dd") · @p.SupplierName</small>
-                        </span>
-                        <strong class="num">@p.Total.ToString("N2")</strong>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
-</div>
+@section Scripts {
+    <script src="~/lib/chartjs/dist/chart.umd.js" asp-append-version="true"></script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}

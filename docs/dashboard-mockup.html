@@ -1,0 +1,399 @@
+<!doctype html>
+<!--
+  StoresPOS — Dashboard mockup (Phase 22, improvement plan §1).
+  Static, offline, sample numbers only. For approval before building.
+  Toggle the language (العربية / English) and the period buttons are live; charts are plain SVG here,
+  the real page draws them with Chart.js served from wwwroot/lib (no CDN).
+-->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StoresPOS — لوحة التحكم (Mockup)</title>
+<style>
+  @font-face { font-family: "Poppins"; font-weight: 400; src: url("../src/StoresPOS.PL/wwwroot/fonts/poppins/poppins-latin-400.woff2") format("woff2"); }
+  @font-face { font-family: "Poppins"; font-weight: 500; src: url("../src/StoresPOS.PL/wwwroot/fonts/poppins/poppins-latin-500.woff2") format("woff2"); }
+  @font-face { font-family: "Poppins"; font-weight: 600; src: url("../src/StoresPOS.PL/wwwroot/fonts/poppins/poppins-latin-600.woff2") format("woff2"); }
+  @font-face { font-family: "Poppins"; font-weight: 700; src: url("../src/StoresPOS.PL/wwwroot/fonts/poppins/poppins-latin-700.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans Arabic"; font-weight: 400; src: url("../src/StoresPOS.PL/wwwroot/fonts/ibm-plex-sans-arabic/ibm-plex-arabic-400.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans Arabic"; font-weight: 500; src: url("../src/StoresPOS.PL/wwwroot/fonts/ibm-plex-sans-arabic/ibm-plex-arabic-500.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans Arabic"; font-weight: 600; src: url("../src/StoresPOS.PL/wwwroot/fonts/ibm-plex-sans-arabic/ibm-plex-arabic-600.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans Arabic"; font-weight: 700; src: url("../src/StoresPOS.PL/wwwroot/fonts/ibm-plex-sans-arabic/ibm-plex-arabic-700.woff2") format("woff2"); }
+
+  /* Same tokens as src/StoresPOS.PL/wwwroot/css/theme.css */
+  :root {
+    --primary: #1559d6; --primary-soft: #eaf1fe; --primary-border: #b9cff8;
+    --bg: #f3f5f8; --surface: #fff; --surface-muted: #f8f9fa;
+    --text: #1f2937; --strong: #111827; --muted: #6b7280;
+    --border: #e3e7ee; --border-strong: #cfd6e1;
+    --success: #16a34a; --success-soft: #e8f7ee; --warning: #d97706; --warning-soft: #fdf3e2;
+    --danger: #dc2626; --danger-soft: #fdecec; --info: #2563eb; --info-soft: #e8effd; --neutral-soft: #eef0f3;
+    --c1: #1559d6; --c2: #16a34a; --c3: #d97706; --c4: #7c3aed; --c5: #0891b2; --c6: #94a3b8;
+    --radius: 12px; --radius-lg: 14px; --pill: 999px;
+    --shadow: 0 1px 2px rgba(17,24,39,.04), 0 12px 32px -8px rgba(17,24,39,.10);
+    --font: "Poppins", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --primary: #5b8ff0; --primary-soft: #1d2a44; --primary-border: #2c4475;
+      --bg: #0f1218; --surface: #171b23; --surface-muted: #1d222c; --text: #d7dce5; --strong: #f3f5f8; --muted: #8d96a6;
+      --border: #262c38; --border-strong: #343c4b; --success-soft: #12301f; --warning-soft: #33260f; --danger-soft: #3a1717;
+      --info-soft: #18264a; --neutral-soft: #222835;
+    }
+  }
+  :root[data-theme="dark"] {
+    --primary: #5b8ff0; --primary-soft: #1d2a44; --primary-border: #2c4475;
+    --bg: #0f1218; --surface: #171b23; --surface-muted: #1d222c; --text: #d7dce5; --strong: #f3f5f8; --muted: #8d96a6;
+    --border: #262c38; --border-strong: #343c4b; --success-soft: #12301f; --warning-soft: #33260f; --danger-soft: #3a1717;
+    --info-soft: #18264a; --neutral-soft: #222835;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font); }
+  .num { font-variant-numeric: tabular-nums lining-nums; direction: ltr; unicode-bidi: isolate; }
+  .page { max-width: 1320px; margin: 0 auto; padding: 24px 16px 48px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+  h1, h2, h3 { color: var(--strong); margin: 0; }
+  h2 { font-size: 16px; font-weight: 600; }
+  .muted { color: var(--muted); }
+  .note {
+    margin-bottom: 16px; padding: 10px 14px; border-radius: var(--radius); background: var(--info-soft); color: var(--info); font-size: 13px;
+  }
+
+  /* 1. Top bar */
+  .top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 16px; }
+  .top__title { margin-inline-end: auto; }
+  .top__title h1 { font-size: 24px; font-weight: 700; }
+  .top__title p { margin: 2px 0 0; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--pill); padding: 3px; }
+  .seg button {
+    border: 0; background: transparent; color: var(--text); font: inherit; font-size: 13px; font-weight: 500;
+    padding: 6px 14px; border-radius: var(--pill); cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--pill); font-size: 13px; font-weight: 600; }
+  .chip--ok { background: var(--success-soft); color: var(--success); }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .lang { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: var(--pill); padding: 6px 14px; font: inherit; font-size: 13px; cursor: pointer; }
+
+  /* 2. Alerts */
+  .alerts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .alert { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius); font-size: 13px; font-weight: 500; text-decoration: none; }
+  .alert b { font-weight: 700; }
+  .alert--danger { background: var(--danger-soft); color: var(--danger); }
+  .alert--warn { background: var(--warning-soft); color: var(--warning); }
+  .alert--info { background: var(--info-soft); color: var(--info); }
+
+  /* 3. KPI cards */
+  .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi { padding: 16px; display: grid; gap: 6px; }
+  .kpi__label { color: var(--muted); font-size: 13px; font-weight: 500; }
+  .kpi__value { font-size: 24px; font-weight: 700; color: var(--strong); line-height: 1.2; }
+  .kpi__value small { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .kpi__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .delta { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: var(--pill); }
+  .delta--up { background: var(--success-soft); color: var(--success); }
+  .delta--down { background: var(--danger-soft); color: var(--danger); }
+  .spark { width: 84px; height: 28px; }
+  .kpi--locked { border-style: dashed; box-shadow: none; background: transparent; }
+
+  /* 4–6. Grid rows */
+  .row { display: grid; gap: 12px; margin-bottom: 16px; }
+  .row--charts { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .row--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .row--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panel { padding: 16px; }
+  .panel__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .panel__head a { color: var(--primary); font-size: 13px; text-decoration: none; font-weight: 500; }
+
+  .bars { width: 100%; height: 220px; }
+  .bars text, .donut text { direction: ltr; unicode-bidi: plaintext; }
+  .donut-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .donut { width: 150px; height: 150px; flex: none; }
+  .legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; flex: 1; min-width: 140px; font-size: 13px; }
+  .legend li { display: flex; align-items: center; gap: 8px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .legend span:last-child { margin-inline-start: auto; font-weight: 600; color: var(--strong); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: start; color: var(--muted); font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 4px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: 0; }
+  td.n, th.n { text-align: end; }
+  .rank { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--neutral-soft); font-size: 12px; font-weight: 700; margin-inline-end: 6px; }
+  .meter { height: 6px; background: var(--neutral-soft); border-radius: var(--pill); overflow: hidden; margin-top: 4px; }
+  .meter > span { display: block; height: 100%; background: var(--primary); border-radius: inherit; }
+  .btn { display: inline-flex; align-items: center; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn--primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .stock-low { color: var(--danger); font-weight: 600; }
+
+  .money { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .money div { padding: 12px; border-radius: var(--radius); background: var(--surface-muted); }
+  .money b { display: block; font-size: 18px; color: var(--strong); }
+  .due { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .due li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--pill); }
+  .tag--in { background: var(--success-soft); color: var(--success); }
+  .tag--out { background: var(--warning-soft); color: var(--warning); }
+  .due .when { margin-inline-start: auto; color: var(--muted); }
+
+  /* 7. Timeline */
+  .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .timeline li { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--border); }
+  .timeline li:last-child { border-bottom: 0; }
+  .ico { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-size: 15px; }
+  .ico--sale { background: var(--success-soft); color: var(--success); }
+  .ico--return { background: var(--danger-soft); color: var(--danger); }
+  .ico--cash { background: var(--warning-soft); color: var(--warning); }
+  .ico--purchase { background: var(--info-soft); color: var(--info); }
+  .timeline small { display: block; color: var(--muted); }
+  .timeline .amt { font-weight: 600; color: var(--strong); }
+
+  .annot { font-size: 11px; color: var(--muted); border: 1px dashed var(--border-strong); border-radius: 8px; padding: 2px 8px; }
+
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .row--three { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 760px) {
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .row--charts, .row--three, .row--two { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <p class="note" data-en="Mockup for approval — sample numbers. Numbered notes (①…⑦) match section 1 of docs/improvement-plan.md.">نموذج للموافقة — الأرقام تجريبية. الأرقام المرقّمة (①…⑦) هي نفس ترتيب القسم 1 في docs/improvement-plan.md.</p>
+
+  <!-- ① Top bar -->
+  <header class="top">
+    <div class="top__title">
+      <h1 data-en="Good morning, Ahmed">صباح الخير يا أحمد</h1>
+      <p><span data-en="Saturday 21 November 2026">السبت 21 نوفمبر 2026</span> · <span class="annot">①</span></p>
+    </div>
+    <div class="seg" role="group" aria-label="Period" id="period">
+      <button type="button" aria-pressed="true" data-p="today" data-en="Today">النهارده</button>
+      <button type="button" aria-pressed="false" data-p="yesterday" data-en="Yesterday">أمس</button>
+      <button type="button" aria-pressed="false" data-p="7" data-en="7 days">7 أيام</button>
+      <button type="button" aria-pressed="false" data-p="30" data-en="30 days">30 يوم</button>
+      <button type="button" aria-pressed="false" data-p="month" data-en="This month">الشهر</button>
+    </div>
+    <span class="chip chip--ok" data-en="Shift #12 open · 3 cashiers">وردية #12 مفتوحة · 3 كاشير</span>
+    <button type="button" class="lang" id="lang">English</button>
+  </header>
+
+  <!-- ② Alerts (only when something needs action) -->
+  <div class="alerts" aria-label="Alerts">
+    <span class="annot">②</span>
+    <a class="alert alert--danger" href="#"><b class="num">2</b> <span data-en="cheques overdue">شيك متأخر</span></a>
+    <a class="alert alert--warn" href="#"><b class="num">1</b> <span data-en="cheque due today">شيك مستحق النهارده</span></a>
+    <a class="alert alert--warn" href="#"><b class="num">4</b> <span data-en="items out of stock">أصناف خلصت</span></a>
+    <a class="alert alert--info" href="#"><span data-en="Last backup 31 hours ago">آخر نسخة احتياطية من 31 ساعة</span></a>
+  </div>
+
+  <!-- ③ KPI cards: change vs the previous period + sparkline -->
+  <section class="kpis" aria-label="Key figures">
+    <article class="card kpi">
+      <span class="kpi__label" data-en="Net sales">صافي المبيعات</span>
+      <span class="kpi__value num" data-k="sales">18,420 <small data-en="EGP">ج.م</small></span>
+      <div class="kpi__foot"><span class="delta delta--up num" data-k="d1">▲ 12.4%</span><svg class="spark" viewBox="0 0 84 28" aria-hidden="true"><polyline fill="none" stroke="var(--c1)" stroke-width="2" points="0,22 12,18 24,20 36,12 48,14 60,8 72,10 84,4"/></svg></div>
+    </article>
+    <article class="card kpi">
+      <span class="kpi__label" data-en="Invoices">عدد الفواتير</span>
+      <span class="kpi__value num" data-k="inv">146</span>
+      <div class="kpi__foot"><span class="delta delta--up num">▲ 6.0%</span><svg class="spark" viewBox="0 0 84 28" aria-hidden="true"><polyline fill="none" stroke="var(--c1)" stroke-width="2" points="0,18 12,20 24,16 36,14 48,16 60,12 72,10 84,9"/></svg></div>
+    </article>
+    <article class="card kpi">
+      <span class="kpi__label" data-en="Average invoice">متوسط الفاتورة</span>
+      <span class="kpi__value num">126.20 <small data-en="EGP">ج.م</small></span>
+      <div class="kpi__foot"><span class="delta delta--up num">▲ 5.9%</span><svg class="spark" viewBox="0 0 84 28" aria-hidden="true"><polyline fill="none" stroke="var(--c1)" stroke-width="2" points="0,16 12,14 24,18 36,14 48,12 60,13 72,9 84,8"/></svg></div>
+    </article>
+    <article class="card kpi">
+      <span class="kpi__label" data-en="Cash in drawer">الكاش في الدرج</span>
+      <span class="kpi__value num">9,870 <small data-en="EGP">ج.م</small></span>
+      <div class="kpi__foot"><span class="muted" style="font-size:12px" data-en="Expected for shift #12">المتوقع لوردية #12</span></div>
+    </article>
+    <article class="card kpi">
+      <span class="kpi__label" data-en="Returns">المرتجعات</span>
+      <span class="kpi__value num">640 <small data-en="EGP">ج.م</small></span>
+      <div class="kpi__foot"><span class="delta delta--down num">▼ 3 <span data-en="slips">إيصالات</span></span><svg class="spark" viewBox="0 0 84 28" aria-hidden="true"><polyline fill="none" stroke="var(--danger)" stroke-width="2" points="0,20 12,22 24,14 36,18 48,20 60,16 72,18 84,12"/></svg></div>
+    </article>
+  </section>
+  <p class="muted" style="font-size:12px;margin:-8px 0 16px"><span class="annot">③</span> <span data-en="A Profit card is added once profit costing is decided (section 9), visible only with the new Profit.View permission.">كارت الربح يتضاف بعد حسم قرار تكلفة الربح (القسم 9)، ويظهر لمن عنده صلاحية Profit.View الجديدة بس.</span></p>
+
+  <!-- ④ Charts -->
+  <section class="row row--charts">
+    <article class="card panel">
+      <div class="panel__head"><h2 data-en="Sales by hour">المبيعات بالساعة</h2><span class="annot">④</span></div>
+      <svg class="bars" viewBox="0 0 640 220" role="img" aria-label="Sales by hour" id="bars"></svg>
+      <p class="muted" style="font-size:12px;margin:6px 0 0" data-en="By hour for one day, by day for longer periods. Faded bars = same hours of the previous period.">بالساعة لو الفترة يوم، وباليوم لو أطول. الأعمدة الفاتحة = نفس الساعات في الفترة السابقة.</p>
+    </article>
+    <article class="card panel">
+      <div class="panel__head"><h2 data-en="Payment methods">طرق الدفع</h2></div>
+      <div class="donut-wrap">
+        <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Payment methods" id="donut"></svg>
+        <ul class="legend" id="legend"></ul>
+      </div>
+    </article>
+  </section>
+
+  <!-- ⑤ Analysis -->
+  <section class="row row--three">
+    <article class="card panel">
+      <div class="panel__head"><h2 data-en="Top products">أكتر الأصناف مبيعاً</h2><span class="annot">⑤</span></div>
+      <table>
+        <thead><tr><th data-en="Product">الصنف</th><th class="n" data-en="Qty">الكمية</th><th class="n" data-en="Sales">المبيعات</th></tr></thead>
+        <tbody id="top"></tbody>
+      </table>
+    </article>
+    <article class="card panel">
+      <div class="panel__head"><h2 data-en="Sales by cashier">المبيعات لكل كاشير</h2></div>
+      <table>
+        <thead><tr><th data-en="Cashier">الكاشير</th><th class="n" data-en="Invoices">فواتير</th><th class="n" data-en="Sales">المبيعات</th></tr></thead>
+        <tbody>
+          <tr><td>محمد الكاشير<div class="meter"><span style="width:100%"></span></div></td><td class="n num">71</td><td class="n num">8,940</td></tr>
+          <tr><td>سارة الكاشير<div class="meter"><span style="width:74%"></span></div></td><td class="n num">52</td><td class="n num">6,610</td></tr>
+          <tr><td>أحمد المدير<div class="meter"><span style="width:32%"></span></div></td><td class="n num">23</td><td class="n num">2,870</td></tr>
+        </tbody>
+      </table>
+    </article>
+    <article class="card panel">
+      <div class="panel__head"><h2 data-en="Running low">قاربت تخلص</h2><a href="#" data-en="All">الكل</a></div>
+      <table>
+        <thead><tr><th data-en="Product">الصنف</th><th class="n" data-en="Left">الباقي</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>زيت عباد الشمس ١ لتر</td><td class="n num stock-low">0</td><td class="n"><button class="btn btn--primary" type="button" data-en="Purchase order">أمر شراء</button></td></tr>
+          <tr><td>سكر ١ كجم</td><td class="n num stock-low">2</td><td class="n"><button class="btn" type="button" data-en="Purchase order">أمر شراء</button></td></tr>
+          <tr><td>أرز مصري ٥ كجم</td><td class="n num">4</td><td class="n"><button class="btn" type="button" data-en="Purchase order">أمر شراء</button></td></tr>
+          <tr><td>شاي ٢٥٠ جم</td><td class="n num">5</td><td class="n"><button class="btn" type="button" data-en="Purchase order">أمر شراء</button></td></tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+
+  <!-- ⑥ Money -->
+  <section class="row row--two">
+    <article class="card panel">
+      <div class="panel__head"><h2 data-en="Treasury balances">أرصدة الخزائن</h2><span class="annot">⑥</span></div>
+      <div class="money">
+        <div><span class="muted" data-en="Main cash">الخزينة الرئيسية</span><b class="num">42,310.00</b></div>
+        <div><span class="muted" data-en="Bank — CIB">بنك CIB</span><b class="num">118,900.50</b></div>
+        <div><span class="muted" data-en="Vodafone Cash">فودافون كاش</span><b class="num">6,240.00</b></div>
+      </div>
+    </article>
+    <article class="card panel">
+      <div class="panel__head"><h2 data-en="Cheques due in 7 days">شيكات مستحقة خلال 7 أيام</h2><a href="#" data-en="Cheques">الشيكات</a></div>
+      <ul class="due">
+        <li><span class="tag tag--in" data-en="Ours">لنا</span><span>شركة النيل للتوريدات · <span class="num">#88012</span></span><b class="num">12,500</b><span class="when" data-en="today">النهارده</span></li>
+        <li><span class="tag tag--out" data-en="Owed">علينا</span><span>مخازن الأمل · <span class="num">#40221</span></span><b class="num">7,800</b><span class="when" data-en="in 2 days">بعد يومين</span></li>
+        <li><span class="tag tag--in" data-en="Ours">لنا</span><span>سوبر ماركت الهدى · <span class="num">#55210</span></span><b class="num">3,150</b><span class="when" data-en="in 5 days">بعد 5 أيام</span></li>
+      </ul>
+    </article>
+  </section>
+
+  <!-- ⑦ One activity timeline -->
+  <section class="card panel">
+    <div class="panel__head"><h2 data-en="Latest activity">آخر النشاط</h2><span class="annot">⑦</span></div>
+    <ul class="timeline">
+      <li><span class="ico ico--sale" aria-hidden="true">↗</span><span><span data-en="Sale">بيع</span> <span class="num">S-000146</span><small>محمد الكاشير · <span class="num">10:42</span></small></span><span class="amt num">+ 320.00</span></li>
+      <li><span class="ico ico--return" aria-hidden="true">↩</span><span><span data-en="Return">مرتجع</span> <span class="num">R-000031</span><small>سارة الكاشير · <span class="num">10:31</span></small></span><span class="amt num">− 85.00</span></li>
+      <li><span class="ico ico--cash" aria-hidden="true">₤</span><span><span data-en="Cash-out — delivery">صرف نقدي — توصيل</span><small>أحمد المدير · <span class="num">10:05</span></small></span><span class="amt num">− 150.00</span></li>
+      <li><span class="ico ico--purchase" aria-hidden="true">⬇</span><span><span data-en="Purchase">شراء</span> <span class="num">P-2026-118</span><small>مخازن الأمل · <span class="num">09:40</span></small></span><span class="amt num">4,600.00</span></li>
+      <li><span class="ico ico--sale" aria-hidden="true">↗</span><span><span data-en="Sale">بيع</span> <span class="num">S-000145</span><small>محمد الكاشير · <span class="num">09:38</span></small></span><span class="amt num">+ 1,140.50</span></li>
+    </ul>
+  </section>
+
+  <p class="muted" style="font-size:12px;margin-top:16px" data-en="Build notes: key figures render with the page; charts and analysis load right after (AJAX partials) with a 30–60 s cache. Cashiers keep going to the shift gate; the dashboard needs Dashboard.View.">ملاحظات التنفيذ: الأرقام الأساسية تظهر مع الصفحة، والرسوم والتحليل تتحمل بعدها (AJAX) مع كاش 30–60 ثانية. الكاشير يفضل يروح لبوابة الوردية، والداشبورد محتاجة صلاحية Dashboard.View.</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var hours = ["9","10","11","12","13","14","15","16","17","18","19","20","21"];
+  var now = [420, 980, 1650, 2210, 1900, 1240, 1080, 1620, 2380, 2650, 1700, 420, 0];
+  var prev = [380, 760, 1420, 2050, 1700, 1300, 900, 1400, 2100, 2300, 1900, 900, 300];
+  var methods = [
+    { ar: "كاش", en: "Cash", v: 11240, c: "var(--c1)" },
+    { ar: "فيزا", en: "Card", v: 3980, c: "var(--c2)" },
+    { ar: "إنستاباي", en: "InstaPay", v: 1820, c: "var(--c3)" },
+    { ar: "فودافون كاش", en: "Vodafone Cash", v: 1060, c: "var(--c4)" },
+    { ar: "شيك", en: "Cheque", v: 320, c: "var(--c5)" }
+  ];
+  var top = [
+    { ar: "زيت عباد الشمس ١ لتر", en: "Sunflower oil 1 L", q: 64, s: 4992 },
+    { ar: "سكر ١ كجم", en: "Sugar 1 kg", q: 58, s: 1914 },
+    { ar: "أرز مصري ٥ كجم", en: "Egyptian rice 5 kg", q: 21, s: 3360 },
+    { ar: "شاي ٢٥٠ جم", en: "Tea 250 g", q: 19, s: 1330 },
+    { ar: "مكرونة ٤٠٠ جم", en: "Pasta 400 g", q: 17, s: 289 }
+  ];
+  var lang = "ar";
+  var fmt = function (n) { return n.toLocaleString("en-US"); };
+
+  function drawBars() {
+    var svg = document.getElementById("bars");
+    var w = 640, h = 220, top = 12, bottom = 24, axis = 44, max = 3000;
+    var rtl = document.documentElement.dir === "rtl";
+    var x0 = rtl ? 4 : axis, x1 = rtl ? w - axis : w - 4;   // plot area; the value axis sits on the reading side
+    var bw = (x1 - x0) / hours.length, ph = h - top - bottom;
+    var out = "";
+    for (var g = 0; g <= 3; g++) {
+      var y = h - bottom - ph * g / 3;
+      out += '<line x1="' + x0 + '" x2="' + x1 + '" y1="' + y + '" y2="' + y + '" stroke="var(--border)"/>';
+      out += '<text x="' + (rtl ? w - 4 : axis - 6) + '" y="' + (y + 4) + '" font-size="10" text-anchor="end" fill="var(--muted)">' + fmt(max * g / 3) + '</text>';
+    }
+    hours.forEach(function (hr, i) {
+      var idx = rtl ? hours.length - 1 - i : i;   // time runs right-to-left in Arabic
+      var x = x0 + i * bw;
+      var bh = ph * prev[idx] / max, nh = ph * now[idx] / max;
+      out += '<rect x="' + (x + bw * .12) + '" y="' + (h - bottom - bh) + '" width="' + bw * .34 + '" height="' + bh + '" rx="3" fill="var(--primary-border)"/>';
+      out += '<rect x="' + (x + bw * .5) + '" y="' + (h - bottom - nh) + '" width="' + bw * .34 + '" height="' + nh + '" rx="3" fill="var(--c1)"><title>' + hours[idx] + ':00 — ' + fmt(now[idx]) + '</title></rect>';
+      out += '<text x="' + (x + bw / 2) + '" y="' + (h - 8) + '" font-size="10" text-anchor="middle" fill="var(--muted)">' + hours[idx] + '</text>';
+    });
+    svg.innerHTML = out;
+  }
+
+  function drawDonut() {
+    var total = methods.reduce(function (a, m) { return a + m.v; }, 0);
+    var r = 15.9155, off = 25, out = '<circle cx="21" cy="21" r="' + r + '" fill="none" stroke="var(--neutral-soft)" stroke-width="6"/>';
+    methods.forEach(function (m) {
+      var pct = m.v / total * 100;
+      out += '<circle cx="21" cy="21" r="' + r + '" fill="none" stroke="' + m.c + '" stroke-width="6" stroke-dasharray="' + (pct - .6) + ' ' + (100 - pct + .6) + '" stroke-dashoffset="' + off + '"><title>' + m[lang] + ' ' + pct.toFixed(1) + '%</title></circle>';
+      off -= pct;
+    });
+    out += '<text x="21" y="20" text-anchor="middle" font-size="5" font-weight="700" fill="var(--strong)">' + fmt(total) + '</text>';
+    out += '<text x="21" y="26" text-anchor="middle" font-size="3" fill="var(--muted)">' + (lang === "ar" ? "ج.م" : "EGP") + '</text>';
+    document.getElementById("donut").innerHTML = out;
+    document.getElementById("legend").innerHTML = methods.map(function (m) {
+      return '<li><i style="background:' + m.c + '"></i><span>' + m[lang] + '</span><span class="num">' + (m.v / total * 100).toFixed(0) + '%</span></li>';
+    }).join("");
+  }
+
+  function drawTop() {
+    var max = top[0].s;
+    document.getElementById("top").innerHTML = top.map(function (p, i) {
+      return '<tr><td><span class="rank num">' + (i + 1) + '</span>' + p[lang] + '<div class="meter"><span style="width:' + Math.round(p.s / Math.max.apply(null, top.map(function (x) { return x.s; })) * 100) + '%"></span></div></td><td class="n num">' + p.q + '</td><td class="n num">' + fmt(p.s) + '</td></tr>';
+    }).join("");
+  }
+
+  // Language toggle: swaps text, direction and font order.
+  var originals = new Map();
+  document.querySelectorAll("[data-en]").forEach(function (el) { originals.set(el, el.innerHTML); });
+  document.getElementById("lang").addEventListener("click", function () {
+    lang = lang === "ar" ? "en" : "ar";
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    this.textContent = lang === "ar" ? "English" : "العربية";
+    document.querySelectorAll("[data-en]").forEach(function (el) {
+      el.innerHTML = lang === "en" ? el.getAttribute("data-en") : originals.get(el);
+    });
+    drawBars(); drawDonut(); drawTop();
+  });
+
+  // Period buttons: visual only in the mockup.
+  document.getElementById("period").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    this.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+  });
+
+  drawBars(); drawDonut(); drawTop();
+})();
+</script>
+</body>
+</html>

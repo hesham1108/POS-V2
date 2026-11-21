@@ -1,0 +1,196 @@
+@model DashboardDetailsDto
+@* Dashboard rows ⑤–⑦ (Phase 22), loaded after the page by dashboard.js. *@
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    bool Can(string permission) => User.HasClaim(AppPermissions.ClaimType, permission);
+    var topMax = Model.TopProducts.Count == 0 ? 1m : Math.Max(1m, Model.TopProducts.Max(x => x.Sales));
+    var cashierMax = Model.Cashiers.Count == 0 ? 1m : Math.Max(1m, Model.Cashiers.Max(x => x.Sales));
+    string Width(decimal v, decimal max) => (v <= 0 ? 0 : Math.Round(v / max * 100m, 1)).ToString(System.Globalization.CultureInfo.InvariantCulture) + "%";
+}
+
+@* ⑤ Analysis *@
+<section class="dash-row dash-row--three">
+    <article class="sp-card dash-panel">
+        <div class="dash-panel__head"><h2>@L["Top products"]</h2></div>
+        @if (Model.TopProducts.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No sales in this period"]</p>
+        }
+        else
+        {
+            <table class="table sp-table sp-table--compact dash-table">
+                <thead><tr><th>@L["Product"]</th><th class="col-num">@L["Qty"]</th><th class="col-num">@L["Sales"]</th></tr></thead>
+                <tbody>
+                    @{ var rank = 1; }
+                    @foreach (var p in Model.TopProducts)
+                    {
+                        <tr>
+                            <td>
+                                <span class="dash-rank num">@(rank++)</span>@(isAr ? p.NameAr : p.NameEn)
+                                <div class="dash-meter"><span style="width:@Width(p.Sales, topMax)"></span></div>
+                            </td>
+                            <td class="col-num num">@p.Quantity.ToString("0.###")</td>
+                            <td class="col-num num">@p.Sales.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </article>
+
+    <article class="sp-card dash-panel">
+        <div class="dash-panel__head"><h2>@L["Sales by cashier"]</h2></div>
+        @if (Model.Cashiers.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No sales in this period"]</p>
+        }
+        else
+        {
+            <table class="table sp-table sp-table--compact dash-table">
+                <thead><tr><th>@L["Cashier"]</th><th class="col-num">@L["Invoices"]</th><th class="col-num">@L["Sales"]</th></tr></thead>
+                <tbody>
+                    @foreach (var c in Model.Cashiers)
+                    {
+                        <tr>
+                            <td>@c.DisplayName<div class="dash-meter"><span style="width:@Width(c.Sales, cashierMax)"></span></div></td>
+                            <td class="col-num num">@c.Invoices</td>
+                            <td class="col-num num">@c.Sales.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </article>
+
+    <article class="sp-card dash-panel">
+        <div class="dash-panel__head">
+            <h2>@L["Running low"]</h2>
+            @if (Model.LowStockCount > 0 && Can(AppPermissions.CatalogManage))
+            {
+                <a asp-controller="Inventory" asp-action="Index" asp-route-lowStockOnly="true">@string.Format(L["All ({0})"].Value, Model.LowStockCount)</a>
+            }
+        </div>
+        @if (Model.LowStock.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No active product is at or below its low-stock level."]</p>
+        }
+        else
+        {
+            <table class="table sp-table sp-table--compact dash-table">
+                <thead><tr><th>@L["Product"]</th><th class="col-num">@L["Left"]</th><th><span class="visually-hidden">@L["Actions"]</span></th></tr></thead>
+                <tbody>
+                    @foreach (var p in Model.LowStock)
+                    {
+                        <tr>
+                            <td>@(isAr ? p.NameAr : p.NameEn)</td>
+                            <td class="col-num num @(p.StockQuantity <= 0 ? "text-danger fw-semibold" : "")">@p.StockQuantity.ToString("0.###") @p.Unit</td>
+                            <td class="text-end">
+                                @if (Can(AppPermissions.PurchasesManage))
+                                {
+                                    <a class="btn btn-sm @(p.StockQuantity <= 0 ? "sp-btn-primary" : "sp-btn-secondary")" asp-controller="Purchases" asp-action="Create" asp-route-productId="@p.ProductId">@L["Purchase order"]</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </article>
+</section>
+
+@* ⑥ Money *@
+<section class="dash-row dash-row--two">
+    <article class="sp-card dash-panel">
+        <div class="dash-panel__head">
+            <h2>@L["Treasury balances"]</h2>
+            @if (Can(AppPermissions.TreasuriesView))
+            {
+                <a asp-controller="Treasuries" asp-action="Index">@L["Treasuries"]</a>
+            }
+        </div>
+        @if (Model.Treasuries.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No treasuries yet"]</p>
+        }
+        else
+        {
+            <div class="dash-money">
+                @foreach (var t in Model.Treasuries.Take(6))
+                {
+                    <div>
+                        <span class="text-muted">@(isAr ? t.NameAr : t.NameEn)</span>
+                        <b class="num">@t.Balance.ToString("N2")</b>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="sp-card dash-panel">
+        <div class="dash-panel__head">
+            <h2>@L["Cheques due in 7 days"]</h2>
+            @if (Can(AppPermissions.ChequesView))
+            {
+                <a asp-controller="Cheques" asp-action="Index">@L["Cheques"]</a>
+            }
+        </div>
+        @if (Model.ChequesDue.Count == 0)
+        {
+            <p class="text-muted mb-0">@L["No cheques due this week"]</p>
+        }
+        else
+        {
+            <ul class="dash-due">
+                @foreach (var c in Model.ChequesDue)
+                {
+                    <li>
+                        <span class="dash-tag @(c.Incoming ? "dash-tag--in" : "dash-tag--out")">@(c.Incoming ? L["Receivable"] : L["Payable"])</span>
+                        <span class="dash-due__who">@(c.PartyName ?? "—") · <span class="num">#@c.Number</span></span>
+                        <b class="num">@c.Amount.ToString("N2")</b>
+                        <span class="dash-due__when">@(c.DaysLeft == 0 ? L["due today"].Value : c.DaysLeft == 1 ? L["tomorrow"].Value : string.Format(L["in {0} days"].Value, c.DaysLeft))</span>
+                    </li>
+                }
+            </ul>
+        }
+    </article>
+</section>
+
+@* ⑦ One activity timeline *@
+<section class="sp-card dash-panel">
+    <div class="dash-panel__head"><h2>@L["Latest activity"]</h2></div>
+    @if (Model.Activity.Count == 0)
+    {
+        <p class="text-muted mb-0">@L["Nothing yet."]</p>
+    }
+    else
+    {
+        <ul class="dash-timeline">
+            @foreach (var e in Model.Activity)
+            {
+                var (cls, icon, label, url) = e.Kind switch
+                {
+                    DashboardActivityKind.Sale => ("sale", "receipt", L["Sale"].Value, Can(AppPermissions.ReportsView) ? Url.Action("Details", "Sales", new { id = e.Id }) : null),
+                    DashboardActivityKind.Return => ("return", "undo", L["Return"].Value, null),
+                    DashboardActivityKind.CashOut => ("cash", "cash", L["Cash-out"].Value, null),
+                    _ => ("purchase", "truck", L["Purchase"].Value, Can(AppPermissions.PurchasesManage) ? Url.Action("Details", "Purchases", new { id = e.Id }) : null)
+                };
+                <li>
+                    <span class="dash-ico dash-ico--@cls" aria-hidden="true"><partial name="_PosIcon" model="icon" /></span>
+                    <span>
+                        @label
+                        @if (url is not null)
+                        {
+                            <a href="@url" class="num">@e.Reference</a>
+                        }
+                        else
+                        {
+                            <span class="@(e.Kind == DashboardActivityKind.CashOut ? "" : "num")">@e.Reference</span>
+                        }
+                        <small>@e.Who · <span class="num">@e.AtUtc.ToLocalTime().ToString("MM/dd HH:mm")</span></small>
+                    </span>
+                    <span class="dash-amt num @(e.Amount < 0 ? "is-out" : "")" dir="ltr">@(e.Amount < 0 ? "− " : e.Kind == DashboardActivityKind.Purchase ? "" : "+ ")@Math.Abs(e.Amount).ToString("N2")</span>
+                </li>
+            }
+        </ul>
+    }
+</section>
