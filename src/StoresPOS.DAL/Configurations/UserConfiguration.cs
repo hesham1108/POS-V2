@@ -15,6 +15,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.PasswordHash).HasMaxLength(256).IsRequired();
         builder.Property(x => x.PasswordSalt).HasMaxLength(256).IsRequired();
         builder.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.PermissionStamp).HasDefaultValue(1);
+        builder.Property(x => x.SecurityStamp).HasDefaultValue(1);
+        builder.Property(x => x.ApprovalPinHash).HasMaxLength(256);
+        builder.Property(x => x.ApprovalPinSalt).HasMaxLength(256);
 
         builder.HasOne(x => x.Role)
             .WithMany(x => x.Users)

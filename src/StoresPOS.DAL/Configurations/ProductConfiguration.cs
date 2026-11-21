@@ -17,6 +17,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(x => x.Unit).HasMaxLength(30).IsRequired();
 
         builder.Property(x => x.PurchasePrice).HasPrecision(18, 2);
+        builder.Property(x => x.AverageCost).HasPrecision(18, 4);
         builder.Property(x => x.RetailMarkupPercent).HasPrecision(18, 4);
         builder.Property(x => x.RetailPrice).HasPrecision(18, 2);
         builder.Property(x => x.WholesaleMarkupPercent).HasPrecision(18, 4);

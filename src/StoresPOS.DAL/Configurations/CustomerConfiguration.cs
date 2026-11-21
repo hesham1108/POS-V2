@@ -16,9 +16,11 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(x => x.Address).HasMaxLength(400);
         builder.Property(x => x.Notes).HasMaxLength(1000);
         builder.Property(x => x.DefaultSaleType).HasConversion<byte>();
+        builder.Property(x => x.CustomerType).HasConversion<byte>(); // DB default 1 (Retail) is set in the migration
         builder.Property(x => x.IsActive).HasDefaultValue(true);
 
         builder.HasIndex(x => x.Name);
         builder.HasIndex(x => x.Phone);
+        builder.HasIndex(x => x.CustomerType);
     }
 }

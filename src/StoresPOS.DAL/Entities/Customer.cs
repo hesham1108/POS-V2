@@ -14,6 +14,9 @@ public class Customer
     /// <summary>Picking this customer in the POS switches the invoice to this sale type.</summary>
     public SaleType DefaultSaleType { get; set; } = SaleType.Retail;
 
+    /// <summary>Customer classification (retail / wholesale / company). Does not change prices by itself.</summary>
+    public CustomerType CustomerType { get; set; } = CustomerType.Retail;
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAtUtc { get; set; }

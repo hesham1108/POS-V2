@@ -22,6 +22,57 @@ namespace StoresPOS.DAL.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.AuditLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int?>("TargetUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("ActorUserId", "CreatedAtUtc");
+
+                    b.HasIndex("TargetUserId", "CreatedAtUtc");
+
+                    b.ToTable("AuditLogs", (string)null);
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.CashOut", b =>
                 {
                     b.Property<int>("Id")
@@ -244,6 +295,9 @@ namespace StoresPOS.DAL.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<byte>("CustomerType")
+                        .HasColumnType("tinyint");
+
                     b.Property<byte>("DefaultSaleType")
                         .HasColumnType("tinyint");
 
@@ -269,6 +323,8 @@ namespace StoresPOS.DAL.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerType");
 
                     b.HasIndex("Name");
 
@@ -369,6 +425,10 @@ namespace StoresPOS.DAL.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AverageCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Barcode")
                         .HasMaxLength(64)
@@ -1315,6 +1375,14 @@ namespace StoresPOS.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApprovalPinHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ApprovalPinSalt")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -1323,11 +1391,20 @@ namespace StoresPOS.DAL.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastLoginAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1339,8 +1416,18 @@ namespace StoresPOS.DAL.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<int>("PermissionStamp")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<int>("SecurityStamp")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -1355,6 +1442,20 @@ namespace StoresPOS.DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.UserPermission", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Permission")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("UserId", "Permission");
+
+                    b.ToTable("UserPermissions", (string)null);
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.Warehouse", b =>
@@ -1889,6 +1990,17 @@ namespace StoresPOS.DAL.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("StoresPOS.DAL.Entities.UserPermission", b =>
+                {
+                    b.HasOne("StoresPOS.DAL.Entities.User", "User")
+                        .WithMany("Permissions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("StoresPOS.DAL.Entities.WarehouseStock", b =>
                 {
                     b.HasOne("StoresPOS.DAL.Entities.Product", "Product")
@@ -1960,6 +2072,11 @@ namespace StoresPOS.DAL.Migrations
             modelBuilder.Entity("StoresPOS.DAL.Entities.Treasury", b =>
                 {
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("StoresPOS.DAL.Entities.User", b =>
+                {
+                    b.Navigation("Permissions");
                 });
 
             modelBuilder.Entity("StoresPOS.DAL.Entities.Warehouse", b =>

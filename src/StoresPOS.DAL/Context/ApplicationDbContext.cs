@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<ShiftParticipant> ShiftParticipants => Set<ShiftParticipant>();
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
@@ -36,6 +37,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<WarehouseStock> WarehouseStocks => Set<WarehouseStock>();
     public DbSet<StockTransfer> StockTransfers => Set<StockTransfer>();
     public DbSet<StockTransferItem> StockTransferItems => Set<StockTransferItem>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
