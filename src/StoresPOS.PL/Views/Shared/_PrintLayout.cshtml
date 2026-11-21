@@ -4,6 +4,9 @@
     fmt.ApplyCulture();
     var autoPrint = ViewData["AutoPrint"] is true;
     var paper = fmt.Settings.PaperWidthMm;
+    // Phase 24: font size from the document's template (falls back to the store-wide receipt scale).
+    var tpl = ViewData["Template"] as StoresPOS.BLL.Models.PrintTemplate;
+    var scale = (tpl?.FontScale ?? fmt.Settings.ReceiptFontScale).ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
 <!DOCTYPE html>
 <html lang="@fmt.Language" dir="@(fmt.IsRtl ? "rtl" : "ltr")">
@@ -15,6 +18,7 @@
     <style>
         @@page { size: @(paper)mm auto; margin: 0; }
         :root { --paper: @(paper)mm; }
+        .receipt-body { font-size: @(scale)em; }
     </style>
 </head>
 <body class="receipt-body">
@@ -22,8 +26,14 @@
     @if (autoPrint)
     {
         <script>
-            // Inside the POS hidden iframe this prints straight away; with Chrome --kiosk-printing it skips the dialog.
-            window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 50); });
+            // Parent print-frame.js also calls print(); this covers direct opens and kiosk mode.
+            function storesAutoPrint() {
+                try { window.focus(); window.print(); } catch (e) { /* ignore */ }
+            }
+            window.addEventListener("load", function () {
+                setTimeout(storesAutoPrint, 100);
+                setTimeout(storesAutoPrint, 500);
+            });
         </script>
     }
 </body>

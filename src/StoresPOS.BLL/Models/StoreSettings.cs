@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace StoresPOS.BLL.Models;
 
 /// <summary>
@@ -61,6 +63,55 @@ public class StoreSettings
     /// <summary>Relative path under wwwroot for the A4 logo (e.g. uploads/logo.png).</summary>
     public string? LogoRelativePath { get; set; }
 
+    /// <summary>UI/sidebar/login logo; falls back to <see cref="LogoRelativePath"/> when empty.</summary>
+    public string? UiLogoRelativePath { get; set; }
+
+    /// <summary>Favicon under wwwroot (e.g. uploads/favicon.ico).</summary>
+    public string? FaviconRelativePath { get; set; }
+
+    /// <summary>Windows printer name used as the store default (synced with the OS default when possible).</summary>
+    public string? DefaultPrinterName { get; set; }
+
+    /// <summary>Printer for 80/58 mm documents. Empty = <see cref="DefaultPrinterName"/> (Phase 19).</summary>
+    public string? ThermalPrinterName { get; set; }
+
+    /// <summary>Printer for A4 documents. Empty = <see cref="DefaultPrinterName"/> (Phase 19).</summary>
+    public string? A4PrinterName { get; set; }
+
+    /// <summary>Per-document print defaults (Phase 19). Empty values fall back to the older single settings.</summary>
+    public DocumentPrintSettings SalePrint { get; set; } = new();
+    public DocumentPrintSettings ReturnPrint { get; set; } = new();
+    public DocumentPrintSettings PurchasePrint { get; set; } = new();
+    public DocumentPrintSettings ShiftPrint { get; set; } = new();
+
+    /// <summary>Show store logo on 80 mm receipts.</summary>
+    public bool ShowLogoOn80mm { get; set; }
+
+    /// <summary>Show Code 128 barcode on 80 mm receipts.</summary>
+    public bool ShowBarcode { get; set; } = true;
+
+    /// <summary>Receipt body scale (0.9–1.2).</summary>
+    public decimal ReceiptFontScale { get; set; } = 1m;
+
+    public bool ShowAddressOnReceipt { get; set; } = true;
+    public bool ShowPhoneOnReceipt { get; set; } = true;
+    public bool ShowTaxNumberOnReceipt { get; set; } = true;
+
+    /// <summary>Show logo on A4 invoices.</summary>
+    public bool A4ShowLogo { get; set; } = true;
+
+    /// <summary>Show commercial register on A4 invoices.</summary>
+    public bool A4ShowCommercialRegister { get; set; } = true;
+
+    /// <summary>"light" or "dark" UI theme.</summary>
+    public string UiTheme { get; set; } = "light";
+
+    /// <summary>Primary brand color (#RRGGBB). Empty = theme.css default.</summary>
+    public string? UiPrimaryColor { get; set; }
+
+    /// <summary>Sidebar background (#RRGGBB). Empty = theme.css default.</summary>
+    public string? UiSidebarColor { get; set; }
+
     /// <summary>Folder SQL Server writes .bak files into (must be writable by the SQL Server service account).</summary>
     public string BackupFolder { get; set; } = @"C:\StoresPOS\Backups";
 
@@ -77,14 +128,98 @@ public class StoreSettings
     public string? AddressFor(string language) => language == "ar" ? AddressAr : AddressEn;
     public string? FooterFor(string language) => language == "ar" ? ReceiptFooterAr : ReceiptFooterEn;
 
-    public bool PrefersA4Receipt =>
-        string.Equals(DefaultReceiptFormat, "A4", StringComparison.OrdinalIgnoreCase);
+    /// <summary>The sale invoice prints on A4 by default (POS choice, reprint last, silent print).</summary>
+    [JsonIgnore]
+    public bool PrefersA4Receipt => FormatFor(PrintDocumentType.Sale) == PrintFormats.A4;
+
+    /// <summary>
+    /// Paper format for a document: its own setting, otherwise the value an older settings file implies
+    /// (sale/return: <see cref="DefaultReceiptFormat"/>, purchase: A4, shift report: 80 mm).
+    /// </summary>
+    public string FormatFor(PrintDocumentType document)
+    {
+        var own = PrintSettingsFor(document).Format;
+        if (PrintFormats.IsKnown(own))
+        {
+            return PrintFormats.Normalize(own);
+        }
+
+        return document switch
+        {
+            PrintDocumentType.Purchase => PrintFormats.A4,
+            PrintDocumentType.Shift => PrintFormats.Mm80,
+            _ => PrintFormats.Normalize(DefaultReceiptFormat)
+        };
+    }
+
+    public DocumentPrintSettings PrintSettingsFor(PrintDocumentType document) => document switch
+    {
+        PrintDocumentType.Return => ReturnPrint ??= new(),
+        PrintDocumentType.Purchase => PurchasePrint ??= new(),
+        PrintDocumentType.Shift => ShiftPrint ??= new(),
+        _ => SalePrint ??= new()
+    };
+
+    /// <summary>Configured printer for a paper format: format printer → store default printer → null (Windows default).</summary>
+    public string? PrinterFor(string? format)
+    {
+        var specific = PrintFormats.Normalize(format) == PrintFormats.A4 ? A4PrinterName : ThermalPrinterName;
+        if (!string.IsNullOrWhiteSpace(specific))
+        {
+            return specific.Trim();
+        }
+
+        return string.IsNullOrWhiteSpace(DefaultPrinterName) ? null : DefaultPrinterName.Trim();
+    }
+
+    [JsonIgnore]
+    public string EffectiveUiLogoPath =>
+        !string.IsNullOrWhiteSpace(UiLogoRelativePath) ? UiLogoRelativePath! : LogoRelativePath ?? string.Empty;
+
+    [JsonIgnore]
+    public bool IsDarkTheme =>
+        string.Equals(UiTheme, "dark", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>VAT contained in a VAT-inclusive total; 0 when prices exclude VAT or the rate is 0.</summary>
     public decimal IncludedVat(decimal total) =>
         PricesIncludeVat && VatPercent > 0
             ? Math.Round(total - total / (1 + VatPercent / 100m), 2, MidpointRounding.AwayFromZero)
             : 0m;
+}
+
+/// <summary>Documents with their own print defaults.</summary>
+public enum PrintDocumentType
+{
+    Sale,
+    Return,
+    Purchase,
+    Shift
+}
+
+public static class PrintFormats
+{
+    public const string Mm80 = "80mm";
+    public const string A4 = "A4";
+
+    public static bool IsKnown(string? value) =>
+        string.Equals(value, A4, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(value, Mm80, StringComparison.OrdinalIgnoreCase);
+
+    public static string Normalize(string? value) =>
+        string.Equals(value, A4, StringComparison.OrdinalIgnoreCase) ? A4 : Mm80;
+}
+
+/// <summary>Print defaults of one document type (Phase 19).</summary>
+public class DocumentPrintSettings
+{
+    /// <summary>"80mm", "A4", or empty = fall back to the older store-wide setting.</summary>
+    public string? Format { get; set; }
+
+    /// <summary>Print automatically after the document is saved (POS pay, return saved, shift closed).</summary>
+    public bool AutoPrint { get; set; } = true;
+
+    /// <summary>Copies for silent printing (1–5). Browser printing always prints one.</summary>
+    public int Copies { get; set; } = 1;
 }
 
 public class LicenseOptions

@@ -1,0 +1,27 @@
+@model SettingsPageViewModel
+<section class="sp-settings-section">
+    <h2 class="sp-settings-section__title">@L["Sales and tax"]</h2>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="form-check mt-4">
+                <input asp-for="Form.PricesIncludeVat" class="form-check-input" />
+                <label asp-for="Form.PricesIncludeVat" class="form-check-label"></label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.VatPercent" class="form-label"></label>
+            <input asp-for="Form.VatPercent" class="form-control num" step="0.01" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.ReturnWindowDays" class="form-label"></label>
+            <input asp-for="Form.ReturnWindowDays" class="form-control num" />
+            <div class="form-text">@L["0 = no limit"]</div>
+        </div>
+        <div class="col-12">
+            <div class="form-check">
+                <input asp-for="Form.AllowSellAtZeroStock" class="form-check-input" />
+                <label asp-for="Form.AllowSellAtZeroStock" class="form-check-label"></label>
+            </div>
+        </div>
+    </div>
+</section>

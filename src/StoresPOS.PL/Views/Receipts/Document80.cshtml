@@ -1,0 +1,164 @@
+@model PrintedDocument
+@* Any document on a receipt roll (80/58 mm), sections in the template's order (Phase 24). *@
+@{
+    Layout = "_PrintLayout";
+    var d = Model;
+    var t = d.Template;
+    var f = d.Format;
+    var s = d.Settings;
+    var lang = d.Language;
+    f.ApplyCulture();
+    ViewData["ReceiptFormat"] = f;
+    ViewData["Template"] = t;
+    ViewData["AutoPrint"] ??= false;
+    ViewData["Title"] = d.Number;
+}
+<article class="receipt receipt--@t.Density receipt-doc-@t.Document">
+    @foreach (var section in t.SectionOrder.Where(t.Shows))
+    {
+        switch (section)
+        {
+            case "header":
+                <header class="receipt__store" data-section="header">
+                    @if (t.ShowLogo && !string.IsNullOrWhiteSpace(s.LogoRelativePath))
+                    {
+                        <img src="~/@s.LogoRelativePath" alt="" class="receipt__logo" />
+                    }
+                    @if (t.ShowStoreName)
+                    {
+                        <h1>@s.NameFor(lang)</h1>
+                    }
+                    @if (t.ShowAddress && !string.IsNullOrWhiteSpace(s.AddressFor(lang)))
+                    {
+                        <p>@s.AddressFor(lang)</p>
+                    }
+                    @if (t.ShowPhone && !string.IsNullOrWhiteSpace(s.Phone))
+                    {
+                        <p>@L["Phone"] <bdi dir="ltr">@f.Digits(s.Phone)</bdi></p>
+                    }
+                    @if (t.ShowTaxNumber && !string.IsNullOrWhiteSpace(s.TaxNumber))
+                    {
+                        <p>@L["Tax no."] <bdi dir="ltr">@f.Digits(s.TaxNumber)</bdi></p>
+                    }
+                    @if (t.ShowCommercialRegister && !string.IsNullOrWhiteSpace(s.CommercialRegister))
+                    {
+                        <p>@L["Commercial register"] <bdi dir="ltr">@f.Digits(s.CommercialRegister)</bdi></p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(t.HeaderLineFor(lang)))
+                    {
+                        <p class="receipt__headline">@t.HeaderLineFor(lang)</p>
+                    }
+                    @if (!t.Shows("info"))
+                    {
+                        <p class="receipt__doc">@d.Title · <span dir="ltr">@d.Number</span></p>
+                    }
+                </header>
+                break;
+
+            case "info":
+                <section class="receipt__meta" data-section="info">
+                    <div class="receipt__title">
+                        <strong>@d.Title</strong>
+                        <strong dir="ltr">@d.Number</strong>
+                    </div>
+                    @foreach (var r in d.Info)
+                    {
+                        <div><span>@r.Label</span><span dir="@(r.Ltr ? "ltr" : null)">@r.Value</span></div>
+                    }
+                </section>
+                break;
+
+            case "items":
+                if (d.Columns.Count > 0 && d.Rows.Count > 0)
+                {
+                    <table class="receipt__lines" data-section="items">
+                        <thead>
+                            <tr>
+                                @foreach (var c in d.Columns)
+                                {
+                                    <th class="@(c.Numeric ? "n" : null)">@c.Label</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in d.Rows)
+                            {
+                                <tr>
+                                    @for (var i = 0; i < row.Length; i++)
+                                    {
+                                        <td class="@(d.Columns[i].Numeric ? "n" : null)">@row[i]</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                break;
+
+            case "totals":
+                <section class="receipt__totals" data-section="totals">
+                    @foreach (var r in d.Totals)
+                    {
+                        <div class="@(r.Grand ? "receipt__grand" : r.Strong ? "receipt__strong" : r.Small ? "receipt__small" : null)">
+                            <span>@r.Label</span><span dir="@(r.Ltr ? "ltr" : null)">@r.Value</span>
+                        </div>
+                    }
+                </section>
+                @if (!string.IsNullOrWhiteSpace(d.AmountInWords))
+                {
+                    <p class="receipt__small receipt__words">@d.AmountInWords</p>
+                }
+                @foreach (var x in d.Extra)
+                {
+                    <h2 class="receipt__section">@x.Title</h2>
+                    <table class="receipt__lines">
+                        <tbody>
+                            @foreach (var row in x.Rows)
+                            {
+                                <tr>
+                                    @for (var i = 0; i < row.Length; i++)
+                                    {
+                                        <td class="@(x.Columns[i].Numeric ? "n" : null)">@row[i]</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                @if (d.Notes is not null)
+                {
+                    <p class="receipt__notes">@d.Notes</p>
+                }
+                break;
+
+            case "footer":
+                <footer class="receipt__footer" data-section="footer">
+                    @if (t.ShowFooterText && !string.IsNullOrWhiteSpace(s.FooterFor(lang)))
+                    {
+                        <p>@s.FooterFor(lang)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(t.ReturnPolicyFor(lang)))
+                    {
+                        <p class="receipt__small">@t.ReturnPolicyFor(lang)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(t.BankDetailsFor(lang)))
+                    {
+                        <p class="receipt__small">@t.BankDetailsFor(lang)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(d.BarcodeSvg))
+                    {
+                        <div class="receipt__barcode">@Html.Raw(d.BarcodeSvg)</div>
+                    }
+                    @if (t.ShowDocumentNumber)
+                    {
+                        <p dir="ltr" class="receipt__number">@d.Number</p>
+                    }
+                    @if (d.PrintedAt is not null)
+                    {
+                        <p class="receipt__small">@d.PrintedAt</p>
+                    }
+                </footer>
+                break;
+        }
+    }
+</article>

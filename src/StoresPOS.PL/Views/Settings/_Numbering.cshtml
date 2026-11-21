@@ -1,0 +1,14 @@
+@model SettingsPageViewModel
+<section class="sp-settings-section">
+    <h2 class="sp-settings-section__title">@L["Numbering"]</h2>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Form.InvoiceNumberPrefix" class="form-label"></label>
+            <input asp-for="Form.InvoiceNumberPrefix" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Form.ReturnNumberPrefix" class="form-label"></label>
+            <input asp-for="Form.ReturnNumberPrefix" class="form-control" />
+        </div>
+    </div>
+</section>

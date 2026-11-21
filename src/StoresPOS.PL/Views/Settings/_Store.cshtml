@@ -1,0 +1,66 @@
+@model SettingsPageViewModel
+@{
+    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+}
+<section class="sp-settings-section">
+    <h2 class="sp-settings-section__title">@L["Store profile"]</h2>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Form.NameEn" class="form-label"></label>
+            <input asp-for="Form.NameEn" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Form.NameAr" class="form-label"></label>
+            <input asp-for="Form.NameAr" class="form-control" dir="rtl" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Form.AddressEn" class="form-label"></label>
+            <input asp-for="Form.AddressEn" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Form.AddressAr" class="form-label"></label>
+            <input asp-for="Form.AddressAr" class="form-control" dir="rtl" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.Phone" class="form-label"></label>
+            <input asp-for="Form.Phone" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.TaxNumber" class="form-label"></label>
+            <input asp-for="Form.TaxNumber" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.CommercialRegister" class="form-label"></label>
+            <input asp-for="Form.CommercialRegister" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@L["A4 logo"]</label>
+            <input type="file" name="logoFile" class="form-control" accept=".png,.jpg,.jpeg,.webp" />
+            <input type="hidden" asp-for="Form.LogoRelativePath" />
+            @if (!string.IsNullOrWhiteSpace(Model.Form.LogoRelativePath))
+            {
+                <div class="mt-2"><img src="~/@Model.Form.LogoRelativePath" alt="logo" style="max-height:64px" /></div>
+            }
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Form.SellingWarehouseId" class="form-label"></label>
+            <select asp-for="Form.SellingWarehouseId" class="form-select">
+                <option value="0">@L["Default warehouse"]</option>
+                @foreach (var w in Model.Warehouses)
+                {
+                    <option value="@w.Id">@(isAr ? w.NameAr : w.NameEn)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Form.DefaultTreasuryId" class="form-label"></label>
+            <select asp-for="Form.DefaultTreasuryId" class="form-select">
+                <option value="0">@L["Default treasury"]</option>
+                @foreach (var t in Model.Treasuries)
+                {
+                    <option value="@t.Id">@(isAr ? t.NameAr : t.NameEn)</option>
+                }
+            </select>
+        </div>
+    </div>
+</section>

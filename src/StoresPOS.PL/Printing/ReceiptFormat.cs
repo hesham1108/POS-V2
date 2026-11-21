@@ -24,6 +24,19 @@ public sealed class ReceiptFormat
 
     public void ApplyCulture() => CultureInfo.CurrentUICulture = new CultureInfo(Language);
 
+    /// <summary>Receipt language for labels until disposed, then the previous UI culture again (Phase 24).</summary>
+    public IDisposable UseCulture()
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        ApplyCulture();
+        return new Restore(previous);
+    }
+
+    private sealed class Restore(CultureInfo previous) : IDisposable
+    {
+        public void Dispose() => CultureInfo.CurrentUICulture = previous;
+    }
+
     public string Money(decimal value) => Digits(value.ToString("N2", CultureInfo.InvariantCulture));
     public string Qty(decimal value) => Digits(value.ToString("0.###", CultureInfo.InvariantCulture));
     public string DateTime(DateTime utc) => Digits(utc.ToLocalTime().ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture));

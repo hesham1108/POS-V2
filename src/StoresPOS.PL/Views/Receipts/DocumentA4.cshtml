@@ -1,0 +1,172 @@
+@model PrintedDocument
+@* Any document on A4, sections in the template's order (Phase 24). *@
+@{
+    Layout = "_A4PrintLayout";
+    var d = Model;
+    var t = d.Template;
+    var f = d.Format;
+    var s = d.Settings;
+    var lang = d.Language;
+    f.ApplyCulture();
+    ViewData["ReceiptFormat"] = f;
+    ViewData["Template"] = t;
+    ViewData["AutoPrint"] ??= false;
+    ViewData["Title"] = d.Number + " A4";
+}
+<article class="a4-invoice a4-doc-@t.Document a4--@t.Density">
+    @foreach (var section in t.SectionOrder.Where(t.Shows))
+    {
+        switch (section)
+        {
+            case "header":
+                <header class="a4-invoice__header" data-section="header">
+                    <div class="a4-invoice__store">
+                        @if (t.ShowLogo && !string.IsNullOrWhiteSpace(s.LogoRelativePath))
+                        {
+                            <img class="a4-invoice__logo" src="~/@s.LogoRelativePath" alt="" />
+                        }
+                        @if (t.ShowStoreName)
+                        {
+                            <h1>@s.NameFor(lang)</h1>
+                        }
+                        @if (t.ShowAddress && !string.IsNullOrWhiteSpace(s.AddressFor(lang)))
+                        {
+                            <p>@s.AddressFor(lang)</p>
+                        }
+                        @if (t.ShowPhone && !string.IsNullOrWhiteSpace(s.Phone))
+                        {
+                            <p>@L["Phone"]: <bdi dir="ltr">@f.Digits(s.Phone)</bdi></p>
+                        }
+                        @if (t.ShowTaxNumber && !string.IsNullOrWhiteSpace(s.TaxNumber))
+                        {
+                            <p>@L["Tax no."]: <bdi dir="ltr">@f.Digits(s.TaxNumber)</bdi></p>
+                        }
+                        @if (t.ShowCommercialRegister && !string.IsNullOrWhiteSpace(s.CommercialRegister))
+                        {
+                            <p>@L["Commercial register"]: <bdi dir="ltr">@f.Digits(s.CommercialRegister)</bdi></p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(t.HeaderLineFor(lang)))
+                        {
+                            <p class="a4-invoice__headline">@t.HeaderLineFor(lang)</p>
+                        }
+                    </div>
+                    <div class="a4-invoice__meta">
+                        <strong>@d.Title</strong>
+                        <div dir="ltr">@d.Number</div>
+                    </div>
+                </header>
+                break;
+
+            case "info":
+                if (d.Info.Count > 0)
+                {
+                    <section class="a4-doc__info" data-section="info">
+                        @foreach (var r in d.Info)
+                        {
+                            <div><span>@r.Label</span><strong dir="@(r.Ltr ? "ltr" : null)">@r.Value</strong></div>
+                        }
+                    </section>
+                }
+                break;
+
+            case "items":
+                if (d.Columns.Count > 0 && d.Rows.Count > 0)
+                {
+                    <table data-section="items">
+                        <thead>
+                            <tr>
+                                @foreach (var c in d.Columns)
+                                {
+                                    <th class="@(c.Numeric ? "n" : null)">@c.Label</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in d.Rows)
+                            {
+                                <tr>
+                                    @for (var i = 0; i < row.Length; i++)
+                                    {
+                                        <td class="@(d.Columns[i].Numeric ? "n" : null)">@row[i]</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                break;
+
+            case "totals":
+                <div class="a4-invoice__totals" data-section="totals">
+                    <dl>
+                        @foreach (var r in d.Totals)
+                        {
+                            <div class="@(r.Grand ? "grand" : r.Strong ? "strong" : null)"><dt>@r.Label</dt><dd class="n" dir="@(r.Ltr ? "ltr" : null)">@r.Value</dd></div>
+                        }
+                    </dl>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(d.AmountInWords))
+                {
+                    <p class="a4-invoice__words"><strong>@L["Amount in words"]:</strong> @d.AmountInWords</p>
+                }
+                @foreach (var x in d.Extra)
+                {
+                    <h2 class="a4-doc__subtitle">@x.Title</h2>
+                    <table>
+                        <thead><tr>@foreach (var c in x.Columns) { <th class="@(c.Numeric ? "n" : null)">@c.Label</th> }</tr></thead>
+                        <tbody>
+                            @foreach (var row in x.Rows)
+                            {
+                                <tr>
+                                    @for (var i = 0; i < row.Length; i++)
+                                    {
+                                        <td class="@(x.Columns[i].Numeric ? "n" : null)">@row[i]</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                @if (d.Notes is not null)
+                {
+                    <p class="a4-doc__notes"><strong>@L["Notes"]:</strong> @d.Notes</p>
+                }
+                break;
+
+            case "footer":
+                <div data-section="footer">
+                    @if (!string.IsNullOrWhiteSpace(t.ReturnPolicyFor(lang)))
+                    {
+                        <p class="a4-doc__note">@t.ReturnPolicyFor(lang)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(t.BankDetailsFor(lang)))
+                    {
+                        <p class="a4-doc__note"><strong>@L["Bank details"]:</strong> @t.BankDetailsFor(lang)</p>
+                    }
+                    @if (t.ShowSignatures)
+                    {
+                        <div class="a4-invoice__sign">
+                            <div>@(t.Document == "shift" ? L["Cashier"] : L["Prepared by"])</div>
+                            <div>@(t.Document == "shift" ? L["Manager"] : L["Received by"])</div>
+                            <div>@L["Stamp"]</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(d.BarcodeSvg))
+                    {
+                        <div class="a4-doc__barcode">@Html.Raw(d.BarcodeSvg)</div>
+                    }
+                    <footer class="a4-invoice__footer">
+                        <span>@(t.ShowFooterText ? s.FooterFor(lang) : null)</span>
+                        <span>
+                            @if (t.ShowDocumentNumber)
+                            {
+                                <bdi dir="ltr">@d.Number</bdi>
+                            }
+                            @d.PrintedAt
+                        </span>
+                    </footer>
+                </div>
+                break;
+        }
+    }
+</article>

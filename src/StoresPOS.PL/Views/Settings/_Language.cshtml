@@ -1,0 +1,12 @@
+@model SettingsPageViewModel
+<section class="sp-settings-section">
+    <h2 class="sp-settings-section__title">@L["Language"]</h2>
+    <div class="mb-3" style="max-width:320px">
+        <label asp-for="Form.DefaultUiLanguage" class="form-label"></label>
+        <select asp-for="Form.DefaultUiLanguage" class="form-select">
+            <option value="ar">العربية</option>
+            <option value="en">English</option>
+        </select>
+        <div class="form-text">@L["Applies to new browsers; the language toggle still wins after the first visit."]</div>
+    </div>
+</section>

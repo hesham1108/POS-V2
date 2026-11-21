@@ -1,0 +1,44 @@
+@model SettingsPageViewModel
+    <div class="sp-card p-4 mt-4" id="backup-list">
+        <form asp-action="BackupNow" method="post" class="mb-4">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn sp-btn-secondary">@L["Backup now"]</button>
+        </form>
+        <div class="table-responsive">
+            <table class="table sp-table">
+                <thead>
+                    <tr>
+                        <th>@L["File"]</th>
+                        <th class="col-num">@L["Size"]</th>
+                        <th>@L["Date"]</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Backups.Count == 0)
+                {
+                    <tr><td colspan="4"><partial name="_EmptyState" model='(@L["No backups yet"].Value, @L["Run Backup now or wait for the daily job."].Value)' /></td></tr>
+                }
+                else
+                {
+                    foreach (var b in Model.Backups)
+                    {
+                        <tr>
+                            <td class="num">@b.FileName</td>
+                            <td class="col-num num">@((b.SizeBytes / 1024d).ToString("N0")) KB</td>
+                            <td class="num">@b.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end">
+                                <form asp-action="Restore" method="post" class="d-inline"
+                                      onsubmit="return confirm('@L["Restore this backup? All current data will be replaced. Stop other users first."]');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="fileName" value="@b.FileName" />
+                                    <button type="submit" class="btn btn-sm sp-btn-secondary">@L["Restore"]</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>

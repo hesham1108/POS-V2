@@ -1,3 +1,5 @@
+using StoresPOS.BLL.Models;
+
 namespace StoresPOS.BLL.DTOs;
 
 public class StoreSettingsFormDto
@@ -25,6 +27,26 @@ public class StoreSettingsFormDto
     public string DefaultUiLanguage { get; set; } = "ar";
     public bool AllowSellAtZeroStock { get; set; }
     public string? LogoRelativePath { get; set; }
+    public string? UiLogoRelativePath { get; set; }
+    public string? FaviconRelativePath { get; set; }
+    public string? DefaultPrinterName { get; set; }
+    public string? ThermalPrinterName { get; set; }
+    public string? A4PrinterName { get; set; }
+    public DocumentPrintSettings SalePrint { get; set; } = new();
+    public DocumentPrintSettings ReturnPrint { get; set; } = new();
+    public DocumentPrintSettings PurchasePrint { get; set; } = new();
+    public DocumentPrintSettings ShiftPrint { get; set; } = new();
+    public bool ShowLogoOn80mm { get; set; }
+    public bool ShowBarcode { get; set; } = true;
+    public decimal ReceiptFontScale { get; set; } = 1m;
+    public bool ShowAddressOnReceipt { get; set; } = true;
+    public bool ShowPhoneOnReceipt { get; set; } = true;
+    public bool ShowTaxNumberOnReceipt { get; set; } = true;
+    public bool A4ShowLogo { get; set; } = true;
+    public bool A4ShowCommercialRegister { get; set; } = true;
+    public string UiTheme { get; set; } = "light";
+    public string? UiPrimaryColor { get; set; }
+    public string? UiSidebarColor { get; set; }
     public string BackupFolder { get; set; } = @"C:\StoresPOS\Backups";
     public bool BackupOnShiftClose { get; set; } = true;
     public bool DailyBackupEnabled { get; set; } = true;

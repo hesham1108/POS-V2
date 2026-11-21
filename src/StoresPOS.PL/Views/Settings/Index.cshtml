@@ -1,7 +1,62 @@
 @model SettingsPageViewModel
+@using System.ComponentModel.DataAnnotations
+@using System.Reflection
 @{
-    string TabClass(string id) => Model.Tab == id ? "nav-link active" : "nav-link";
-    var isAr = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    // Phase 18: grouped side navigation; every tab is its own partial and loads only its own data.
+    var groups = new (string Title, (string Tab, string Label, string Icon)[] Items)[]
+    {
+        (L["Store"].Value, new[]
+        {
+            ("store", L["Store profile"].Value, "home"),
+            ("sales", L["Sales and tax"].Value, "receipt"),
+            ("numbering", L["Numbering"].Value, "tag")
+        }),
+        (L["Appearance and language"].Value, new[]
+        {
+            ("appearance", L["Appearance"].Value, "edit"),
+            ("language", L["Language"].Value, "globe")
+        }),
+        (L["Printing"].Value, new[]
+        {
+            ("printing", L["Printers and defaults"].Value, "printer"),
+            ("templates", L["Print templates"].Value, "file")
+        }),
+        (L["Data"].Value, new[]
+        {
+            ("backup", L["Database and backup"].Value, "layers"),
+            ("license", L["License"].Value, "lock")
+        })
+    };
+
+    var formTabs = new[] { "store", "appearance", "sales", "numbering", "printing", "language", "backup" };
+    var isFormTab = formTabs.Contains(Model.Tab);
+
+    // Search index: every field label with the tab it lives on (field id = Form_<Property>).
+    var index = new List<object>();
+    foreach (var prop in typeof(StoreSettingsFormViewModel).GetProperties())
+    {
+        var tab = prop.GetCustomAttribute<SettingsTabAttribute>()?.Tabs.FirstOrDefault();
+        var display = prop.GetCustomAttribute<DisplayAttribute>()?.Name;
+        if (tab is null || display is null)
+        {
+            continue;
+        }
+
+        index.Add(new { label = L[display].Value, tab, id = "Form_" + prop.Name });
+    }
+
+    index.Add(new { label = L["Printers"].Value, tab = "printing", id = "printers-section" });
+    index.Add(new { label = L["Document defaults"].Value, tab = "printing", id = "document-defaults" });
+    index.Add(new { label = L["Shift report"].Value, tab = "printing", id = "document-defaults" });
+    index.Add(new { label = L["Receipt look"].Value, tab = "printing", id = "receipt-look" });
+    index.Add(new { label = L["Print templates"].Value, tab = "templates", id = "template-editor" });
+    index.Add(new { label = L["Return policy (Arabic)"].Value, tab = "templates", id = "template-editor" });
+    index.Add(new { label = L["Backup now"].Value, tab = "backup", id = "backup-list" });
+    index.Add(new { label = L["Device ID"].Value, tab = "license", id = "license-status" });
+    index.Add(new { label = L["UI logo"].Value, tab = "appearance", id = "Form_UiLogoRelativePath" });
+    index.Add(new { label = L["Favicon"].Value, tab = "appearance", id = "Form_FaviconRelativePath" });
+    index.Add(new { label = L["A4 logo"].Value, tab = "store", id = "Form_LogoRelativePath" });
+    var indexJson = System.Text.Json.JsonSerializer.Serialize(index);
 }
 
 @section PageActions {
@@ -11,302 +66,89 @@
 <partial name="_PageHeader" />
 <partial name="_Flash" />
 
-<ul class="nav nav-tabs mb-4">
-    <li class="nav-item"><a class="@TabClass("store")" asp-action="Index" asp-route-tab="store">@L["Store profile"]</a></li>
-    <li class="nav-item"><a class="@TabClass("sales")" asp-action="Index" asp-route-tab="sales">@L["Sales and tax"]</a></li>
-    <li class="nav-item"><a class="@TabClass("numbering")" asp-action="Index" asp-route-tab="numbering">@L["Numbering"]</a></li>
-    <li class="nav-item"><a class="@TabClass("printing")" asp-action="Index" asp-route-tab="printing">@L["Printing"]</a></li>
-    <li class="nav-item"><a class="@TabClass("language")" asp-action="Index" asp-route-tab="language">@L["Language"]</a></li>
-    <li class="nav-item"><a class="@TabClass("backup")" asp-action="Index" asp-route-tab="backup">@L["Database and backup"]</a></li>
-    <li class="nav-item"><a class="@TabClass("license")" asp-action="Index" asp-route-tab="license">@L["License"]</a></li>
-</ul>
-
-@if (Model.Tab is "store" or "sales" or "numbering" or "printing" or "language" or "backup")
-{
-    <form asp-action="Save" method="post" enctype="multipart/form-data" class="sp-card p-4">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="tab" value="@Model.Tab" />
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-        @if (Model.Tab == "store")
+<div class="sp-settings" data-tab="@Model.Tab">
+    <aside class="sp-settings__nav" aria-label="@L["Settings"]">
+        <div class="sp-settings__search">
+            <input type="search" class="form-control" id="settings-search" autocomplete="off"
+                   placeholder="@L["Search settings"]" aria-label="@L["Search settings"]"
+                   data-index="@indexJson" data-base-url="@Url.Action("Index", "Settings")"
+                   data-empty="@L["No matching settings"]" />
+            <div class="sp-settings__results" id="settings-search-results" role="listbox" hidden></div>
+        </div>
+        @foreach (var g in groups)
         {
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label asp-for="Form.NameEn" class="form-label"></label>
-                    <input asp-for="Form.NameEn" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.NameAr" class="form-label"></label>
-                    <input asp-for="Form.NameAr" class="form-control" dir="rtl" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.AddressEn" class="form-label"></label>
-                    <input asp-for="Form.AddressEn" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.AddressAr" class="form-label"></label>
-                    <input asp-for="Form.AddressAr" class="form-control" dir="rtl" />
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.Phone" class="form-label"></label>
-                    <input asp-for="Form.Phone" class="form-control" />
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.TaxNumber" class="form-label"></label>
-                    <input asp-for="Form.TaxNumber" class="form-control" />
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.CommercialRegister" class="form-label"></label>
-                    <input asp-for="Form.CommercialRegister" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">@L["A4 logo"]</label>
-                    <input type="file" name="logoFile" class="form-control" accept=".png,.jpg,.jpeg,.webp" />
-                    <input type="hidden" asp-for="Form.LogoRelativePath" />
-                    @if (!string.IsNullOrWhiteSpace(Model.Form.LogoRelativePath))
+            <div class="sp-settings__group">
+                <div class="sp-settings__group-title">@g.Title</div>
+                @foreach (var item in g.Items)
+                {
+                    <a class="sp-settings__link @(Model.Tab == item.Tab ? "is-active" : "")"
+                       asp-action="Index" asp-route-tab="@item.Tab"
+                       aria-current="@(Model.Tab == item.Tab ? "page" : null)">
+                        <partial name="_PosIcon" model="item.Icon" /><span>@item.Label</span>
+                    </a>
+                }
+            </div>
+        }
+    </aside>
+
+    <div class="sp-settings__body">
+        @if (isFormTab)
+        {
+            <form asp-action="Save" method="post" enctype="multipart/form-data" id="settings-form" class="sp-settings__form" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="tab" value="@Model.Tab" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="sp-card p-4">
+                    @switch (Model.Tab)
                     {
-                        <div class="mt-2"><img src="~/@Model.Form.LogoRelativePath" alt="logo" style="max-height:64px" /></div>
+                        case "store": <partial name="_Store" />; break;
+                        case "sales": <partial name="_Sales" />; break;
+                        case "numbering": <partial name="_Numbering" />; break;
+                        case "appearance": <partial name="_Appearance" />; break;
+                        case "language": <partial name="_Language" />; break;
+                        case "printing": <partial name="_Printing" />; break;
+                        case "backup": <partial name="_Backup" />; break;
                     }
                 </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.SellingWarehouseId" class="form-label"></label>
-                    <select asp-for="Form.SellingWarehouseId" class="form-select">
-                        <option value="0">@L["Default warehouse"]</option>
-                        @foreach (var w in Model.Warehouses)
-                        {
-                            <option value="@w.Id">@(isAr ? w.NameAr : w.NameEn)</option>
-                        }
-                    </select>
+
+                <div class="sp-savebar" id="settings-savebar">
+                    <span class="sp-savebar__state" id="settings-dirty" data-clean="@L["All changes saved"]" data-dirty="@L["Unsaved changes"]">@L["All changes saved"]</span>
+                    <button type="reset" class="btn sp-btn-secondary" id="settings-discard" disabled>@L["Discard"]</button>
+                    <button type="submit" class="btn sp-btn-primary" id="settings-save" data-saving="@L["Saving…"]">@L["Save"]</button>
                 </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.DefaultTreasuryId" class="form-label"></label>
-                    <select asp-for="Form.DefaultTreasuryId" class="form-select">
-                        <option value="0">@L["Default treasury"]</option>
-                        @foreach (var t in Model.Treasuries)
-                        {
-                            <option value="@t.Id">@(isAr ? t.NameAr : t.NameEn)</option>
-                        }
-                    </select>
-                </div>
-            </div>
+            </form>
         }
-        else if (Model.Tab == "sales")
+
+        @if (Model.Tab == "templates")
         {
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="form-check mt-4">
-                        <input asp-for="Form.PricesIncludeVat" class="form-check-input" />
-                        <label asp-for="Form.PricesIncludeVat" class="form-check-label"></label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.VatPercent" class="form-label"></label>
-                    <input asp-for="Form.VatPercent" class="form-control num" step="0.01" />
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.ReturnWindowDays" class="form-label"></label>
-                    <input asp-for="Form.ReturnWindowDays" class="form-control num" />
-                    <div class="form-text">@L["0 = no limit"]</div>
-                </div>
-                <div class="col-12">
-                    <div class="form-check">
-                        <input asp-for="Form.AllowSellAtZeroStock" class="form-check-input" />
-                        <label asp-for="Form.AllowSellAtZeroStock" class="form-check-label"></label>
-                    </div>
-                </div>
-            </div>
-        }
-        else if (Model.Tab == "numbering")
-        {
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label asp-for="Form.InvoiceNumberPrefix" class="form-label"></label>
-                    <input asp-for="Form.InvoiceNumberPrefix" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.ReturnNumberPrefix" class="form-label"></label>
-                    <input asp-for="Form.ReturnNumberPrefix" class="form-control" />
-                </div>
-            </div>
-        }
-        else if (Model.Tab == "printing")
-        {
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label asp-for="Form.PaperWidthMm" class="form-label"></label>
-                    <select asp-for="Form.PaperWidthMm" class="form-select">
-                        <option value="80">80</option>
-                        <option value="58">58</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.DefaultReceiptFormat" class="form-label"></label>
-                    <select asp-for="Form.DefaultReceiptFormat" class="form-select">
-                        <option value="80mm">80 mm</option>
-                        <option value="A4">A4</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.ReceiptLanguage" class="form-label"></label>
-                    <select asp-for="Form.ReceiptLanguage" class="form-select">
-                        <option value="ar">العربية</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.ReceiptDigits" class="form-label"></label>
-                    <select asp-for="Form.ReceiptDigits" class="form-select">
-                        <option value="western">123</option>
-                        <option value="arabic">١٢٣</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.ReceiptFooterEn" class="form-label"></label>
-                    <input asp-for="Form.ReceiptFooterEn" class="form-control" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Form.ReceiptFooterAr" class="form-label"></label>
-                    <input asp-for="Form.ReceiptFooterAr" class="form-control" dir="rtl" />
-                </div>
-            </div>
-        }
-        else if (Model.Tab == "language")
-        {
-            <div class="mb-3" style="max-width:320px">
-                <label asp-for="Form.DefaultUiLanguage" class="form-label"></label>
-                <select asp-for="Form.DefaultUiLanguage" class="form-select">
-                    <option value="ar">العربية</option>
-                    <option value="en">English</option>
-                </select>
-                <div class="form-text">@L["Applies to new browsers; the language toggle still wins after the first visit."]</div>
-            </div>
+            <partial name="_Templates" />
         }
         else if (Model.Tab == "backup")
         {
-            <div class="row g-3 mb-2">
-                <div class="col-md-8">
-                    <label asp-for="Form.BackupFolder" class="form-label"></label>
-                    <input asp-for="Form.BackupFolder" class="form-control" />
-                    <div class="form-text">@L["Folder must be writable by the SQL Server service account."]</div>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Form.DailyBackupHourLocal" class="form-label"></label>
-                    <input asp-for="Form.DailyBackupHourLocal" class="form-control num" />
-                </div>
-                <div class="col-md-6">
-                    <div class="form-check">
-                        <input asp-for="Form.BackupOnShiftClose" class="form-check-input" />
-                        <label asp-for="Form.BackupOnShiftClose" class="form-check-label"></label>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-check">
-                        <input asp-for="Form.DailyBackupEnabled" class="form-check-input" />
-                        <label asp-for="Form.DailyBackupEnabled" class="form-check-label"></label>
-                    </div>
-                </div>
-            </div>
+            <partial name="_BackupList" />
         }
-
-        <button type="submit" class="btn sp-btn-primary mt-4">@L["Save"]</button>
-    </form>
-}
-
-@if (Model.Tab == "backup")
-{
-    <div class="sp-card p-4 mt-4">
-        <form asp-action="BackupNow" method="post" class="mb-4">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn sp-btn-secondary">@L["Backup now"]</button>
-        </form>
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>@L["File"]</th>
-                        <th class="col-num">@L["Size"]</th>
-                        <th>@L["Date"]</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                @if (Model.Backups.Count == 0)
-                {
-                    <tr><td colspan="4"><partial name="_EmptyState" model='(@L["No backups yet"].Value, @L["Run Backup now or wait for the daily job."].Value)' /></td></tr>
-                }
-                else
-                {
-                    foreach (var b in Model.Backups)
-                    {
-                        <tr>
-                            <td class="num">@b.FileName</td>
-                            <td class="col-num num">@((b.SizeBytes / 1024d).ToString("N0")) KB</td>
-                            <td class="num">@b.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                            <td class="text-end">
-                                <form asp-action="Restore" method="post" class="d-inline"
-                                      onsubmit="return confirm('@L["Restore this backup? All current data will be replaced. Stop other users first."]');">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="fileName" value="@b.FileName" />
-                                    <button type="submit" class="btn btn-sm sp-btn-secondary">@L["Restore"]</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                }
-                </tbody>
-            </table>
-        </div>
+        else if (Model.Tab == "license")
+        {
+            <partial name="_License" />
+        }
     </div>
-}
-
-@if (Model.Tab == "license")
-{
-    <div class="sp-card p-4 mb-4">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="text-muted small">@L["Device ID"]</div>
-                <div class="fw-semibold num">@Model.License.DeviceId</div>
-            </div>
-            <div class="col-md-4">
-                <div class="text-muted small">@L["Status"]</div>
-                <div>
-                    @if (Model.License.IsActivated)
-                    {
-                        <span class="sp-status sp-status-ok">@Model.License.StatusMessage</span>
-                    }
-                    else
-                    {
-                        <span class="sp-status sp-status-warn">@Model.License.StatusMessage</span>
-                    }
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="text-muted small">@L["Licensed to"]</div>
-                <div>@(Model.License.LicensedTo ?? "—")</div>
-            </div>
-        </div>
-    </div>
-
-    <form asp-action="ActivateLicense" method="post" class="sp-card p-4" style="max-width:560px">
-        @Html.AntiForgeryToken()
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-        <div class="mb-3">
-            <label asp-for="LicenseForm.LicensedTo" class="form-label"></label>
-            <input asp-for="LicenseForm.LicensedTo" class="form-control" />
-        </div>
-        <div class="mb-3">
-            <label asp-for="LicenseForm.ExpiresUtc" class="form-label"></label>
-            <input asp-for="LicenseForm.ExpiresUtc" class="form-control" type="date" />
-        </div>
-        <div class="mb-3">
-            <label asp-for="LicenseForm.Signature" class="form-label"></label>
-            <input asp-for="LicenseForm.Signature" class="form-control font-monospace" />
-            <div class="form-text">@L["Paste the signature from the license file we issued for this Device ID."]</div>
-        </div>
-        <button type="submit" class="btn sp-btn-primary">@L["Activate"]</button>
-    </form>
-}
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script id="settings-i18n" type="application/json">
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            leave = L["You have unsaved changes. Leave this page?"].Value,
+            printed = L["Printed"].Value,
+            failed = L["Print failed"].Value,
+            noPrinters = L["No printers found"].Value
+        }))
+    </script>
+    <script src="~/js/settings.js" asp-append-version="true"></script>
+    @if (Model.Tab == "templates")
+    {
+        <script src="~/js/templates.js" asp-append-version="true"></script>
+    }
 }

@@ -146,3 +146,23 @@
   .a4-invoice thead { display: table-header-group; }
   .a4-invoice tr { page-break-inside: avoid; }
 }
+
+/* A4 shift report (Phase 19) */
+.a4-shift__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-bottom: 6mm; }
+.a4-shift__title { font-size: 12pt; font-weight: 700; margin: 4mm 0 2mm; }
+.a4-shift__strong td { font-weight: 700; border-top: 1px solid #111; }
+.a4-shift__notes { margin-top: 4mm; }
+
+/* Phase 24: template sections */
+.a4-invoice__logo { max-height: 72px; margin-bottom: .5rem; }
+.a4-invoice__headline { font-weight: 600; }
+.a4-doc__info { display: grid; grid-template-columns: repeat(auto-fit, minmax(45mm, 1fr)); gap: 2mm 6mm; margin: 0 0 5mm; padding: 3mm 4mm; border: 1px solid #e5e7eb; border-radius: 6px; }
+.a4-doc__info div { display: flex; flex-direction: column; }
+.a4-doc__info span { font-size: .75rem; color: #6b7280; }
+.a4-doc__subtitle { font-size: 1rem; margin: 1rem 0 .4rem; }
+.a4-doc__note, .a4-doc__notes { margin: 3mm 0 0; font-size: .85rem; }
+.a4-doc__barcode { margin-top: 4mm; text-align: center; }
+.a4-doc__barcode svg { max-height: 14mm; }
+.a4-invoice__totals .strong dt, .a4-invoice__totals .strong dd { font-weight: 700; }
+.a4--compact table td { padding-block: 1mm; }
+.a4--relaxed table td { padding-block: 3mm; }

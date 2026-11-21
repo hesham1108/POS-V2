@@ -2,6 +2,11 @@
     var fmt = (ReceiptFormat)ViewData["ReceiptFormat"]!;
     fmt.ApplyCulture();
     var autoPrint = ViewData["AutoPrint"] is true;
+    // Phase 24: orientation, margin and font size come from the document's template.
+    var tpl = ViewData["Template"] as StoresPOS.BLL.Models.PrintTemplate;
+    var orientation = tpl is null || tpl.Landscape ? "landscape" : "portrait";
+    var margin = tpl?.MarginMm ?? 10;
+    var scale = (tpl?.FontScale ?? 1m).ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
 <!DOCTYPE html>
 <html lang="@fmt.Language" dir="@(fmt.IsRtl ? "rtl" : "ltr")">
@@ -12,7 +17,8 @@
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/a4-invoice.css" asp-append-version="true" />
     <style>
-        @@page { size: A4 landscape; margin: 10mm; }
+        @@page { size: A4 @orientation; margin: @(margin)mm; }
+        .a4-body { font-size: @(scale)em; }
     </style>
 </head>
 <body class="a4-body">
@@ -20,7 +26,13 @@
     @if (autoPrint)
     {
         <script>
-            window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 50); });
+            function storesAutoPrint() {
+                try { window.focus(); window.print(); } catch (e) { /* ignore */ }
+            }
+            window.addEventListener("load", function () {
+                setTimeout(storesAutoPrint, 100);
+                setTimeout(storesAutoPrint, 500);
+            });
         </script>
     }
 </body>

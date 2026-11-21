@@ -5,8 +5,11 @@ using StoresPOS.BLL.Constants;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
-using StoresPOS.PL;
+using StoresPOS.BLL.Models;
+using StoresPOS.PL.Printing;
 using StoresPOS.PL.ViewModels;
+
+using StoresPOS.PL.Extensions;
 
 namespace StoresPOS.PL.Controllers;
 
@@ -18,8 +21,12 @@ public class SettingsController : Controller
     private readonly ILicenseService _licenses;
     private readonly IWarehouseService _warehouses;
     private readonly ITreasuryService _treasuries;
+    private readonly IWindowsPrinterService _printers;
+    private readonly ISilentPrintService _silentPrint;
+    private readonly StoresPOS.BLL.Services.IPrintTemplateService _templates;
     private readonly IWebHostEnvironment _env;
     private readonly IStringLocalizer<SharedResource> _l;
+    private readonly ILogger<SettingsController> _logger;
 
     public SettingsController(
         IStoreSettingsService settings,
@@ -27,22 +34,146 @@ public class SettingsController : Controller
         ILicenseService licenses,
         IWarehouseService warehouses,
         ITreasuryService treasuries,
+        IWindowsPrinterService printers,
+        ISilentPrintService silentPrint,
+        StoresPOS.BLL.Services.IPrintTemplateService templates,
         IWebHostEnvironment env,
-        IStringLocalizer<SharedResource> localizer)
+        IStringLocalizer<SharedResource> localizer,
+        ILogger<SettingsController> logger)
     {
         _settings = settings;
         _backups = backups;
         _licenses = licenses;
         _warehouses = warehouses;
         _treasuries = treasuries;
+        _printers = printers;
+        _silentPrint = silentPrint;
+        _templates = templates;
         _env = env;
         _l = localizer;
+        _logger = logger;
     }
 
+    /// <summary>Tabs of the settings page. Each one loads only its own data (Phase 18).</summary>
+    public static readonly string[] Tabs = ["store", "sales", "numbering", "appearance", "language", "printing", "templates", "backup", "license"];
+
     [HttpGet]
-    public async Task<IActionResult> Index(string? tab, CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? tab, string? doc, string? format, CancellationToken cancellationToken)
     {
-        return View(await BuildPageAsync(tab ?? "store", cancellationToken));
+        var page = await BuildPageAsync(NormalizeTab(tab), cancellationToken);
+        if (page.Tab == "templates")
+        {
+            (doc, format) = TemplateTarget(doc, format);
+            page.Template = _templates.Get(doc, format, _settings.Current);
+            page.TemplateCustomized = _templates.IsCustomized(doc, format);
+        }
+
+        return View(page);
+    }
+
+    /// <summary>Saves the designer's template (JSON from templates.js).</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveTemplate(string template, CancellationToken cancellationToken)
+    {
+        PrintTemplate? t = null;
+        try
+        {
+            t = System.Text.Json.JsonSerializer.Deserialize<PrintTemplate>(template ?? "", new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (System.Text.Json.JsonException)
+        {
+        }
+
+        if (t is null)
+        {
+            return BadRequest();
+        }
+
+        try
+        {
+            await _templates.SaveAsync(t, cancellationToken);
+            TempData["Success"] = _l["Template saved."].Value;
+        }
+        catch (BusinessException ex)
+        {
+            TempData["Error"] = this.Localizer().Localize(ex);
+        }
+
+        return RedirectToAction(nameof(Index), new { tab = "templates", doc = t.Document, format = PrintTemplateCatalog.NormalizeFormat(t.Format) });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetTemplate(string doc, string format, CancellationToken cancellationToken)
+    {
+        (doc, format) = TemplateTarget(doc, format);
+        await _templates.ResetAsync(doc, format, cancellationToken);
+        TempData["Success"] = _l["Template reset to the default layout."].Value;
+        return RedirectToAction(nameof(Index), new { tab = "templates", doc, format });
+    }
+
+    private static (string Doc, string Format) TemplateTarget(string? doc, string? format)
+    {
+        var f = PrintTemplateCatalog.NormalizeFormat(format);
+        var d = doc ?? PrintTemplateCatalog.Sale;
+        return PrintTemplateCatalog.Exists(d, f) ? (d, f)
+            : PrintTemplateCatalog.Exists(d, PrintTemplateCatalog.A4) ? (d, PrintTemplateCatalog.A4)
+            : (PrintTemplateCatalog.Sale, PrintTemplateCatalog.Mm80);
+    }
+
+    /// <summary>Printer list for the Printing tab, loaded with AJAX after the page (cached 60 s; refresh=true asks Windows again).</summary>
+    [HttpGet]
+    public IActionResult Printers(bool refresh = false)
+    {
+        if (refresh)
+        {
+            _printers.Invalidate();
+        }
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var list = BuildPrinterList(_settings.Current);
+        _logger.LogInformation("Settings printers list: {Ms} ms (refresh {Refresh})", watch.ElapsedMilliseconds, refresh);
+        return Json(list);
+    }
+
+    private static string NormalizeTab(string? tab) =>
+        tab is not null && Tabs.Contains(tab) ? tab : "store";
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult TestSilentPrint(string? format, string? printerName)
+    {
+        var result = _silentPrint.PrintSample(format, printerName);
+        return Json(new
+        {
+            ok = result.Succeeded,
+            printed = result.Succeeded,
+            printerName = result.PrinterName,
+            message = result.Message
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetDefaultPrinter(string? printerName, CancellationToken cancellationToken)
+    {
+        var merged = ToDto(await _settings.GetAsync(cancellationToken));
+        merged.DefaultPrinterName = string.IsNullOrWhiteSpace(printerName) ? null : printerName.Trim();
+        await _settings.SaveAsync(merged, cancellationToken);
+
+        var applied = false;
+        if (!string.IsNullOrWhiteSpace(merged.DefaultPrinterName))
+        {
+            applied = _printers.SetWindowsDefault(merged.DefaultPrinterName);
+        }
+
+        return Json(new
+        {
+            ok = true,
+            windowsApplied = applied,
+            printers = BuildPrinterList(_settings.Current)
+        });
     }
 
     [HttpPost]
@@ -51,26 +182,44 @@ public class SettingsController : Controller
         [Bind(Prefix = "Form")] StoreSettingsFormViewModel form,
         string tab,
         IFormFile? logoFile,
+        IFormFile? uiLogoFile,
+        IFormFile? faviconFile,
         CancellationToken cancellationToken)
     {
-        // Each tab posts only its fields; merge with current settings before validating names etc.
         ModelState.Clear();
+        tab = NormalizeTab(tab);
 
         try
         {
             var merged = await MergeTabAsync(tab, form, cancellationToken);
             if (logoFile is { Length: > 0 })
             {
-                merged.LogoRelativePath = await SaveLogoAsync(logoFile, cancellationToken);
+                merged.LogoRelativePath = await SaveUploadAsync(logoFile, "logo", cancellationToken);
+            }
+
+            if (uiLogoFile is { Length: > 0 })
+            {
+                merged.UiLogoRelativePath = await SaveUploadAsync(uiLogoFile, "ui-logo", cancellationToken);
+            }
+
+            if (faviconFile is { Length: > 0 })
+            {
+                merged.FaviconRelativePath = await SaveUploadAsync(faviconFile, "favicon", cancellationToken, allowIco: true);
             }
 
             await _settings.SaveAsync(merged, cancellationToken);
+
+            if (tab == "printing" && !string.IsNullOrWhiteSpace(merged.DefaultPrinterName))
+            {
+                _printers.SetWindowsDefault(merged.DefaultPrinterName);
+            }
+
             TempData["Success"] = _l["Settings saved."].Value;
             return RedirectToAction(nameof(Index), new { tab });
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             var page = await BuildPageAsync(tab, cancellationToken);
             page.Form = form;
             return View("Index", page);
@@ -138,163 +287,153 @@ public class SettingsController : Controller
         }
         catch (BusinessException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            ModelState.AddModelError(string.Empty, this.Localizer().Localize(ex));
             var page = await BuildPageAsync("license", cancellationToken);
             page.LicenseForm = form;
             return View("Index", page);
         }
     }
 
+    private PrinterListDto BuildPrinterList(StoreSettings current) => new()
+    {
+        IsSupported = _printers.IsSupported,
+        WindowsDefault = _printers.GetWindowsDefault(),
+        StoredDefault = current.DefaultPrinterName,
+        ThermalPrinter = current.ThermalPrinterName,
+        A4Printer = current.A4PrinterName,
+        Printers = _printers.ListPrinters(),
+        Message = _printers.IsSupported
+            ? null
+            : _l["Printer listing is available on Windows hosts only."].Value
+    };
+
+    /// <summary>
+    /// Loads what the selected tab shows — and only that (Phase 18). Before, every tab loaded
+    /// warehouses, treasuries, the backup folder, the license and the Windows printer list
+    /// (67 s on the first open). The printer list is no longer loaded here at all: the Printing
+    /// tab fetches it with AJAX (<see cref="Printers"/>). Each stage is still timed and logged
+    /// ("Settings page timing ...") so before/after numbers can be compared.
+    /// </summary>
     private async Task<SettingsPageViewModel> BuildPageAsync(string tab, CancellationToken cancellationToken)
     {
+        var total = System.Diagnostics.Stopwatch.StartNew();
+        var step = System.Diagnostics.Stopwatch.StartNew();
+        long Lap()
+        {
+            var ms = step.ElapsedMilliseconds;
+            step.Restart();
+            return ms;
+        }
+
         var current = await _settings.GetAsync(cancellationToken);
+        var settingsMs = Lap();
         ViewData["Section"] = _l["Settings"].Value;
         ViewData["Title"] = _l["Settings"].Value;
         ViewData["Subtitle"] = _l["Store profile, printing, backup, and license."].Value;
 
-        return new SettingsPageViewModel
+        var page = new SettingsPageViewModel { Tab = tab, Form = ToForm(current) };
+        long warehousesMs = 0, treasuriesMs = 0, backupsMs = 0, licenseMs = 0;
+
+        switch (tab)
         {
-            Tab = tab,
-            Form = new StoreSettingsFormViewModel
-            {
-                NameAr = current.NameAr,
-                NameEn = current.NameEn,
-                AddressAr = current.AddressAr,
-                AddressEn = current.AddressEn,
-                Phone = current.Phone,
-                TaxNumber = current.TaxNumber,
-                CommercialRegister = current.CommercialRegister,
-                ReceiptFooterAr = current.ReceiptFooterAr,
-                ReceiptFooterEn = current.ReceiptFooterEn,
-                ReceiptLanguage = current.ReceiptLanguage,
-                ReceiptDigits = current.ReceiptDigits,
-                PricesIncludeVat = current.PricesIncludeVat,
-                VatPercent = current.VatPercent,
-                ReturnWindowDays = current.ReturnWindowDays,
-                AllowSellAtZeroStock = current.AllowSellAtZeroStock,
-                PaperWidthMm = current.PaperWidthMm,
-                DefaultReceiptFormat = current.DefaultReceiptFormat,
-                SellingWarehouseId = current.SellingWarehouseId,
-                DefaultTreasuryId = current.DefaultTreasuryId,
-                InvoiceNumberPrefix = current.InvoiceNumberPrefix,
-                ReturnNumberPrefix = current.ReturnNumberPrefix,
-                DefaultUiLanguage = current.DefaultUiLanguage,
-                LogoRelativePath = current.LogoRelativePath,
-                BackupFolder = current.BackupFolder,
-                BackupOnShiftClose = current.BackupOnShiftClose,
-                DailyBackupEnabled = current.DailyBackupEnabled,
-                DailyBackupHourLocal = current.DailyBackupHourLocal
-            },
-            Warehouses = await _warehouses.ListAsync(includeInactive: false, cancellationToken),
-            Treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken),
-            Backups = await _backups.ListBackupsAsync(cancellationToken),
-            License = await _licenses.GetStatusAsync(cancellationToken)
-        };
+            case "store":
+                page.Warehouses = await _warehouses.ListAsync(includeInactive: false, cancellationToken);
+                warehousesMs = Lap();
+                page.Treasuries = await _treasuries.ListAsync(includeInactive: false, cancellationToken);
+                treasuriesMs = Lap();
+                break;
+            case "backup":
+                page.Backups = await _backups.ListBackupsAsync(cancellationToken);
+                backupsMs = Lap();
+                break;
+            case "license":
+                page.License = await _licenses.GetStatusAsync(cancellationToken);
+                licenseMs = Lap();
+                break;
+        }
+
+        _logger.LogInformation(
+            "Settings page timing (tab {Tab}): settings {SettingsMs} ms, warehouses {WarehousesMs} ms, treasuries {TreasuriesMs} ms, "
+            + "backups {BackupsMs} ms, license {LicenseMs} ms, printers (AJAX) 0 ms, total {TotalMs} ms",
+            tab, settingsMs, warehousesMs, treasuriesMs, backupsMs, licenseMs, total.ElapsedMilliseconds);
+
+        return page;
     }
 
-    private async Task<string> SaveLogoAsync(IFormFile file, CancellationToken cancellationToken)
+    private async Task<string> SaveUploadAsync(
+        IFormFile file,
+        string baseName,
+        CancellationToken cancellationToken,
+        bool allowIco = false)
     {
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (ext is not (".png" or ".jpg" or ".jpeg" or ".webp"))
+        var allowed = allowIco
+            ? new[] { ".png", ".jpg", ".jpeg", ".webp", ".ico" }
+            : new[] { ".png", ".jpg", ".jpeg", ".webp" };
+        if (!allowed.Contains(ext))
         {
-            throw new BusinessException("Logo must be PNG, JPG, or WebP.");
+            throw new BusinessException(allowIco
+                ? "File must be PNG, JPG, WebP, or ICO."
+                : "Logo must be PNG, JPG, or WebP.");
         }
 
         if (file.Length > 2_000_000)
         {
-            throw new BusinessException("Logo file is too large (2 MB max).");
+            throw new BusinessException("File is too large (2 MB max).");
         }
 
         var relDir = Path.Combine("uploads");
         var absDir = Path.Combine(_env.WebRootPath, relDir);
         Directory.CreateDirectory(absDir);
-        var fileName = "logo" + ext;
+        var fileName = baseName + ext;
         var absPath = Path.Combine(absDir, fileName);
         await using var stream = System.IO.File.Create(absPath);
         await file.CopyToAsync(stream, cancellationToken);
         return Path.Combine(relDir, fileName).Replace('\\', '/');
     }
 
+    /// <summary>
+    /// Current settings + the fields of the saved tab (fields marked <see cref="SettingsTabAttribute"/>).
+    /// Empty upload paths keep the stored file.
+    /// </summary>
     private async Task<StoreSettingsFormDto> MergeTabAsync(
         string tab,
         StoreSettingsFormViewModel form,
         CancellationToken cancellationToken)
     {
         var current = await _settings.GetAsync(cancellationToken);
-        var dto = new StoreSettingsFormDto
-        {
-            NameAr = current.NameAr,
-            NameEn = current.NameEn,
-            AddressAr = current.AddressAr,
-            AddressEn = current.AddressEn,
-            Phone = current.Phone,
-            TaxNumber = current.TaxNumber,
-            CommercialRegister = current.CommercialRegister,
-            ReceiptFooterAr = current.ReceiptFooterAr,
-            ReceiptFooterEn = current.ReceiptFooterEn,
-            ReceiptLanguage = current.ReceiptLanguage,
-            ReceiptDigits = current.ReceiptDigits,
-            PricesIncludeVat = current.PricesIncludeVat,
-            VatPercent = current.VatPercent,
-            ReturnWindowDays = current.ReturnWindowDays,
-            PaperWidthMm = current.PaperWidthMm,
-            DefaultReceiptFormat = current.DefaultReceiptFormat,
-            SellingWarehouseId = current.SellingWarehouseId,
-            DefaultTreasuryId = current.DefaultTreasuryId,
-            InvoiceNumberPrefix = current.InvoiceNumberPrefix,
-            ReturnNumberPrefix = current.ReturnNumberPrefix,
-            DefaultUiLanguage = current.DefaultUiLanguage,
-            AllowSellAtZeroStock = current.AllowSellAtZeroStock,
-            LogoRelativePath = current.LogoRelativePath,
-            BackupFolder = current.BackupFolder,
-            BackupOnShiftClose = current.BackupOnShiftClose,
-            DailyBackupEnabled = current.DailyBackupEnabled,
-            DailyBackupHourLocal = current.DailyBackupHourLocal
-        };
-
-        switch (tab)
-        {
-            case "store":
-                dto.NameAr = form.NameAr;
-                dto.NameEn = form.NameEn;
-                dto.AddressAr = form.AddressAr;
-                dto.AddressEn = form.AddressEn;
-                dto.Phone = form.Phone;
-                dto.TaxNumber = form.TaxNumber;
-                dto.CommercialRegister = form.CommercialRegister;
-                dto.SellingWarehouseId = form.SellingWarehouseId;
-                dto.DefaultTreasuryId = form.DefaultTreasuryId;
-                dto.LogoRelativePath = form.LogoRelativePath ?? current.LogoRelativePath;
-                break;
-            case "sales":
-                dto.PricesIncludeVat = form.PricesIncludeVat;
-                dto.VatPercent = form.VatPercent;
-                dto.ReturnWindowDays = form.ReturnWindowDays;
-                dto.AllowSellAtZeroStock = form.AllowSellAtZeroStock;
-                break;
-            case "numbering":
-                dto.InvoiceNumberPrefix = form.InvoiceNumberPrefix;
-                dto.ReturnNumberPrefix = form.ReturnNumberPrefix;
-                break;
-            case "printing":
-                dto.PaperWidthMm = form.PaperWidthMm;
-                dto.DefaultReceiptFormat = form.DefaultReceiptFormat;
-                dto.ReceiptLanguage = form.ReceiptLanguage;
-                dto.ReceiptDigits = form.ReceiptDigits;
-                dto.ReceiptFooterAr = form.ReceiptFooterAr;
-                dto.ReceiptFooterEn = form.ReceiptFooterEn;
-                break;
-            case "language":
-                dto.DefaultUiLanguage = form.DefaultUiLanguage;
-                break;
-            case "backup":
-                dto.BackupFolder = form.BackupFolder;
-                dto.BackupOnShiftClose = form.BackupOnShiftClose;
-                dto.DailyBackupEnabled = form.DailyBackupEnabled;
-                dto.DailyBackupHourLocal = form.DailyBackupHourLocal;
-                break;
-        }
-
+        var dto = ToDto(current);
+        MergeTab(tab, form, dto);
         return dto;
     }
+
+    public static void MergeTab(string tab, StoreSettingsFormViewModel form, StoreSettingsFormDto dto)
+    {
+        foreach (var source in typeof(StoreSettingsFormViewModel).GetProperties())
+        {
+            var tabs = source.GetCustomAttributes(typeof(SettingsTabAttribute), inherit: false)
+                .Cast<SettingsTabAttribute>()
+                .SelectMany(a => a.Tabs);
+            if (!tabs.Contains(tab))
+            {
+                continue;
+            }
+
+            var target = typeof(StoreSettingsFormDto).GetProperty(source.Name)
+                ?? throw new InvalidOperationException($"StoreSettingsFormDto has no property {source.Name}.");
+            var value = source.GetValue(form);
+            if (source.Name.EndsWith("RelativePath", StringComparison.Ordinal) && string.IsNullOrWhiteSpace(value as string))
+            {
+                continue;
+            }
+
+            target.SetValue(dto, value is DocumentPrintSettings doc ? SettingsMapper.Map<DocumentPrintSettings>(doc) : value);
+        }
+    }
+
+    public static StoreSettingsFormViewModel ToForm(StoreSettings current) =>
+        SettingsMapper.Map<StoreSettingsFormViewModel>(current);
+
+    public static StoreSettingsFormDto ToDto(StoreSettings current) =>
+        SettingsMapper.Map<StoreSettingsFormDto>(current);
 }

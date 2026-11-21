@@ -1,0 +1,244 @@
+@model SettingsPageViewModel
+@using StoresPOS.BLL.Models
+@using System.Text.Json
+@*
+    Print template designer (Phase 24): pick a document and paper size, switch sections and their parts on/off,
+    reorder sections, add texts; the preview shows the unsaved template on a sample document.
+*@
+@{
+    var t = Model.Template!;
+    var docLabels = new Dictionary<string, string>
+    {
+        [PrintTemplateCatalog.Sale] = L["Sales invoice"].Value,
+        [PrintTemplateCatalog.Return] = L["Return slip"].Value,
+        [PrintTemplateCatalog.Purchase] = L["Purchase invoice"].Value,
+        [PrintTemplateCatalog.Shift] = L["Shift report"].Value
+    };
+    var sectionLabels = new Dictionary<string, string>
+    {
+        ["header"] = L["Header"].Value,
+        ["info"] = L["Document details"].Value,
+        ["items"] = L["Items"].Value,
+        ["totals"] = L["Totals"].Value,
+        ["footer"] = L["Footer"].Value
+    };
+    var keyLabels = new Dictionary<string, string>
+    {
+        ["date"] = "Date", ["cashier"] = "Cashier", ["customer"] = "Customer", ["mobile"] = "Mobile", ["address"] = "Address",
+        ["shift"] = "Shift", ["payment"] = "Payment", ["reference"] = "Reference", ["original"] = "Original invoice", ["user"] = "User",
+        ["reason"] = "Reason", ["refund"] = "Refund method", ["status"] = "Status", ["supplier"] = "Supplier", ["createdBy"] = "Created by",
+        ["confirmedBy"] = "Confirmed by", ["notes"] = "Notes", ["opened"] = "Opened", ["openedBy"] = "Opened by", ["closed"] = "Closed",
+        ["closedBy"] = "Closed by", ["participants"] = "Participants", ["invoices"] = "Invoices"
+    };
+    var columnLabels = new Dictionary<string, string>
+    {
+        ["no"] = "Line number", ["code"] = "Barcode", ["item"] = "Item", ["unit"] = "Unit", ["qty"] = "Qty", ["catalog"] = "Catalog price",
+        ["price"] = "Price", ["discount"] = "Line discount", ["total"] = "Total", ["refund"] = "Refund", ["cost"] = "Cost",
+        ["cashier"] = "Cashier", ["invoices"] = "Invoices", ["cash"] = "Cash", ["noncash"] = "Non-cash"
+    };
+    var totalLabels = new Dictionary<string, string>
+    {
+        ["count"] = "Item count", ["subtotal"] = "Total before discount", ["discount"] = "Discount", ["total"] = "Total", ["vat"] = "VAT",
+        ["paid"] = "Amount paid", ["change"] = "Change", ["method"] = "Refund method", ["methods"] = "Sales by payment method",
+        ["totalSales"] = "Total sales", ["opening"] = "Opening amount", ["cashSales"] = "Cash sales", ["refunds"] = "Cash refunds",
+        ["cashouts"] = "Cash-outs", ["expected"] = "Expected in drawer", ["actual"] = "Actual cash", ["difference"] = "Difference",
+        ["handover"] = "Handover", ["result"] = "Result"
+    };
+    string Label(Dictionary<string, string> map, string key) => map.TryGetValue(key, out var v) ? L[v].Value : key;
+    var json = JsonSerializer.Serialize(t);
+}
+
+<div class="tpl-picker mb-3" role="tablist" aria-label="@L["Document"]">
+    @foreach (var (doc, format) in PrintTemplateCatalog.All)
+    {
+        var on = doc == t.Document && format == t.Format;
+        <a class="@(on ? "is-active" : "")" aria-current="@(on ? "page" : null)"
+           asp-action="Index" asp-route-tab="templates" asp-route-doc="@doc" asp-route-format="@format">
+            @docLabels[doc] <span class="num">@(format == PrintTemplateCatalog.A4 ? "A4" : "80 mm")</span>
+        </a>
+    }
+</div>
+
+<p class="text-muted small mb-3">
+    @if (Model.TemplateCustomized)
+    {
+        <span class="sp-status sp-status-info">@L["Customized"]</span>
+    }
+    else
+    {
+        <span class="sp-status sp-status-neutral">@L["Default layout"]</span>
+    }
+    @L["Changes show in the preview right away and apply to printing after you save."]
+</p>
+
+<div class="tpl-layout">
+    <div class="sp-card p-4" id="template-editor" data-template="@json" data-preview-url="@Url.Action("TemplatePreview", "Receipts")">
+        <section class="sp-settings-section">
+            <h2 class="sp-settings-section__title">@L["Sections"]</h2>
+            <p class="sp-settings-section__sub">@L["Switch sections on or off and move them up or down."]</p>
+            <ol class="tpl-sections" id="tpl-sections">
+                @foreach (var key in t.SectionOrder)
+                {
+                    <li data-section="@key">
+                        <label class="form-check m-0">
+                            <input class="form-check-input" type="checkbox" data-section-visible="@key" checked="@t.Shows(key)" />
+                            <span class="form-check-label">@sectionLabels[key]</span>
+                        </label>
+                        <span class="tpl-move">
+                            <button type="button" class="btn btn-sm sp-btn-secondary" data-move="up" aria-label="@L["Move up"]">↑</button>
+                            <button type="button" class="btn btn-sm sp-btn-secondary" data-move="down" aria-label="@L["Move down"]">↓</button>
+                        </span>
+                    </li>
+                }
+            </ol>
+        </section>
+
+        <section class="sp-settings-section">
+            <h2 class="sp-settings-section__title">@L["Header"]</h2>
+            <div class="tpl-checks">
+                @foreach (var (field, label) in new[] { ("ShowLogo", "Logo"), ("ShowStoreName", "Store name"), ("ShowAddress", "Address"), ("ShowPhone", "Phone"), ("ShowTaxNumber", "Tax number"), ("ShowCommercialRegister", "Commercial register") })
+                {
+                    var value = (bool)typeof(PrintTemplate).GetProperty(field)!.GetValue(t)!;
+                    <label class="form-check"><input class="form-check-input" type="checkbox" data-bool="@field" checked="@value" /> <span class="form-check-label">@L[label]</span></label>
+                }
+            </div>
+            <div class="sp-form__grid mt-2">
+                <div><label class="form-label" for="tpl-HeaderLineAr">@L["Extra line (Arabic)"]</label><input class="form-control" id="tpl-HeaderLineAr" data-text="HeaderLineAr" dir="rtl" value="@t.HeaderLineAr" maxlength="200" /></div>
+                <div><label class="form-label" for="tpl-HeaderLineEn">@L["Extra line (English)"]</label><input class="form-control" id="tpl-HeaderLineEn" data-text="HeaderLineEn" value="@t.HeaderLineEn" maxlength="200" /></div>
+            </div>
+        </section>
+
+        <section class="sp-settings-section">
+            <h2 class="sp-settings-section__title">@L["Document details"]</h2>
+            <div class="tpl-checks">
+                @foreach (var key in PrintTemplateCatalog.InfoKeys(t.Document))
+                {
+                    <label class="form-check"><input class="form-check-input" type="checkbox" data-hide-list="HiddenInfo" value="@key" checked="@t.ShowsInfo(key)" /> <span class="form-check-label">@Label(keyLabels, key)</span></label>
+                }
+            </div>
+        </section>
+
+        <section class="sp-settings-section">
+            <h2 class="sp-settings-section__title">@L["Items"]</h2>
+            <div class="tpl-checks">
+                @foreach (var key in PrintTemplateCatalog.ColumnKeys(t.Document))
+                {
+                    <label class="form-check"><input class="form-check-input" type="checkbox" data-hide-list="HiddenColumns" value="@key" checked="@t.ShowsColumn(key)" /> <span class="form-check-label">@Label(columnLabels, key)</span></label>
+                }
+            </div>
+            @if (t.Document != PrintTemplateCatalog.Shift)
+            {
+                <div class="mt-2" style="max-width:260px">
+                    <label class="form-label" for="tpl-ItemNames">@L["Item names"]</label>
+                    <select class="form-select" id="tpl-ItemNames" data-select="ItemNames">
+                        <option value="store" selected="@(t.ItemNames == "store")">@L["Receipt language"]</option>
+                        <option value="ar" selected="@(t.ItemNames == "ar")">العربية</option>
+                        <option value="en" selected="@(t.ItemNames == "en")">English</option>
+                        <option value="both" selected="@(t.ItemNames == "both")">@L["Both"]</option>
+                    </select>
+                </div>
+            }
+        </section>
+
+        <section class="sp-settings-section">
+            <h2 class="sp-settings-section__title">@L["Totals"]</h2>
+            <div class="tpl-checks">
+                @foreach (var key in PrintTemplateCatalog.TotalKeys(t.Document))
+                {
+                    <label class="form-check"><input class="form-check-input" type="checkbox" data-hide-list="HiddenTotals" value="@key" checked="@t.ShowsTotal(key)" /> <span class="form-check-label">@Label(totalLabels, key)</span></label>
+                }
+                @if (t.Document != PrintTemplateCatalog.Shift)
+                {
+                    <label class="form-check"><input class="form-check-input" type="checkbox" data-bool="ShowAmountInWords" checked="@t.ShowAmountInWords" /> <span class="form-check-label">@L["Amount in words"]</span></label>
+                }
+            </div>
+        </section>
+
+        <section class="sp-settings-section">
+            <h2 class="sp-settings-section__title">@L["Footer"]</h2>
+            <div class="tpl-checks">
+                <label class="form-check"><input class="form-check-input" type="checkbox" data-bool="ShowFooterText" checked="@t.ShowFooterText" /> <span class="form-check-label">@L["Thank-you text (Settings → Printing)"]</span></label>
+                <label class="form-check"><input class="form-check-input" type="checkbox" data-bool="ShowBarcode" checked="@t.ShowBarcode" /> <span class="form-check-label">@L["Barcode"]</span></label>
+                <label class="form-check"><input class="form-check-input" type="checkbox" data-bool="ShowDocumentNumber" checked="@t.ShowDocumentNumber" /> <span class="form-check-label">@L["Document number"]</span></label>
+                @if (t.IsA4)
+                {
+                    <label class="form-check"><input class="form-check-input" type="checkbox" data-bool="ShowSignatures" checked="@t.ShowSignatures" /> <span class="form-check-label">@L["Signature boxes"]</span></label>
+                }
+            </div>
+            <div class="sp-form__grid mt-2">
+                <div><label class="form-label" for="tpl-ReturnPolicyAr">@L["Return policy (Arabic)"]</label><textarea class="form-control" id="tpl-ReturnPolicyAr" data-text="ReturnPolicyAr" dir="rtl" rows="2" maxlength="500">@t.ReturnPolicyAr</textarea></div>
+                <div><label class="form-label" for="tpl-ReturnPolicyEn">@L["Return policy (English)"]</label><textarea class="form-control" id="tpl-ReturnPolicyEn" data-text="ReturnPolicyEn" rows="2" maxlength="500">@t.ReturnPolicyEn</textarea></div>
+                @if (t.IsA4)
+                {
+                    <div><label class="form-label" for="tpl-BankDetailsAr">@L["Bank details (Arabic)"]</label><textarea class="form-control" id="tpl-BankDetailsAr" data-text="BankDetailsAr" dir="rtl" rows="2" maxlength="500">@t.BankDetailsAr</textarea></div>
+                    <div><label class="form-label" for="tpl-BankDetailsEn">@L["Bank details (English)"]</label><textarea class="form-control" id="tpl-BankDetailsEn" data-text="BankDetailsEn" rows="2" maxlength="500">@t.BankDetailsEn</textarea></div>
+                }
+            </div>
+        </section>
+
+        <section class="sp-settings-section">
+            <h2 class="sp-settings-section__title">@L["Print"]</h2>
+            <div class="sp-form__grid">
+                <div>
+                    <label class="form-label" for="tpl-FontScale">@L["Font size"]</label>
+                    <input class="form-control num" type="number" id="tpl-FontScale" data-number="FontScale" min="0.8" max="1.4" step="0.05" value="@t.FontScale.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                </div>
+                <div>
+                    <label class="form-label" for="tpl-Density">@L["Line spacing"]</label>
+                    <select class="form-select" id="tpl-Density" data-select="Density">
+                        <option value="compact" selected="@(t.Density == "compact")">@L["Compact"]</option>
+                        <option value="normal" selected="@(t.Density == "normal")">@L["Normal"]</option>
+                        <option value="relaxed" selected="@(t.Density == "relaxed")">@L["Relaxed"]</option>
+                    </select>
+                </div>
+                @if (t.IsA4)
+                {
+                    <div>
+                        <label class="form-label" for="tpl-MarginMm">@L["Margins (mm)"]</label>
+                        <input class="form-control num" type="number" id="tpl-MarginMm" data-number="MarginMm" min="3" max="30" step="1" value="@t.MarginMm" />
+                    </div>
+                    <div class="d-flex align-items-end">
+                        <label class="form-check mb-2"><input class="form-check-input" type="checkbox" data-bool="Landscape" checked="@t.Landscape" /> <span class="form-check-label">@L["Landscape"]</span></label>
+                    </div>
+                }
+            </div>
+            <p class="form-text">@L["Paper width, receipt language and digits are set on the Printers and defaults tab."]</p>
+        </section>
+
+        <div class="sp-savebar">
+            <span class="sp-savebar__state" id="tpl-state" data-clean="@L["All changes saved"]" data-dirty="@L["Unsaved changes"]">@L["All changes saved"]</span>
+            <form asp-action="ResetTemplate" method="post" class="d-inline" onsubmit="return confirm('@L["Go back to the default layout for this document?"]');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="doc" value="@t.Document" />
+                <input type="hidden" name="format" value="@t.Format" />
+                <button type="submit" class="btn sp-btn-secondary" disabled="@(!Model.TemplateCustomized)">@L["Reset to default"]</button>
+            </form>
+            <form asp-action="SaveTemplate" method="post" class="d-inline" id="tpl-save-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="template" id="tpl-save-json" />
+                <button type="submit" class="btn sp-btn-primary">@L["Save template"]</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="tpl-preview">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small">@L["Preview (sample data)"]</span>
+        </div>
+        <form method="post" action="@Url.Action("TemplatePreview", "Receipts")" target="tpl-preview-frame" id="tpl-preview-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="template" id="tpl-preview-json" />
+        </form>
+        @if (t.IsA4)
+        {
+            @* A4 is drawn at real size and scaled down to the column (templates.js). *@
+            <div class="tpl-a4-box" id="tpl-a4-box" data-landscape="@(t.Landscape ? "true" : "false")">
+                <iframe name="tpl-preview-frame" id="tpl-preview-frame" title="@L["Preview"]" class="tpl-a4-frame"></iframe>
+            </div>
+        }
+        else
+        {
+            <iframe name="tpl-preview-frame" id="tpl-preview-frame" title="@L["Preview"]" class="sp-receipt-preview"></iframe>
+        }
+    </div>
+</div>

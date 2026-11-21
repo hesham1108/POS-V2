@@ -1,0 +1,20 @@
+@model StoresPOS.BLL.Models.PrintDocumentType
+@inject Microsoft.Extensions.Options.IOptionsMonitor<StoresPOS.BLL.Models.StoreSettings> StoreOptions
+@*
+    Paper size switch "80 mm | A4" (Phase 19). Starts on the document's default from Settings → Printing and
+    remembers the user's last choice in this browser. Elements with data-format-base="<url>" on the page get
+    their print URL / link / print-on-load URL rewritten with &format=… (print-frame.js).
+*@
+@{
+    var key = Model.ToString().ToLowerInvariant();
+    var current = StoreOptions.CurrentValue.FormatFor(Model);
+}
+<div class="btn-group btn-group-sm sp-segmented sp-paper-picker" role="group" aria-label="@L["Paper size"]"
+     data-format-picker="@key" data-format-default="@current">
+    @foreach (var opt in new[] { "80mm", "A4" })
+    {
+        var id = $"paper-{key}-{opt}";
+        <input type="radio" class="btn-check" name="paper-@key" id="@id" value="@opt" checked="@(current == opt)" autocomplete="off" />
+        <label class="btn sp-btn-secondary" for="@id">@(opt == "A4" ? "A4" : "80 mm")</label>
+    }
+</div>

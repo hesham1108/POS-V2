@@ -49,6 +49,46 @@ public class SettingsAndLicenseTests
     }
 
     [Fact]
+    public async Task StoreSettings_Save_WritesPrintersAndDocumentDefaults()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "storespos-settings-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            var svc = new StoreSettingsService(
+                TestFactories.StoreMonitor(new StoreSettings()),
+                Options.Create(new StoreSettingsPersistenceOptions { FilePath = path }));
+
+            await svc.SaveAsync(new StoreSettingsFormDto
+            {
+                NameEn = "Al Noor",
+                NameAr = "النور",
+                PaperWidthMm = 80,
+                ThermalPrinterName = "  XP-80C ",
+                A4PrinterName = "",
+                SalePrint = new DocumentPrintSettings { Format = "a4", AutoPrint = false, Copies = 9 },
+                ShiftPrint = new DocumentPrintSettings { Format = "nonsense" }
+            });
+
+            using var doc = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(path));
+            var store = doc.RootElement.GetProperty("Store");
+            Assert.Equal("XP-80C", store.GetProperty("ThermalPrinterName").GetString());
+            Assert.Equal(System.Text.Json.JsonValueKind.Null, store.GetProperty("A4PrinterName").ValueKind);
+            Assert.Equal("A4", store.GetProperty("SalePrint").GetProperty("Format").GetString());
+            Assert.False(store.GetProperty("SalePrint").GetProperty("AutoPrint").GetBoolean());
+            Assert.Equal(5, store.GetProperty("SalePrint").GetProperty("Copies").GetInt32()); // clamped 1–5
+            Assert.Equal(System.Text.Json.JsonValueKind.Null, store.GetProperty("ShiftPrint").GetProperty("Format").ValueKind);
+            Assert.False(store.TryGetProperty("PrefersA4Receipt", out _)); // computed values are not stored
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
     public async Task License_Activate_AcceptsValidSignature_RejectsWrongDevice()
     {
         var licensePath = Path.Combine(Path.GetTempPath(), "storespos-license-" + Guid.NewGuid().ToString("N") + ".json");

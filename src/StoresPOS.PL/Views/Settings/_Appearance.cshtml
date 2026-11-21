@@ -1,0 +1,61 @@
+@model SettingsPageViewModel
+<section class="sp-settings-section">
+    <h2 class="sp-settings-section__title">@L["Appearance"]</h2>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Form.NameEn" class="form-label"></label>
+            <input asp-for="Form.NameEn" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Form.NameAr" class="form-label"></label>
+            <input asp-for="Form.NameAr" class="form-control" dir="rtl" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.UiTheme" class="form-label"></label>
+            <select asp-for="Form.UiTheme" class="form-select">
+                <option value="light">@L["Light"]</option>
+                <option value="dark">@L["Dark"]</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.UiPrimaryColor" class="form-label"></label>
+            <input asp-for="Form.UiPrimaryColor" class="form-control" placeholder="#0f6751" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.UiSidebarColor" class="form-label"></label>
+            <input asp-for="Form.UiSidebarColor" class="form-control" placeholder="#1a1d26" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@L["UI logo"]</label>
+            <input type="file" name="uiLogoFile" class="form-control" accept=".png,.jpg,.jpeg,.webp" />
+            <input type="hidden" asp-for="Form.UiLogoRelativePath" />
+            @{
+                var uiLogo = !string.IsNullOrWhiteSpace(Model.Form.UiLogoRelativePath)
+                    ? Model.Form.UiLogoRelativePath
+                    : Model.Form.LogoRelativePath;
+            }
+            @if (!string.IsNullOrWhiteSpace(uiLogo))
+            {
+                <div class="mt-2"><img src="~/@uiLogo" alt="logo" style="max-height:64px" /></div>
+            }
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@L["Favicon"]</label>
+            <input type="file" name="faviconFile" class="form-control" accept=".png,.jpg,.jpeg,.webp,.ico" />
+            <input type="hidden" asp-for="Form.FaviconRelativePath" />
+            @if (!string.IsNullOrWhiteSpace(Model.Form.FaviconRelativePath))
+            {
+                <div class="mt-2"><img src="~/@Model.Form.FaviconRelativePath" alt="favicon" style="max-height:32px" /></div>
+            }
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@L["A4 logo"]</label>
+            <input type="file" name="logoFile" class="form-control" accept=".png,.jpg,.jpeg,.webp" />
+            <input type="hidden" asp-for="Form.LogoRelativePath" />
+            @if (!string.IsNullOrWhiteSpace(Model.Form.LogoRelativePath))
+            {
+                <div class="mt-2"><img src="~/@Model.Form.LogoRelativePath" alt="a4 logo" style="max-height:64px" /></div>
+            }
+        </div>
+    </div>
+</section>

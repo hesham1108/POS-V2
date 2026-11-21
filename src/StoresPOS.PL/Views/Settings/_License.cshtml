@@ -1,0 +1,45 @@
+@model SettingsPageViewModel
+    <div class="sp-card p-4 mb-4" id="license-status">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="text-muted small">@L["Device ID"]</div>
+                <div class="fw-semibold num">@Model.License.DeviceId</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">@L["Status"]</div>
+                <div>
+                    @if (Model.License.IsActivated)
+                    {
+                        <span class="sp-status sp-status-ok">@L[Model.License.StatusMessage]</span>
+                    }
+                    else
+                    {
+                        <span class="sp-status sp-status-warn">@L[Model.License.StatusMessage]</span>
+                    }
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">@L["Licensed to"]</div>
+                <div>@(Model.License.LicensedTo ?? "—")</div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="ActivateLicense" method="post" class="sp-card p-4" style="max-width:560px">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="LicenseForm.LicensedTo" class="form-label"></label>
+            <input asp-for="LicenseForm.LicensedTo" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="LicenseForm.ExpiresUtc" class="form-label"></label>
+            <input asp-for="LicenseForm.ExpiresUtc" class="form-control" type="date" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="LicenseForm.Signature" class="form-label"></label>
+            <input asp-for="LicenseForm.Signature" class="form-control font-monospace" />
+            <div class="form-text">@L["Paste the signature from the license file we issued for this Device ID."]</div>
+        </div>
+        <button type="submit" class="btn sp-btn-primary">@L["Activate"]</button>
+    </form>

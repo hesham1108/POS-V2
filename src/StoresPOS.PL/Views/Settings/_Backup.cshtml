@@ -1,0 +1,27 @@
+@model SettingsPageViewModel
+<section class="sp-settings-section">
+    <h2 class="sp-settings-section__title">@L["Database and backup"]</h2>
+    <div class="row g-3 mb-2">
+        <div class="col-md-8">
+            <label asp-for="Form.BackupFolder" class="form-label"></label>
+            <input asp-for="Form.BackupFolder" class="form-control" />
+            <div class="form-text">@L["Folder must be writable by the SQL Server service account."]</div>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Form.DailyBackupHourLocal" class="form-label"></label>
+            <input asp-for="Form.DailyBackupHourLocal" class="form-control num" />
+        </div>
+        <div class="col-md-6">
+            <div class="form-check">
+                <input asp-for="Form.BackupOnShiftClose" class="form-check-input" />
+                <label asp-for="Form.BackupOnShiftClose" class="form-check-label"></label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check">
+                <input asp-for="Form.DailyBackupEnabled" class="form-check-input" />
+                <label asp-for="Form.DailyBackupEnabled" class="form-check-label"></label>
+            </div>
+        </div>
+    </div>
+</section>
