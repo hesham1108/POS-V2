@@ -35,7 +35,21 @@ public class PurchaseService : IPurchaseService
 
     public async Task<IReadOnlyList<PurchaseInvoiceListItemDto>> GetListAsync(
         PurchaseInvoiceListFilterDto? filter = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await BuildListQuery(filter).ToListAsync(cancellationToken);
+
+    public static readonly string[] SortColumns =
+        [nameof(PurchaseInvoiceListItemDto.InvoiceNumber), nameof(PurchaseInvoiceListItemDto.SupplierNameEn),
+         nameof(PurchaseInvoiceListItemDto.InvoiceDate), nameof(PurchaseInvoiceListItemDto.Status),
+         nameof(PurchaseInvoiceListItemDto.SubTotal), nameof(PurchaseInvoiceListItemDto.LineCount)];
+
+    public Task<PagedResult<PurchaseInvoiceListItemDto>> GetPageAsync(
+        PurchaseInvoiceListFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default) =>
+        BuildListQuery(filter).ToPagedAsync(list, SortColumns, x => x.SubTotal, list.PageSize > 100, cancellationToken);
+
+    private IQueryable<PurchaseInvoiceListItemDto> BuildListQuery(PurchaseInvoiceListFilterDto? filter)
     {
         filter ??= new PurchaseInvoiceListFilterDto();
         var query = _db.PurchaseInvoices.AsNoTracking().AsQueryable();
@@ -59,7 +73,7 @@ public class PurchaseService : IPurchaseService
                 || x.Supplier.NameAr.Contains(term));
         }
 
-        return await query
+        return query
             .OrderByDescending(x => x.InvoiceDate)
             .ThenByDescending(x => x.Id)
             .Select(x => new PurchaseInvoiceListItemDto
@@ -75,8 +89,7 @@ public class PurchaseService : IPurchaseService
                 LineCount = x.Items.Count,
                 CreatedAtUtc = x.CreatedAtUtc,
                 ConfirmedAtUtc = x.ConfirmedAtUtc
-            })
-            .ToListAsync(cancellationToken);
+            });
     }
 
     public async Task<PurchaseInvoiceDetailDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -398,7 +411,7 @@ public class PurchaseService : IPurchaseService
 
             if (!products.TryGetValue(input.ProductId, out var product))
             {
-                throw new BusinessException($"Product #{input.ProductId} was not found or is inactive.");
+                throw new BusinessException("Product #{0} was not found or is inactive.", input.ProductId);
             }
 
             var qty = Math.Round(input.Quantity, 3, MidpointRounding.AwayFromZero);

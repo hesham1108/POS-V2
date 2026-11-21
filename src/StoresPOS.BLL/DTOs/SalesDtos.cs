@@ -54,6 +54,8 @@ public class CartDto
     /// <summary>Null = walk-in customer.</summary>
     public int? CustomerId { get; set; }
     public string? CustomerName { get; set; }
+    /// <summary>Classification of the invoice customer (null for a walk-in invoice).</summary>
+    public CustomerType? CustomerType { get; set; }
     public string? CustomerPhone { get; set; }
     public IReadOnlyList<CartLineDto> Lines { get; set; } = [];
     public decimal ItemCount { get; set; }
@@ -125,6 +127,9 @@ public class SalesInvoiceFilterDto
     public PaymentMethod? PaymentMethod { get; set; }
     public int? ShiftId { get; set; }
     public int? CustomerId { get; set; }
+
+    /// <summary>Invoices that contain this product (report drill-down, Phase 23).</summary>
+    public int? ProductId { get; set; }
     public int Take { get; set; } = 200;
 }
 

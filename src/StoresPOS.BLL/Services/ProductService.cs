@@ -18,7 +18,20 @@ public class ProductService : IProductService
 
     public async Task<IReadOnlyList<ProductDto>> GetListAsync(
         ProductListFilterDto? filter = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await BuildListQuery(filter).ToListAsync(cancellationToken);
+
+    public static readonly string[] SortColumns =
+        [nameof(ProductDto.NameEn), nameof(ProductDto.NameAr), nameof(ProductDto.Barcode), nameof(ProductDto.CategoryNameEn),
+         nameof(ProductDto.PurchasePrice), nameof(ProductDto.RetailPrice), nameof(ProductDto.WholesalePrice), nameof(ProductDto.StockQuantity)];
+
+    public Task<PagedResult<ProductDto>> GetPageAsync(
+        ProductListFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default) =>
+        BuildListQuery(filter).ToPagedAsync(list, SortColumns, allowAnyPageSize: list.PageSize > 100, cancellationToken: cancellationToken);
+
+    private IQueryable<ProductDto> BuildListQuery(ProductListFilterDto? filter)
     {
         filter ??= new ProductListFilterDto();
         var query = _db.Products.AsNoTracking().AsQueryable();
@@ -51,7 +64,7 @@ public class ProductService : IProductService
             query = query.Where(x => x.StockQuantity <= x.LowStockThreshold);
         }
 
-        return await query
+        return query
             .OrderBy(x => x.NameEn)
             .Select(x => new ProductDto
             {
@@ -72,8 +85,7 @@ public class ProductService : IProductService
                 LowStockThreshold = x.LowStockThreshold,
                 IsLowStock = x.StockQuantity <= x.LowStockThreshold,
                 IsActive = x.IsActive
-            })
-            .ToListAsync(cancellationToken);
+            });
     }
 
     public async Task<ProductDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -128,6 +140,7 @@ public class ProductService : IProductService
             Unit = string.IsNullOrWhiteSpace(dto.Unit) ? "pcs" : dto.Unit.Trim(),
             CategoryId = dto.CategoryId,
             PurchasePrice = PricingCalculator.RoundMoney(dto.PurchasePrice),
+            AverageCost = PricingCalculator.RoundMoney(dto.PurchasePrice),
             RetailPrice = retailPrice,
             RetailMarkupPercent = retailMarkup,
             WholesalePrice = wholesalePrice,

@@ -26,6 +26,12 @@ public class SalesService : ISalesService
     public const string MsgInvalidQuantity = "Quantity must be greater than zero.";
     public const string MsgLineNotFound = "That line is no longer on the invoice.";
     public const string MsgNoPricePermission = "You do not have permission to change prices.";
+
+    /// <summary>Product name shown inside cashier messages: Arabic in an Arabic UI, English otherwise (text only).</summary>
+    private static string MessageName(Product product) =>
+        CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar" && !string.IsNullOrWhiteSpace(product.NameAr)
+            ? product.NameAr
+            : product.NameEn;
     public const string MsgInvalidPrice = "Price must be greater than zero.";
     public const string MsgNoDiscountPermission = "You do not have permission to give discounts.";
     public const string MsgInvalidDiscount = "Discount must be between 0 and the invoice subtotal.";
@@ -182,7 +188,7 @@ public class SalesService : ISalesService
 
         if (!product.IsActive)
         {
-            throw new BusinessException(MsgProductInactive, product.NameEn);
+            throw new BusinessException(MsgProductInactive, MessageName(product));
         }
 
         var line = draft.Items.FirstOrDefault(x => x.ProductId == productId);
@@ -202,7 +208,8 @@ public class SalesService : ISalesService
                 Quantity = newQty,
                 CatalogUnitPrice = price,
                 UnitPrice = price,
-                UnitCost = product.PurchasePrice,
+                // Profit cost = weighted average cost (Phase 23); older products without one use the purchase price.
+                UnitCost = product.AverageCost > 0 ? product.AverageCost : product.PurchasePrice,
                 SortOrder = draft.Items.Count == 0 ? 1 : draft.Items.Max(x => x.SortOrder) + 1
             });
         }
@@ -694,6 +701,24 @@ public class SalesService : ISalesService
         CancellationToken cancellationToken = default)
     {
         filter ??= new SalesInvoiceFilterDto();
+        var take = filter.Take <= 0 ? 200 : Math.Min(filter.Take, 1000);
+        return await BuildInvoiceQuery(filter).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public static readonly string[] InvoiceSortColumns =
+        [nameof(SalesInvoiceListItemDto.InvoiceNumber), nameof(SalesInvoiceListItemDto.CompletedAtUtc), nameof(SalesInvoiceListItemDto.ShiftId),
+         nameof(SalesInvoiceListItemDto.CashierDisplayName), nameof(SalesInvoiceListItemDto.CustomerName), nameof(SalesInvoiceListItemDto.Total),
+         nameof(SalesInvoiceListItemDto.LineCount)];
+
+    public Task<PagedResult<SalesInvoiceListItemDto>> GetInvoicePageAsync(
+        SalesInvoiceFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default) =>
+        BuildInvoiceQuery(filter).ToPagedAsync(list, InvoiceSortColumns, x => x.Total, list.PageSize > 100, cancellationToken);
+
+    private IQueryable<SalesInvoiceListItemDto> BuildInvoiceQuery(SalesInvoiceFilterDto? filter)
+    {
+        filter ??= new SalesInvoiceFilterDto();
         var query = _db.SalesInvoices.AsNoTracking().Where(x => x.Status == SalesInvoiceStatus.Completed);
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -732,10 +757,13 @@ public class SalesService : ISalesService
             query = query.Where(x => x.CustomerId == filter.CustomerId.Value);
         }
 
-        var take = filter.Take <= 0 ? 200 : Math.Min(filter.Take, 1000);
-        return await query
+        if (filter.ProductId.HasValue)
+        {
+            query = query.Where(x => x.Items.Any(i => i.ProductId == filter.ProductId.Value));
+        }
+
+        return query
             .OrderByDescending(x => x.InvoiceSequence)
-            .Take(take)
             .Select(x => new SalesInvoiceListItemDto
             {
                 Id = x.Id,
@@ -752,8 +780,7 @@ public class SalesService : ISalesService
                 ReturnedAmount = _db.SalesReturns
                     .Where(r => r.OriginalSalesInvoiceId == x.Id)
                     .Sum(r => (decimal?)r.TotalAmount) ?? 0m
-            })
-            .ToListAsync(cancellationToken);
+            });
     }
 
     public async Task<SalesInvoiceDetailsDto?> GetInvoiceAsync(int id, CancellationToken cancellationToken = default) =>
@@ -894,7 +921,7 @@ public class SalesService : ISalesService
             ? null
             : await _db.Customers.AsNoTracking()
                 .Where(x => x.Id == draft.CustomerId.Value)
-                .Select(x => new { x.Name, x.Phone })
+                .Select(x => new { x.Name, x.Phone, x.CustomerType })
                 .FirstOrDefaultAsync(cancellationToken);
 
         Recalculate(draft);
@@ -905,6 +932,7 @@ public class SalesService : ISalesService
             SaleType = draft.SaleType,
             CustomerId = customer is null ? null : draft.CustomerId,
             CustomerName = customer?.Name,
+            CustomerType = customer?.CustomerType,
             CustomerPhone = customer?.Phone,
             Lines = draft.Items
                 .OrderBy(x => x.SortOrder)
@@ -961,12 +989,12 @@ public class SalesService : ISalesService
         var available = await _inventory.GetWarehouseQuantityAsync(warehouseId, product.Id, cancellationToken);
         if (available <= 0)
         {
-            throw new BusinessException(MsgOutOfStock, product.NameEn);
+            throw new BusinessException(MsgOutOfStock, MessageName(product));
         }
 
         if (quantity > available)
         {
-            throw new BusinessException(MsgNotEnoughStock, Qty(available), product.NameEn);
+            throw new BusinessException(MsgNotEnoughStock, Qty(available), MessageName(product));
         }
     }
 

@@ -80,6 +80,35 @@ public class CashOutService : ICashOutService
         CancellationToken cancellationToken = default)
     {
         filter ??= new CashOutFilterDto();
+        var take = filter.Take <= 0 ? 500 : Math.Min(filter.Take, 2000);
+        return await BuildListQuery(filter).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public static readonly string[] SortColumns =
+        [nameof(CashOutListItemDto.CreatedAtUtc), nameof(CashOutListItemDto.ShiftId),
+         nameof(CashOutListItemDto.UserDisplayName), nameof(CashOutListItemDto.Amount)];
+
+    public Task<PagedResult<CashOutListItemDto>> GetPageAsync(
+        CashOutFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default) =>
+        BuildListQuery(filter).ToPagedAsync(list, SortColumns, x => x.Amount, list.PageSize > 100, cancellationToken);
+
+    /// <summary>People who made cash-outs matching the filter (for the user filter list).</summary>
+    public async Task<IReadOnlyList<(int UserId, string DisplayName)>> GetUsersAsync(
+        CashOutFilterDto filter,
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await BuildListQuery(new CashOutFilterDto { FromUtc = filter.FromUtc, ToUtc = filter.ToUtc, ShiftId = filter.ShiftId })
+            .Select(x => new { x.UserId, x.UserDisplayName })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        return rows.OrderBy(x => x.UserDisplayName).Select(x => (x.UserId, x.UserDisplayName)).ToList();
+    }
+
+    private IQueryable<CashOutListItemDto> BuildListQuery(CashOutFilterDto? filter)
+    {
+        filter ??= new CashOutFilterDto();
         var query = _db.CashOuts.AsNoTracking();
 
         if (filter.FromUtc.HasValue)
@@ -102,11 +131,9 @@ public class CashOutService : ICashOutService
             query = query.Where(x => x.UserId == filter.UserId.Value);
         }
 
-        var take = filter.Take <= 0 ? 500 : Math.Min(filter.Take, 2000);
-        return await query
+        return query
             .OrderByDescending(x => x.CreatedAtUtc)
             .ThenByDescending(x => x.Id)
-            .Take(take)
             .Select(x => new CashOutListItemDto
             {
                 Id = x.Id,
@@ -116,7 +143,6 @@ public class CashOutService : ICashOutService
                 UserDisplayName = x.User.DisplayName,
                 Amount = x.Amount,
                 Reason = x.Reason
-            })
-            .ToListAsync(cancellationToken);
+            });
     }
 }

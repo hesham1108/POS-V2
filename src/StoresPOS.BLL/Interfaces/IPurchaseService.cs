@@ -8,6 +8,8 @@ public interface IPurchaseService
         PurchaseInvoiceListFilterDto? filter = null,
         CancellationToken cancellationToken = default);
 
+    Task<PagedResult<PurchaseInvoiceListItemDto>> GetPageAsync(PurchaseInvoiceListFilterDto filter, ListQuery list, CancellationToken cancellationToken = default);
+
     Task<PurchaseInvoiceDetailDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     Task<PurchaseInvoiceDetailDto> CreateDraftAsync(

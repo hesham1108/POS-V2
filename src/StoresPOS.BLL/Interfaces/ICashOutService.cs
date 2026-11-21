@@ -9,4 +9,8 @@ public interface ICashOutService
     Task<CashOutResultDto> CreateAsync(CreateCashOutDto dto, int userId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<CashOutListItemDto>> GetListAsync(CashOutFilterDto? filter = null, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<CashOutListItemDto>> GetPageAsync(CashOutFilterDto filter, ListQuery list, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<(int UserId, string DisplayName)>> GetUsersAsync(CashOutFilterDto filter, CancellationToken cancellationToken = default);
 }

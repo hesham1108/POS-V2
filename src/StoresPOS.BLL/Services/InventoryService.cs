@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using StoresPOS.BLL.DTOs;
 using StoresPOS.BLL.Exceptions;
 using StoresPOS.BLL.Interfaces;
+using StoresPOS.BLL.Models;
 using StoresPOS.DAL.Context;
 using StoresPOS.DAL.Entities;
 
@@ -130,6 +131,7 @@ public class InventoryService : IInventoryService
                     Barcode = x.Product.Barcode,
                     Unit = x.Product.Unit,
                     CategoryNameEn = x.Product.Category != null ? x.Product.Category.NameEn : null,
+                    CategoryNameAr = x.Product.Category != null ? x.Product.Category.NameAr : null,
                     StockQuantity = x.Qty,
                     LowStockThreshold = x.Product.LowStockThreshold,
                     IsLowStock = x.Qty <= x.Product.LowStockThreshold,
@@ -176,6 +178,7 @@ public class InventoryService : IInventoryService
                 Barcode = x.Barcode,
                 Unit = x.Unit,
                 CategoryNameEn = x.Category != null ? x.Category.NameEn : null,
+                CategoryNameAr = x.Category != null ? x.Category.NameAr : null,
                 StockQuantity = x.StockQuantity,
                 LowStockThreshold = x.LowStockThreshold,
                 IsLowStock = x.StockQuantity <= x.LowStockThreshold,
@@ -194,6 +197,25 @@ public class InventoryService : IInventoryService
         await EnsureWarehouseInfrastructureAsync(cancellationToken);
         filter ??= new StockMovementFilterDto();
         var take = filter.Take <= 0 ? 100 : Math.Min(filter.Take, 500);
+        return await BuildMovementQuery(filter).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public static readonly string[] MovementSortColumns =
+        [nameof(StockMovementDto.CreatedAtUtc), nameof(StockMovementDto.ProductNameEn), nameof(StockMovementDto.WarehouseNameEn),
+         nameof(StockMovementDto.MovementType), nameof(StockMovementDto.QuantityChange), nameof(StockMovementDto.QuantityAfter)];
+
+    public async Task<PagedResult<StockMovementDto>> GetMovementPageAsync(
+        StockMovementFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureWarehouseInfrastructureAsync(cancellationToken);
+        return await BuildMovementQuery(filter).ToPagedAsync(list, MovementSortColumns, allowAnyPageSize: list.PageSize > 100, cancellationToken: cancellationToken);
+    }
+
+    private IQueryable<StockMovementDto> BuildMovementQuery(StockMovementFilterDto? filter)
+    {
+        filter ??= new StockMovementFilterDto();
 
         var query = _db.StockMovements.AsNoTracking().AsQueryable();
 
@@ -222,10 +244,9 @@ public class InventoryService : IInventoryService
             query = query.Where(x => x.CreatedAtUtc <= filter.ToUtc.Value);
         }
 
-        return await query
+        return query
             .OrderByDescending(x => x.CreatedAtUtc)
             .ThenByDescending(x => x.Id)
-            .Take(take)
             .Select(x => new StockMovementDto
             {
                 Id = x.Id,
@@ -245,8 +266,7 @@ public class InventoryService : IInventoryService
                 Reason = x.Reason,
                 CreatedByUsername = x.CreatedByUser.Username,
                 CreatedAtUtc = x.CreatedAtUtc
-            })
-            .ToListAsync(cancellationToken);
+            });
     }
 
     public async Task<StockMovementDto> AdjustStockAsync(
@@ -356,12 +376,12 @@ public class InventoryService : IInventoryService
         {
             if (!products.TryGetValue(line.ProductId, out var product))
             {
-                throw new BusinessException($"Product #{line.ProductId} was not found.");
+                throw new BusinessException("Product #{0} was not found.", line.ProductId);
             }
 
             if (!product.IsActive)
             {
-                throw new BusinessException($"Product '{product.NameEn}' is inactive.");
+                throw new BusinessException("Product '{0}' is inactive.", new DisplayName(product.NameEn, product.NameAr));
             }
 
             if (line.Quantity <= 0)
@@ -369,11 +389,17 @@ public class InventoryService : IInventoryService
                 throw new BusinessException("Purchase quantity must be greater than zero.");
             }
 
+            // Weighted average cost over the whole stock (all warehouses), before this receipt is added.
+            var qtyBefore = Math.Max(0m, product.StockQuantity);
+            var costBefore = product.AverageCost > 0 ? product.AverageCost : product.PurchasePrice;
+            var received = Math.Round(line.Quantity, 3, MidpointRounding.AwayFromZero);
+            product.AverageCost = WeightedAverageCost(qtyBefore, costBefore, received, line.UnitCost);
+
             var stock = await GetOrCreateStockAsync(warehouseId, product.Id, cancellationToken);
             await ApplyQuantityChangeAsync(
                 product,
                 stock,
-                Math.Round(line.Quantity, 3, MidpointRounding.AwayFromZero),
+                received,
                 StockMovementType.Purchase,
                 PurchaseReferenceType,
                 purchaseInvoiceId,
@@ -390,6 +416,18 @@ public class InventoryService : IInventoryService
                 product.WholesaleMarkupPercent);
             product.UpdatedAtUtc = DateTime.UtcNow;
         }
+    }
+
+    /// <summary>(qty on hand × average cost + qty received × unit cost) ÷ total qty, rounded to 4 decimals.</summary>
+    public static decimal WeightedAverageCost(decimal qtyOnHand, decimal averageCost, decimal qtyReceived, decimal unitCost)
+    {
+        var total = qtyOnHand + qtyReceived;
+        if (qtyOnHand <= 0 || total <= 0)
+        {
+            return Math.Round(unitCost, 4, MidpointRounding.AwayFromZero);
+        }
+
+        return Math.Round((qtyOnHand * averageCost + qtyReceived * unitCost) / total, 4, MidpointRounding.AwayFromZero);
     }
 
     public async Task ApplySaleAsync(
@@ -420,7 +458,7 @@ public class InventoryService : IInventoryService
         {
             if (!products.TryGetValue(line.ProductId, out var product))
             {
-                throw new BusinessException($"Product #{line.ProductId} was not found.");
+                throw new BusinessException("Product #{0} was not found.", line.ProductId);
             }
 
             if (line.Quantity <= 0)
@@ -470,7 +508,7 @@ public class InventoryService : IInventoryService
         {
             if (!products.TryGetValue(line.ProductId, out var product))
             {
-                throw new BusinessException($"Product #{line.ProductId} was not found.");
+                throw new BusinessException("Product #{0} was not found.", line.ProductId);
             }
 
             if (line.Quantity <= 0)
@@ -523,7 +561,7 @@ public class InventoryService : IInventoryService
         {
             if (!products.TryGetValue(line.ProductId, out var product))
             {
-                throw new BusinessException($"Product #{line.ProductId} was not found.");
+                throw new BusinessException("Product #{0} was not found.", line.ProductId);
             }
 
             var qty = Math.Round(line.Quantity, 3, MidpointRounding.AwayFromZero);
@@ -593,7 +631,7 @@ public class InventoryService : IInventoryService
         if (after < 0)
         {
             throw new BusinessException(
-                $"Stock for '{product.NameEn}' cannot go below zero in this warehouse (would be {after}).");
+                "Stock for '{0}' cannot go below zero in this warehouse (would be {1}).", new DisplayName(product.NameEn, product.NameAr), after);
         }
 
         stock.Quantity = after;
@@ -604,7 +642,7 @@ public class InventoryService : IInventoryService
             if (productAfter < 0)
             {
                 throw new BusinessException(
-                    $"Stock for '{product.NameEn}' cannot go below zero (would be {productAfter}).");
+                    "Stock for '{0}' cannot go below zero (would be {1}).", new DisplayName(product.NameEn, product.NameAr), productAfter);
             }
 
             product.StockQuantity = productAfter;

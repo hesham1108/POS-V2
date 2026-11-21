@@ -16,6 +16,8 @@ public interface IInventoryService
         StockMovementFilterDto? filter = null,
         CancellationToken cancellationToken = default);
 
+    Task<PagedResult<StockMovementDto>> GetMovementPageAsync(StockMovementFilterDto filter, ListQuery list, CancellationToken cancellationToken = default);
+
     Task<StockMovementDto> AdjustStockAsync(
         StockAdjustmentDto dto,
         int userId,

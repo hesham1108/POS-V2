@@ -5,6 +5,8 @@ namespace StoresPOS.BLL.Interfaces;
 public interface ISupplierService
 {
     Task<IReadOnlyList<SupplierDto>> GetListAsync(SupplierListFilterDto? filter = null, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<SupplierDto>> GetPageAsync(SupplierListFilterDto filter, ListQuery list, CancellationToken cancellationToken = default);
     Task<SupplierDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<SupplierDto> CreateAsync(SupplierUpsertDto dto, CancellationToken cancellationToken = default);
     Task<SupplierDto> UpdateAsync(int id, SupplierUpsertDto dto, CancellationToken cancellationToken = default);

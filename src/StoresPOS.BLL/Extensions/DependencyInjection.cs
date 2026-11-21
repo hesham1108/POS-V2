@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ISupplierService, SupplierService>();
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IShiftService, ShiftService>();
         services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IUserAdminService, UserAdminService>();
         services.AddScoped<ISalesService, SalesService>();
         services.AddScoped<ICashOutService, CashOutService>();
         services.AddScoped<IReturnService, ReturnService>();

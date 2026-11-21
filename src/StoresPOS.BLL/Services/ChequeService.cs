@@ -110,6 +110,66 @@ public class ChequeService : IChequeService
         };
     }
 
+    public static readonly string[] SortColumns =
+        [nameof(ChequeListItemDto.Number), nameof(ChequeListItemDto.Bank), nameof(ChequeListItemDto.DueDate),
+         nameof(ChequeListItemDto.Amount), nameof(ChequeListItemDto.Status), nameof(ChequeListItemDto.CreatedAtUtc)];
+
+    public async Task<ChequeListResultDto> ListPageAsync(
+        ChequeFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default)
+    {
+        var today = TodayLocal;
+        var query = ApplyFilter(_db.Cheques.AsNoTracking(), filter, today);
+
+        // Totals over every matching cheque, one grouped query.
+        var totals = await query
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Sum(x => x.Amount),
+                Pending = g.Where(x => x.Status == ChequeStatus.Pending).Sum(x => (decimal?)x.Amount) ?? 0m,
+                PendingCount = g.Count(x => x.Status == ChequeStatus.Pending),
+                OverdueCount = g.Count(x => x.Status == ChequeStatus.Pending && x.DueDate < today)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var page = await query
+            .OrderBy(x => x.DueDate)
+            .ThenBy(x => x.Id)
+            .Select(x => new ChequeListItemDto
+            {
+                Id = x.Id,
+                Number = x.Number,
+                Bank = x.Bank,
+                DueDate = x.DueDate,
+                Amount = x.Amount,
+                Direction = x.Direction,
+                Status = x.Status,
+                CustomerId = x.CustomerId,
+                CustomerName = x.Customer != null ? x.Customer.Name : null,
+                SupplierId = x.SupplierId,
+                SupplierName = x.Supplier != null ? x.Supplier.NameEn : null,
+                SalesInvoiceId = x.SalesInvoiceId,
+                SalesInvoiceNumber = x.SalesInvoice != null ? x.SalesInvoice.InvoiceNumber : null,
+                PurchaseInvoiceId = x.PurchaseInvoiceId,
+                PurchaseInvoiceNumber = x.PurchaseInvoice != null ? x.PurchaseInvoice.InvoiceNumber : null,
+                CreatedAtUtc = x.CreatedAtUtc,
+                IsOverdue = x.Status == ChequeStatus.Pending && x.DueDate < today
+            })
+            .ToPagedAsync(list, SortColumns, allowAnyPageSize: list.PageSize > 100, cancellationToken: cancellationToken);
+
+        return new ChequeListResultDto
+        {
+            Items = page.Items,
+            Page = page,
+            TotalAmount = PricingCalculator.RoundMoney(totals?.Total ?? 0m),
+            PendingAmount = PricingCalculator.RoundMoney(totals?.Pending ?? 0m),
+            PendingCount = totals?.PendingCount ?? 0,
+            OverdueCount = totals?.OverdueCount ?? 0
+        };
+    }
+
     public async Task<ChequeDetailDto?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         var today = TodayLocal;

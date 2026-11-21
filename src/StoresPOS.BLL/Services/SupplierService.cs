@@ -18,7 +18,20 @@ public class SupplierService : ISupplierService
 
     public async Task<IReadOnlyList<SupplierDto>> GetListAsync(
         SupplierListFilterDto? filter = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await BuildListQuery(filter).ToListAsync(cancellationToken);
+
+    public static readonly string[] SortColumns =
+        [nameof(SupplierDto.NameEn), nameof(SupplierDto.NameAr), nameof(SupplierDto.Phone),
+         nameof(SupplierDto.ConfirmedPurchaseCount), nameof(SupplierDto.TotalPurchasesAmount)];
+
+    public Task<PagedResult<SupplierDto>> GetPageAsync(
+        SupplierListFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default) =>
+        BuildListQuery(filter).ToPagedAsync(list, SortColumns, allowAnyPageSize: list.PageSize > 100, cancellationToken: cancellationToken);
+
+    private IQueryable<SupplierDto> BuildListQuery(SupplierListFilterDto? filter)
     {
         filter ??= new SupplierListFilterDto();
         var query = _db.Suppliers.AsNoTracking().AsQueryable();
@@ -42,7 +55,7 @@ public class SupplierService : ISupplierService
                 || (x.Email != null && x.Email.Contains(term)));
         }
 
-        return await query
+        return query
             .OrderBy(x => x.NameEn)
             .Select(x => new SupplierDto
             {
@@ -58,8 +71,7 @@ public class SupplierService : ISupplierService
                 TotalPurchasesAmount = x.PurchaseInvoices
                     .Where(p => p.Status == PurchaseInvoiceStatus.Confirmed)
                     .Sum(p => (decimal?)p.SubTotal) ?? 0m
-            })
-            .ToListAsync(cancellationToken);
+            });
     }
 
     public async Task<SupplierDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

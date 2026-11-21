@@ -9,6 +9,9 @@ public interface IChequeService
         ChequeFilterDto? filter = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>One page of cheques; totals and counts cover every matching cheque (Phase 20).</summary>
+    Task<ChequeListResultDto> ListPageAsync(ChequeFilterDto filter, ListQuery list, CancellationToken cancellationToken = default);
+
     Task<ChequeDetailDto?> GetAsync(int id, CancellationToken cancellationToken = default);
 
     Task<ChequeDetailDto> CreateAsync(

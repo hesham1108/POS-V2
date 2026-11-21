@@ -10,6 +10,7 @@ public class StockBalanceDto
     public string? Barcode { get; set; }
     public string Unit { get; set; } = "pcs";
     public string? CategoryNameEn { get; set; }
+    public string? CategoryNameAr { get; set; }
     public decimal StockQuantity { get; set; }
     public decimal LowStockThreshold { get; set; }
     public bool IsLowStock { get; set; }

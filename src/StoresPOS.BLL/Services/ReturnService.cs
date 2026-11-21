@@ -325,6 +325,24 @@ public class ReturnService : IReturnService
         CancellationToken cancellationToken = default)
     {
         filter ??= new SalesReturnFilterDto();
+        var take = filter.Take <= 0 ? 500 : Math.Min(filter.Take, 2000);
+        return await BuildListQuery(filter).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public static readonly string[] SortColumns =
+        [nameof(SalesReturnListItemDto.ReturnNumber), nameof(SalesReturnListItemDto.OriginalInvoiceNumber),
+         nameof(SalesReturnListItemDto.CreatedAtUtc), nameof(SalesReturnListItemDto.ShiftId),
+         nameof(SalesReturnListItemDto.UserDisplayName), nameof(SalesReturnListItemDto.TotalAmount)];
+
+    public Task<PagedResult<SalesReturnListItemDto>> GetPageAsync(
+        SalesReturnFilterDto filter,
+        ListQuery list,
+        CancellationToken cancellationToken = default) =>
+        BuildListQuery(filter).ToPagedAsync(list, SortColumns, x => x.TotalAmount, list.PageSize > 100, cancellationToken);
+
+    private IQueryable<SalesReturnListItemDto> BuildListQuery(SalesReturnFilterDto? filter)
+    {
+        filter ??= new SalesReturnFilterDto();
         var query = _db.SalesReturns.AsNoTracking();
 
         if (filter.FromUtc.HasValue)
@@ -370,10 +388,8 @@ public class ReturnService : IReturnService
                 || (x.OriginalSalesInvoice.InvoiceNumber != null && x.OriginalSalesInvoice.InvoiceNumber.Contains(term)));
         }
 
-        var take = filter.Take <= 0 ? 500 : Math.Min(filter.Take, 2000);
-        return await query
+        return query
             .OrderByDescending(x => x.ReturnSequence)
-            .Take(take)
             .Select(x => new SalesReturnListItemDto
             {
                 Id = x.Id,
@@ -386,8 +402,7 @@ public class ReturnService : IReturnService
                 RefundMethod = x.RefundMethod,
                 TotalAmount = x.TotalAmount,
                 Reason = x.Reason
-            })
-            .ToListAsync(cancellationToken);
+            });
     }
 
     public async Task<SalesReturnDetailsDto?> GetAsync(int id, CancellationToken cancellationToken = default) =>

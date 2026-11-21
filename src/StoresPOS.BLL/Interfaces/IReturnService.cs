@@ -18,5 +18,7 @@ public interface IReturnService
 
     Task<IReadOnlyList<SalesReturnListItemDto>> GetListAsync(SalesReturnFilterDto? filter = null, CancellationToken cancellationToken = default);
 
+    Task<PagedResult<SalesReturnListItemDto>> GetPageAsync(SalesReturnFilterDto filter, ListQuery list, CancellationToken cancellationToken = default);
+
     Task<SalesReturnDetailsDto?> GetAsync(int id, CancellationToken cancellationToken = default);
 }

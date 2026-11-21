@@ -77,6 +77,9 @@ public class ChequeListResultDto
     public decimal PendingAmount { get; set; }
     public int PendingCount { get; set; }
     public int OverdueCount { get; set; }
+
+    /// <summary>Paging info when the list was loaded one page at a time (Phase 20); null = every row.</summary>
+    public PagedResult<ChequeListItemDto>? Page { get; set; }
 }
 
 public class ChequeStatusChangeDto

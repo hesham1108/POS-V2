@@ -52,6 +52,31 @@ public class PurchaseServiceTests
     }
 
     [Fact]
+    public async Task Confirm_KeepsAWeightedAverageCost_WhileSellPricesFollowTheLastCost()
+    {
+        await using var db = CreateDb();
+        var (userId, supplierId, productId, treasuryId) = await SeedAsync(db);
+        var purchases = CreatePurchases(db);
+        var warehouseId = await TestFactories.DefaultWarehouseIdAsync(db);
+
+        async Task BuyAsync(decimal qty, decimal cost) =>
+            await purchases.CreateAndConfirmAsync(new PurchaseInvoiceUpsertDto
+            {
+                SupplierId = supplierId,
+                InvoiceDate = DateTime.UtcNow.Date,
+                Items = [new PurchaseInvoiceItemInputDto { ProductId = productId, Quantity = qty, UnitCost = cost }]
+            }, userId, treasuryId, warehouseId);
+
+        await BuyAsync(10, 50m);   // nothing on hand → average = 50
+        await BuyAsync(10, 70m);   // (10×50 + 10×70) ÷ 20 = 60
+
+        var product = await db.Products.SingleAsync();
+        Assert.Equal(60m, product.AverageCost);
+        Assert.Equal(70m, product.PurchasePrice);     // last cost drives sell prices, as before
+        Assert.Equal(84m, product.RetailPrice);       // 70 + 20%
+    }
+
+    [Fact]
     public async Task CreateAndConfirm_PreservesLineSnapshots()
     {
         await using var db = CreateDb();

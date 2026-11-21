@@ -50,5 +50,7 @@ public interface ISalesService
     Task<int?> GetLastInvoiceIdAsync(int userId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<SalesInvoiceListItemDto>> GetInvoicesAsync(SalesInvoiceFilterDto? filter = null, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<SalesInvoiceListItemDto>> GetInvoicePageAsync(SalesInvoiceFilterDto filter, ListQuery list, CancellationToken cancellationToken = default);
     Task<SalesInvoiceDetailsDto?> GetInvoiceAsync(int id, CancellationToken cancellationToken = default);
 }
